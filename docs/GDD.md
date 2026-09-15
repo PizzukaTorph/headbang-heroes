@@ -701,3 +701,59 @@ Performance ladder: **IDLE → BANG → COMBO → HIGH HYPE → MAX HYPE / POSSE
 World art can remain dark/muted/gritty while critical rhythm cues use stronger contrast and clarity. Gameplay UI stays restrained; menus may lean harder into concert-poster, backstage, flyer and merch-booth visual language.
 
 The first visual exploration is approved as **Visual Direction v0.1 reference**, not production-ready art. It validates portrait composition, large near-3/4 avatar, head-centered timing ring, minimal HUD, IRON ROOTS readability, the A/B/C synthesis, modular avatar categories and hair/secondary-motion emphasis.
+
+
+## 34. Narrative tone and campaign premise v0.1
+
+### Core narrative rule
+
+The world is absurd, but everyone who lives in it treats it as completely normal.
+
+Competitive headbanging, Masters, rankings, training, specialized techniques, Neck Gyms and the road toward Hell do not require elaborate lore explanations. The comedy comes from absolute sincerity toward ridiculous stakes.
+
+Avoid over-explaining the setting. Headbang Heroes does not need a mythology that justifies every joke.
+
+### The protagonist
+
+The player avatar is **not a Chosen One** and does not begin with a mission to save the world.
+
+They are an ordinary metal fan who discovers that they are naturally very good at headbanging and decides to see how far that ability can take them. The player and protagonist discover the competitive headbanging world together.
+
+### Act 0 — The Bedroom
+
+Working opening premise:
+- the avatar is listening to metal and headbanging alone in their room
+- another character notices the performance and is shocked by the natural ability
+- this character reveals that competitive headbanging is an established discipline
+- the protagonist reacts as the relatively normal observer of an otherwise completely sincere absurd world
+- this encounter becomes the entry point to IRON ROOTS
+
+### Coach / manager
+
+A coach/manager character is planned as the player's guide through the circuit. Working concept: a former promising headbanger whose own competitive career ended because of a neck injury. This is intentionally simple and comedic and remains open to revision.
+
+The coach provides onboarding, context and recurring dialogue without becoming an exposition machine.
+
+### Campaign escalation
+
+The campaign should focus on characters, rivalries, competitions and increasingly extreme situations rather than dense world lore.
+
+IRON ROOTS establishes the circuit and THE KING. Subsequent worlds escalate the player's reputation, technique and the strangeness of the Masters. References to THE NECK can gradually appear, but the character should remain unexplained and legendary.
+
+The first five Masters may ultimately function as guardians/preparation for HELL without requiring a large cosmological explanation.
+
+### THE NECK
+
+Do not over-explain THE NECK.
+
+THE NECK is treated by the world as an established legendary fact. The final encounter should gain power from restraint: reduced comedy/exposition, an intimidating reveal, and very little dialogue before the final performance.
+
+Working principle: the player is not fighting THE NECK to save reality. They have reached the end because they want to prove they can beat the greatest headbanger alive.
+
+### Campaign writing workflow
+
+Develop narrative incrementally rather than writing the entire campaign before gameplay validation:
+
+**Act 0 → Coach → entry into the circuit → IRON ROOTS → THE KING**
+
+Then expand world by world. Preserve unanswered questions when explaining them would make the joke weaker.
