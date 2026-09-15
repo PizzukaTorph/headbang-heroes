@@ -111,3 +111,41 @@ audio -> scheduled chart event -> closing circle -> touch -> timing judgment -> 
 ## Non-goals
 
 No backend, accounts, ads, IAP, multiplayer networking, Addressables architecture, localization framework, elaborate DI framework, production save system or asset-store dependency unless the prototype specifically requires it.
+
+## Dependency policy — build the core ourselves
+
+Headbang Heroes should remain deliberately close to vanilla Unity during prototype and early production.
+
+Default rule: **write the game-specific systems ourselves and add a package only when a concrete, measured problem justifies it.** Do not let a rhythm-game framework or asset dictate the game design.
+
+Expected baseline dependencies are Unity's own standard packages/features where useful, especially Input System and the normal 2D/UI/audio stack.
+
+The following are intentionally custom:
+- DSP-clock rhythm scheduling
+- chart/event model
+- closing-circle cue timing
+- judgment windows and early/late measurement
+- combo and scoring
+- head momentum/inertia model
+- headbang gesture/technique vocabulary
+- gameplay feedback orchestration
+
+MIDI may use a small editor/import-time library if it clearly reduces work, but the preferred pipeline compiles MIDI into Headbang Heroes' internal chart format. Runtime gameplay should not depend on a general MIDI framework without a demonstrated need.
+
+Avoid introducing, by default:
+- generic rhythm-game frameworks/kits
+- DOTween as a structural gameplay dependency
+- FMOD/Wwise
+- third-party physics frameworks
+- networking SDKs
+- dependency-injection frameworks
+- large architecture/framework packages
+
+A dependency is acceptable when all of the following are true:
+1. there is a real current problem, not a hypothetical future one;
+2. the package solves it materially better/safer than a small custom implementation;
+3. mobile cost and maintenance burden are understood;
+4. its license is compatible with the project;
+5. it does not own or distort the core headbang/rhythm design.
+
+Target mindset: roughly **90–95% Unity + Headbang Heroes code** for the core prototype.
