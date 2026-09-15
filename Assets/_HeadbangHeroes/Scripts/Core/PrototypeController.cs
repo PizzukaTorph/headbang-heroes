@@ -17,6 +17,7 @@ namespace HeadbangHeroes.Core
         [SerializeField] HeadMotionModel head;
         [SerializeField] ClosingCircleCue cue;
         [SerializeField] bool startOnPlay = true;
+        [SerializeField, Min(0f)] double startSongTime = 22.0;
 
         readonly ComboScore score = new();
         ChartDefinition runtimeChart;
@@ -70,7 +71,7 @@ namespace HeadbangHeroes.Core
             score.Reset();
             scheduler.Configure(chart);
             scheduler.ResetScheduler();
-            clock.Play(song.audio);
+            clock.Play(song.audio, startSongTime);
         }
 
         void OnCue(ChartEvent ev, double approachTime) => cue?.Show(ev.time, approachTime);
