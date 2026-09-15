@@ -45,8 +45,37 @@ namespace HeadbangHeroes.Editor
                 return;
             }
 
-            var audio = AssetDatabase.LoadAssetAtPath<AudioClip>(LocalAudioPath);
+            ChartJsonData chartData;
+            try
+            {
+                chartData = ChartJsonLoader.Parse(chartJson);
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"HH M0 build failed: could not parse chart JSON at {ChartJsonPath}. {e.Message}");
+                return;
+            }
+
+            var realAudio = AssetDatabase.LoadAssetAtPath<AudioClip>(LocalAudioPath);
+
+            // If the MP3 exists on disk but hasn't been imported yet (e.g. just copied in),
+            // force a synchronous import so we don't fall back to the click-track unnecessarily.
+            if (realAudio == null && System.IO.File.Exists(AbsoluteFromProject(LocalAudioPath)))
+            {
+                AssetDatabase.ImportAsset(LocalAudioPath, ImportAssetOptions.ForceSynchronousImport);
+                realAudio = AssetDatabase.LoadAssetAtPath<AudioClip>(LocalAudioPath);
+            }
+
+            // Testability without the licensed MP3: if it is missing, generate a synthetic
+            // click-track that plays a short tick at each chart event so the whole loop
+            // (clock, closing circle, input, head, judgment, score) is playable on desktop.
+            var usingClickTrack = realAudio == null;
+            var audio = realAudio != null ? realAudio : GetOrCreateClickTrack(chartData);
+
             var song = GetOrCreateSong(audio);
+
+            // With the real MP3 the M0 segment starts ~22s in; the click-track starts at 0.
+            var startSongTime = usingClickTrack ? 0.0 : 22.0;
 
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             scene.name = "Prototype_Headbang";
@@ -85,7 +114,7 @@ namespace HeadbangHeroes.Editor
             Assign(controller, "cue", cue);
             Assign(controller, "hud", hud);
             Assign(controller, "startOnPlay", true);
-            Assign(controller, "startSongTime", 22.0);
+            Assign(controller, "startSongTime", startSongTime);
 
             // --- Input event system ---
             var eventSystem = new GameObject("EventSystem");
@@ -99,8 +128,9 @@ namespace HeadbangHeroes.Editor
             AssetDatabase.Refresh();
             Selection.activeGameObject = avatar;
 
-            if (audio == null)
-                Debug.LogWarning($"HH M0 scene built, but audio is MISSING. Put the supplied MP3 at:\n{LocalAudioPath}\nthen run 'Tools > Headbang Heroes > Build M0 Prototype' again.");
+            if (usingClickTrack)
+                Debug.LogWarning($"HH M0 prototype ready (using a generated CLICK-TRACK). " +
+                    $"To play with the real song, put the MP3 at:\n{LocalAudioPath}\nthen run 'Tools > Headbang Heroes > Build M0 Prototype' again.");
             else
                 Debug.Log("HH M0 prototype ready.");
         }
@@ -143,6 +173,83 @@ namespace HeadbangHeroes.Editor
             EditorUtility.SetDirty(song);
             return song;
         }
+
+        const string ClickTrackPath = GeneratedFolder + "/M0_ClickTrack.wav";
+        const int ClickSampleRate = 44100;
+
+        /// <summary>
+        /// Generates (once) a mono WAV click-track that plays a short tick at each chart
+        /// event time, so the M0 loop is fully playable without the licensed MP3.
+        /// </summary>
+        static AudioClip GetOrCreateClickTrack(ChartJsonData chart)
+        {
+            var lastEvent = 0.0;
+            foreach (var e in chart.events)
+                if (e.time > lastEvent) lastEvent = e.time;
+
+            var totalSeconds = (float)(lastEvent + 2.0);
+            var totalSamples = Mathf.CeilToInt(totalSeconds * ClickSampleRate);
+            var samples = new float[totalSamples];
+
+            // Short decaying sine "tick" per event.
+            const float clickSeconds = 0.05f;
+            var clickSamples = Mathf.CeilToInt(clickSeconds * ClickSampleRate);
+            foreach (var e in chart.events)
+            {
+                var start = Mathf.RoundToInt((float)e.time * ClickSampleRate);
+                var freq = e.direction == BangDirection.Left ? 660f : 880f; // L/R audibly different
+                for (var i = 0; i < clickSamples && start + i < totalSamples; i++)
+                {
+                    var t = (float)i / ClickSampleRate;
+                    var env = Mathf.Exp(-t * 45f);
+                    samples[start + i] += Mathf.Sin(2f * Mathf.PI * freq * t) * env * 0.8f;
+                }
+            }
+
+            WriteWav(ClickTrackPath, samples, ClickSampleRate, 1);
+            AssetDatabase.ImportAsset(ClickTrackPath, ImportAssetOptions.ForceSynchronousImport);
+
+            var clip = AssetDatabase.LoadAssetAtPath<AudioClip>(ClickTrackPath);
+            if (clip == null)
+                Debug.LogError($"HH M0 build: failed to generate click-track at {ClickTrackPath}.");
+            return clip;
+        }
+
+        static void WriteWav(string projectRelativePath, float[] samples, int sampleRate, int channels)
+        {
+            var absolute = AbsoluteFromProject(projectRelativePath);
+            System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(absolute));
+
+            using var stream = new System.IO.FileStream(absolute, System.IO.FileMode.Create);
+            using var w = new System.IO.BinaryWriter(stream);
+
+            var byteRate = sampleRate * channels * 2;
+            var dataSize = samples.Length * 2;
+
+            w.Write(System.Text.Encoding.ASCII.GetBytes("RIFF"));
+            w.Write(36 + dataSize);
+            w.Write(System.Text.Encoding.ASCII.GetBytes("WAVE"));
+            w.Write(System.Text.Encoding.ASCII.GetBytes("fmt "));
+            w.Write(16);
+            w.Write((short)1);               // PCM
+            w.Write((short)channels);
+            w.Write(sampleRate);
+            w.Write(byteRate);
+            w.Write((short)(channels * 2));  // block align
+            w.Write((short)16);              // bits per sample
+            w.Write(System.Text.Encoding.ASCII.GetBytes("data"));
+            w.Write(dataSize);
+
+            foreach (var s in samples)
+            {
+                var v = (short)(Mathf.Clamp(s, -1f, 1f) * short.MaxValue);
+                w.Write(v);
+            }
+        }
+
+        static string AbsoluteFromProject(string projectRelativePath)
+            => System.IO.Path.Combine(
+                System.IO.Directory.GetParent(Application.dataPath).FullName, projectRelativePath);
 
         static Canvas CreateCanvas()
         {

@@ -15,6 +15,10 @@ Assets/ThirdPartyLicensedLocal/
 Assets/_HeadbangHeroes/Content/Lab/LocalAudio/
 Assets/_HeadbangHeroes/Content/Lab/LocalSource/
 
+# Generated at build time by the M0 builder (regenerated on demand)
+Assets/_HeadbangHeroes/Content/Lab/Generated/M0_ClickTrack.wav
+Assets/_HeadbangHeroes/Content/Lab/Generated/M0_ClickTrack.wav.meta
+
 # IDE
 .vs/
 .idea/

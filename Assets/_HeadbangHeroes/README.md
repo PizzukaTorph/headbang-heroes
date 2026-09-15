@@ -47,7 +47,15 @@ Assets/_HeadbangHeroes/Content/Lab/LocalAudio/BeyondThePain.mp3
 ```
 
 The audio file is intentionally **not** committed (see licensing note below). The prototype
-starts the M0 segment at song time ~22 s.
+starts the M0 segment at song time ~22 s when the real track is present.
+
+### No MP3? It still runs (click-track fallback)
+
+If the MP3 is missing, the builder generates a synthetic **click-track** WAV
+(`Content/Lab/Generated/M0_ClickTrack.wav`) that plays a short tick at each chart event
+(Left = lower pitch, Right = higher pitch) and starts at song time 0. This makes the whole
+M0 loop fully playable on desktop without the licensed audio — useful for testing timing,
+input, head motion and scoring. Drop in the real MP3 and rebuild to switch to the song.
 
 ## How to build & run the prototype
 

@@ -3,6 +3,7 @@ using UnityEngine.UI;
 
 namespace HeadbangHeroes.UI
 {
+    [RequireComponent(typeof(CanvasRenderer))]
     public sealed class RingGraphic : MaskableGraphic
     {
         [SerializeField, Range(8, 128)] int segments = 64;
