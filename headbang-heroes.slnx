@@ -1,4 +1,7 @@
 ﻿<Solution>
+  <Project Path="HeadbangHeroes.Runtime.csproj" />
+  <Project Path="HeadbangHeroes.Tests.EditMode.csproj" />
+  <Project Path="HeadbangHeroes.Editor.csproj" />
   <Project Path="Assembly-CSharp.csproj" />
   <Project Path="Assembly-CSharp-Editor.csproj" />
 </Solution>
