@@ -42,7 +42,48 @@ First prototype window:
 - duration: 60 s
 - technique: Classic Bang only
 
-The first authored chart should prioritize readable alternating L/R events over literal transcription of every drum hit. The percussion MIDI informs timing and accents; it does not dictate one input per percussion note.
+The first authored chart prioritizes readable alternating L/R events over literal transcription of every drum hit. The percussion MIDI informs timing and accents; it does not dictate one input per percussion note.
+
+### First playable chart
+
+The committed M0 chart contains **76 alternating Classic Bang events** at half-time relative to the 150 BPM source: approximately **75 headbangs per minute**, one event every 0.8 seconds.
+
+Why half-time for M0:
+- readable on first contact
+- enough time to perceive head inertia and reversal
+- suitable for testing closing-circle timing
+- avoids confusing rhythm-density problems with motion-model problems
+
+Direction alternates Left / Right. Intensity is derived from the percussion grid: ordinary kick/snare anchors use medium-high intensity, while crash/accent positions use maximum prototype intensity.
+
+Chart file:
+`Assets/_HeadbangHeroes/Content/Lab/lab-001-beyond-the-pain-classic-m0.json`
+
+## Unity M0 setup
+
+Local source audio is ignored by Git.
+
+Place the supplied MP3 at:
+
+`Assets/_HeadbangHeroes/Content/Lab/LocalAudio/BeyondThePain.mp3`
+
+Then in Unity run:
+
+`Tools > Headbang Heroes > Build M0 Prototype`
+
+The builder creates/updates:
+- the lab SongDefinition
+- `Prototype_Headbang.unity`
+- DSP AudioClock wiring
+- JSON chart wiring
+- touch/mouse L/R input
+- placeholder torso/head
+- head-centered target + approach rings
+- automatic playback starting at song time 22.0 s
+
+The first chart cue appears roughly one second before the first event at 23.34 s.
+
+The closing ring is driven from absolute DSP song time rather than animation elapsed time, so visual drift cannot become the scoring clock.
 
 ## Architecture consequence
 
