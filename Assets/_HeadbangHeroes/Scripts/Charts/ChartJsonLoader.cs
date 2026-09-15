@@ -28,8 +28,11 @@ namespace HeadbangHeroes.Charts
         }
 
         public static ChartDefinition CreateRuntimeChart(TextAsset source)
+            => CreateRuntimeChart(Parse(source));
+
+        public static ChartDefinition CreateRuntimeChart(ChartJsonData data)
         {
-            var data = Parse(source);
+            if (data == null) throw new ArgumentNullException(nameof(data));
             var chart = ScriptableObject.CreateInstance<ChartDefinition>();
             chart.chartId = data.chartId;
             chart.version = data.version;
