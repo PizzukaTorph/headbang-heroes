@@ -38,7 +38,6 @@ namespace HeadbangHeroes.Editor
 
             var audio = AssetDatabase.LoadAssetAtPath<AudioClip>(LocalAudioPath);
             var song = GetOrCreateSong(audio);
-
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             scene.name = "Prototype_Headbang";
 
@@ -58,6 +57,7 @@ namespace HeadbangHeroes.Editor
             CreateBackground(canvas.transform);
             var avatar = CreateAvatar(canvas.transform, out var headMotion);
             var cue = CreateTimingCue(canvas.transform, clock);
+            var hud = CreateHud(canvas.transform);
 
             Assign(controller, "song", song);
             Assign(controller, "chartJsonOverride", chartJson);
@@ -66,6 +66,7 @@ namespace HeadbangHeroes.Editor
             Assign(controller, "input", input);
             Assign(controller, "head", headMotion);
             Assign(controller, "cue", cue);
+            Assign(controller, "hud", hud);
             Assign(controller, "startOnPlay", true);
             Assign(controller, "startSongTime", 22.0);
 
@@ -78,7 +79,6 @@ namespace HeadbangHeroes.Editor
             EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-
             Selection.activeGameObject = avatar;
 
             if (audio == null)
@@ -95,7 +95,6 @@ namespace HeadbangHeroes.Editor
                 song = ScriptableObject.CreateInstance<SongDefinition>();
                 AssetDatabase.CreateAsset(song, SongAssetPath);
             }
-
             song.songId = "lab-001-beyond-the-pain";
             song.title = "Beyond the Pain";
             song.artist = "Asidie";
@@ -109,7 +108,6 @@ namespace HeadbangHeroes.Editor
             var go = new GameObject("Canvas", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
             var canvas = go.GetComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-
             var scaler = go.GetComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1080, 1920);
@@ -138,8 +136,7 @@ namespace HeadbangHeroes.Editor
             root.sizeDelta = new Vector2(420, 620);
 
             var torso = CreateRect("Torso", root, new Vector2(0, -105), new Vector2(310, 390));
-            var torsoImage = torso.gameObject.AddComponent<Image>();
-            torsoImage.color = new Color(0.18f, 0.18f, 0.2f, 1f);
+            torso.gameObject.AddComponent<Image>().color = new Color(0.18f, 0.18f, 0.2f, 1f);
 
             var head = CreateRect("Head", root, new Vector2(0, 170), new Vector2(185, 185));
             var headImage = head.gameObject.AddComponent<Image>();
@@ -166,18 +163,49 @@ namespace HeadbangHeroes.Editor
             group.blocksRaycasts = false;
 
             var target = CreateRect("TargetRing", rect, Vector2.zero, new Vector2(215, 215));
-            var targetRing = target.gameObject.AddComponent<RingGraphic>();
-            targetRing.color = new Color(1f, 1f, 1f, 0.9f);
+            target.gameObject.AddComponent<RingGraphic>().color = new Color(1f, 1f, 1f, 0.9f);
 
             var approach = CreateRect("ApproachRing", rect, Vector2.zero, new Vector2(215, 215));
-            var approachRing = approach.gameObject.AddComponent<RingGraphic>();
-            approachRing.color = new Color(0.9f, 0.2f, 0.2f, 1f);
+            approach.gameObject.AddComponent<RingGraphic>().color = new Color(0.9f, 0.2f, 0.2f, 1f);
 
             var cue = root.AddComponent<ClosingCircleCue>();
             Assign(cue, "clock", clock);
             Assign(cue, "approachRing", approach);
             Assign(cue, "canvasGroup", group);
             return cue;
+        }
+
+        static PrototypeHud CreateHud(Transform parent)
+        {
+            var root = new GameObject("PrototypeHUD", typeof(RectTransform));
+            var rect = root.GetComponent<RectTransform>();
+            rect.SetParent(parent, false);
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = rect.offsetMax = Vector2.zero;
+
+            var score = CreateText("Score", rect, new Vector2(-270, 790), new Vector2(420, 100), 54, TextAnchor.MiddleLeft);
+            var combo = CreateText("Combo", rect, new Vector2(300, 790), new Vector2(300, 100), 54, TextAnchor.MiddleRight);
+            var judgment = CreateText("Judgment", rect, new Vector2(0, 360), new Vector2(700, 180), 62, TextAnchor.MiddleCenter);
+
+            var hud = root.AddComponent<PrototypeHud>();
+            Assign(hud, "scoreText", score);
+            Assign(hud, "comboText", combo);
+            Assign(hud, "judgmentText", judgment);
+            return hud;
+        }
+
+        static Text CreateText(string name, Transform parent, Vector2 position, Vector2 size, int fontSize, TextAnchor alignment)
+        {
+            var rect = CreateRect(name, parent, position, size);
+            var text = rect.gameObject.AddComponent<Text>();
+            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            text.fontSize = fontSize;
+            text.alignment = alignment;
+            text.color = Color.white;
+            text.text = "";
+            text.raycastTarget = false;
+            return text;
         }
 
         static RectTransform CreateRect(string name, Transform parent, Vector2 position, Vector2 size)
