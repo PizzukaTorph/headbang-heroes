@@ -16,6 +16,7 @@ namespace HeadbangHeroes.Core
         [SerializeField] HeadbangInput input;
         [SerializeField] HeadMotionModel head;
         [SerializeField] ClosingCircleCue cue;
+        [SerializeField] PrototypeHud hud;
         [SerializeField] bool startOnPlay = true;
         [SerializeField, Min(0f)] double startSongTime = 22.0;
 
@@ -69,6 +70,7 @@ namespace HeadbangHeroes.Core
             }
 
             score.Reset();
+            hud?.ResetHud();
             scheduler.Configure(chart);
             scheduler.ResetScheduler();
             clock.Play(song.audio, startSongTime);
@@ -87,6 +89,7 @@ namespace HeadbangHeroes.Core
             if (result.judgment != Judgment.Miss)
                 head?.Bang(direction, activeEvent.intensity);
             cue?.Hide();
+            hud?.Show(result, score.Combo, score.Score);
 
             Debug.Log($"{result.judgment} {result.error * 1000.0:+0;-0;0} ms | combo {score.Combo} | score {score.Score}");
         }
@@ -95,6 +98,7 @@ namespace HeadbangHeroes.Core
         {
             score.Apply(Judgment.Miss);
             cue?.Hide();
+            hud?.ShowMiss(score.Combo, score.Score);
         }
     }
 }
