@@ -12,6 +12,8 @@ Recordings/
 # Asset Store / local licensed content
 Assets/AssetStoreTools*
 Assets/ThirdPartyLicensedLocal/
+Assets/_HeadbangHeroes/Content/Lab/LocalAudio/
+Assets/_HeadbangHeroes/Content/Lab/LocalSource/
 
 # IDE
 .vs/
