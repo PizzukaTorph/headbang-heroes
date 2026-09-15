@@ -74,8 +74,10 @@ namespace HeadbangHeroes.Editor
 
             var song = GetOrCreateSong(audio);
 
-            // With the real MP3 the M0 segment starts ~22s in; the click-track starts at 0.
-            var startSongTime = usingClickTrack ? 0.0 : 22.0;
+            // The chart events are authored at absolute song times (~23s onward, matching the
+            // real track's M0 segment). Start both the real song and the click-track at ~22s so
+            // the first cue appears within ~1.5s instead of after a 22s silence.
+            var startSongTime = 22.0;
 
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             scene.name = "Prototype_Headbang";
@@ -269,6 +271,7 @@ namespace HeadbangHeroes.Editor
             var bg = CreateRect("Background", parent, Vector2.zero, new Vector2(1080, 1920));
             var image = bg.gameObject.AddComponent<Image>();
             image.color = BackgroundColor;
+            image.raycastTarget = false;
             bg.anchorMin = Vector2.zero;
             bg.anchorMax = Vector2.one;
             bg.offsetMin = Vector2.zero;
@@ -284,12 +287,15 @@ namespace HeadbangHeroes.Editor
             root.sizeDelta = new Vector2(420, 620);
 
             var torso = CreateRect("Torso", root, new Vector2(0, -105), new Vector2(310, 390));
-            torso.gameObject.AddComponent<Image>().color = new Color(0.18f, 0.18f, 0.2f, 1f);
+            var torsoImage = torso.gameObject.AddComponent<Image>();
+            torsoImage.color = new Color(0.18f, 0.18f, 0.2f, 1f);
+            torsoImage.raycastTarget = false;
 
             var head = CreateRect("Head", root, new Vector2(0, 170), new Vector2(185, 185));
             var headImage = head.gameObject.AddComponent<Image>();
             headImage.sprite = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/Knob.psd");
             headImage.color = new Color(0.62f, 0.52f, 0.43f, 1f);
+            headImage.raycastTarget = false;
 
             motion = avatar.AddComponent<HeadMotionModel>();
             Assign(motion, "head", head);
@@ -311,10 +317,14 @@ namespace HeadbangHeroes.Editor
             group.blocksRaycasts = false;
 
             var target = CreateRect("TargetRing", rect, Vector2.zero, new Vector2(215, 215));
-            target.gameObject.AddComponent<RingGraphic>().color = new Color(1f, 1f, 1f, 0.9f);
+            var targetRing = target.gameObject.AddComponent<RingGraphic>();
+            targetRing.color = new Color(1f, 1f, 1f, 0.9f);
+            targetRing.raycastTarget = false;
 
             var approach = CreateRect("ApproachRing", rect, Vector2.zero, new Vector2(215, 215));
-            approach.gameObject.AddComponent<RingGraphic>().color = new Color(0.9f, 0.2f, 0.2f, 1f);
+            var approachRing = approach.gameObject.AddComponent<RingGraphic>();
+            approachRing.color = new Color(0.9f, 0.2f, 0.2f, 1f);
+            approachRing.raycastTarget = false;
 
             var cue = root.AddComponent<ClosingCircleCue>();
             Assign(cue, "clock", clock);
