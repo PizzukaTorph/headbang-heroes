@@ -1,21 +1,23 @@
+using HeadbangHeroes.Audio;
 using UnityEngine;
 
 namespace HeadbangHeroes.UI
 {
     public sealed class ClosingCircleCue : MonoBehaviour
     {
+        [SerializeField] AudioClock clock;
         [SerializeField] RectTransform approachRing;
         [SerializeField] CanvasGroup canvasGroup;
         [SerializeField] float startScale = 2.4f;
 
-        double duration;
-        double elapsed;
+        double targetSongTime;
+        double approachSeconds;
         bool running;
 
-        public void Show(double approachSeconds)
+        public void Show(double eventSongTime, double approachDuration)
         {
-            duration = System.Math.Max(0.01, approachSeconds);
-            elapsed = 0;
+            targetSongTime = eventSongTime;
+            approachSeconds = System.Math.Max(0.01, approachDuration);
             running = true;
             if (canvasGroup != null) canvasGroup.alpha = 1f;
             Apply(0f);
@@ -29,9 +31,10 @@ namespace HeadbangHeroes.UI
 
         void Update()
         {
-            if (!running) return;
-            elapsed += Time.unscaledDeltaTime;
-            Apply(Mathf.Clamp01((float)(elapsed / duration)));
+            if (!running || clock == null) return;
+            var remaining = targetSongTime - clock.SongTime;
+            var t = 1.0 - remaining / approachSeconds;
+            Apply(Mathf.Clamp01((float)t));
         }
 
         void Apply(float t)
