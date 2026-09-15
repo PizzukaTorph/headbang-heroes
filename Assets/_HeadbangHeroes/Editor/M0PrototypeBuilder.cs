@@ -8,7 +8,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.SceneManagement;
+using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 
 namespace HeadbangHeroes.Editor
@@ -56,7 +56,7 @@ namespace HeadbangHeroes.Editor
 
             var canvas = CreateCanvas();
             CreateBackground(canvas.transform);
-            var avatar = CreateAvatar(canvas.transform, out var headTransform, out var headMotion);
+            var avatar = CreateAvatar(canvas.transform, out var headMotion);
             var cue = CreateTimingCue(canvas.transform, clock);
 
             Assign(controller, "song", song);
@@ -67,6 +67,7 @@ namespace HeadbangHeroes.Editor
             Assign(controller, "head", headMotion);
             Assign(controller, "cue", cue);
             Assign(controller, "startOnPlay", true);
+            Assign(controller, "startSongTime", 22.0);
 
             var eventSystem = new GameObject("EventSystem");
             eventSystem.AddComponent<EventSystem>();
@@ -128,7 +129,7 @@ namespace HeadbangHeroes.Editor
             bg.offsetMax = Vector2.zero;
         }
 
-        static GameObject CreateAvatar(Transform parent, out Transform headTransform, out HeadMotionModel motion)
+        static GameObject CreateAvatar(Transform parent, out HeadMotionModel motion)
         {
             var avatar = new GameObject("Prototype_Avatar", typeof(RectTransform));
             var root = avatar.GetComponent<RectTransform>();
@@ -147,7 +148,6 @@ namespace HeadbangHeroes.Editor
 
             motion = avatar.AddComponent<HeadMotionModel>();
             Assign(motion, "head", head);
-            headTransform = head;
             return avatar;
         }
 
