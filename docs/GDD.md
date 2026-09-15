@@ -658,3 +658,46 @@ Boss escalation:
 The first boss remains plausibly human. Each subsequent world pushes anatomy, movement and environment further into myth until THE NECK requires no literal explanation. The game should treat THE NECK as a legendary fact rather than over-explaining the character.
 
 All world and boss names above are working names until final naming/brand review.
+
+
+## 30. Avatar customization model v0.1
+
+The avatar is a player-created modular character rather than a fixed protagonist.
+
+Identity presentation options: Male, Female, Other. These are customization starting points, not gameplay classes.
+
+Target face system: 5 distinct face archetypes per presentation set.
+
+Target body system: 4 controlled archetypes: S / Slim, M / Medium, L / Large, XL / Extra Large. Prefer a shared skeleton and controlled body families so apparel remains scalable.
+
+Customization categories include facial hair, piercings, makeup, tattoos and a Special category for more extreme original metal-themed face/body treatments. The underlying system should remain flexible even where curated presets differ.
+
+Hair is a major customization and feedback category: short through very long, multiple textures, mohawks, undercuts, shaved/bald and fantasy/extreme styles, with natural and unnatural colors. Hair choice never affects scoring.
+
+Apparel categories: headwear, tops/shirts, jackets/vests, bottoms, footwear and accessories. Apparel is intended as a primary HH soft-currency sink and long-term content surface. Future licensed band collaborations may include digital band apparel where rights permit.
+
+## 31. Gameplay screen composition v0.1
+
+Portrait mobile is the baseline. The avatar should occupy roughly 50–60% of useful gameplay height in a near-frontal three-quarter presentation, preserving face/apparel readability while making head movement readable.
+
+The closing-circle timing target lives around or immediately adjacent to the avatar's head. The head is effectively part of the interface; avoid separating rhythm gameplay into a traditional note highway.
+
+Active-song HUD remains minimal: score, combo and HYPE/Crowd meter. XP, HH and progression information remain outside active performance.
+
+The timing cue stays geometrically simple: fixed target ring plus approaching/converging ring. Judgment feedback can be expressive, but ornament must never compromise sub-second readability.
+
+## 32. Visual style synthesis v0.1
+
+The approved direction combines three explored treatments:
+
+- **A — Clean Dark Cartoon:** gameplay readability baseline, strong silhouettes and controlled detail.
+- **B — Metal Comic:** texture, grit, typography and aggressive attitude for the wider brand and selected environments.
+- **C — Grotesque Cartoon:** increasing deformation for HIGH/MAX HYPE, finishers and bosses rather than constant maximum distortion.
+
+Working synthesis: **A for baseline readability + B for metal identity + C for performance escalation.**
+
+Performance ladder: **IDLE → BANG → COMBO → HIGH HYPE → MAX HYPE / POSSESSED**.
+
+World art can remain dark/muted/gritty while critical rhythm cues use stronger contrast and clarity. Gameplay UI stays restrained; menus may lean harder into concert-poster, backstage, flyer and merch-booth visual language.
+
+The first visual exploration is approved as **Visual Direction v0.1 reference**, not production-ready art. It validates portrait composition, large near-3/4 avatar, head-centered timing ring, minimal HUD, IRON ROOTS readability, the A/B/C synthesis, modular avatar categories and hair/secondary-motion emphasis.
