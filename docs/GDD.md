@@ -1,4 +1,4 @@
-# Game Design Document v0.2
+# Game Design Document v0.3
 
 ## 1. High concept
 
@@ -461,3 +461,145 @@ The prototype passes when:
 - a 60–120 second session is fun without progression rewards
 
 If these fail, iterate on the core before expanding scope.
+
+
+## 24. Level progression
+
+The player level cap is **666**. This number is part of the game's identity, not a traditional slow RPG progression curve.
+
+Principles:
+- early levels should arrive quickly and frequently
+- progression gradually slows but remains visible
+- not every level needs a unique unlock
+- XP is never spent; HH remains the spendable soft currency
+- reaching level 666 is a prestige achievement, not a competitive advantage
+- XP may continue to be tracked statistically after the cap, but displayed level remains 666
+
+Candidate milestone levels include 6, 66, 100, 200, 333, 500, 600 and 666.
+
+Level rewards may include HH grants, apparel access, cosmetics, gestures, techniques, combo chains and increasingly spectacular movement variants. Core competitive power must not be purchasable.
+
+Level 666 should award an exceptional prestige cosmetic/title/animation rather than stronger scoring.
+
+## 25. Campaign world structure
+
+**Road to the Pit** consists of five genre-focused training/conquest worlds followed by a sixth mixed-genre endgame world: Hell.
+
+Each world contains six levels and culminates in its own Headbang Master/boss. The first five bosses embody their world's musical/gameplay identity. Hell combines everything learned previously and culminates in THE NECK.
+
+Initial structure:
+
+1. **Heavy World** — foundational timing and Classic Bang
+2. **Thrash World** — aggression/accents and Downbang
+3. **Doom World** — slow weight, stored momentum and Doom Hold
+4. **Death World** — precision/directional complexity and Sidebang
+5. **Black World** — endurance/continuous motion and Windmill
+6. **HELL** — mixed genres, mastery chains and Whiplash
+
+The exact world/boss names remain open for creative development.
+
+### Hell
+
+Hell deliberately has no single genre. Its songs/charts mix the established gameplay languages and demand combinations of previously learned techniques. Whiplash is the final fundamental/master technique.
+
+The design progression is therefore:
+
+**five fundamental schools → Hell mastery → THE NECK**.
+
+THE NECK does not need a secret seventh technique. The fantasy is that THE NECK has absolute mastery of the same language the player has spent the campaign learning.
+
+### Boss encounters
+
+Bosses should not be limited to ordinary high-difficulty charts. A low-cost signature mechanic is **Call & Response**:
+
+boss performs a move/pattern → player reads/responds → pattern escalates → encounter transitions into or interleaves with normal chart play.
+
+This reuses the core rhythm/headbang systems while making bosses feel authored and distinct. THE NECK can reuse, combine and mutate pattern languages learned from all previous bosses.
+
+## 26. Catalog access and progression gating
+
+The long-term target is a very large song library. Campaign progression must therefore remain separate from music access.
+
+Default philosophy: **do not lock ordinary song listening/play behind arbitrary player level.**
+
+Levels primarily unlock techniques, combos, cosmetics, apparel, gestures, campaign progression and advanced challenges. A song may remain playable at an accessible chart difficulty even when its advanced charts use techniques the player has not yet learned.
+
+Candidate difficulty naming remains open; the current conceptual ladder is Easy / Normal / Hard / Neckbreaker.
+
+Charts should support authored sections so future modes such as 60–90 second Quick Bang, daily challenges, practice segments and multiplayer excerpts can reuse song content without destructive editing.
+
+Fail-state philosophy: prefer allowing the player to finish the song and receive a poor rank/reduced rewards rather than ejecting them mid-track. This supports music discovery and reduces mobile-session frustration.
+
+## 27. Practice mode — Neck Gym
+
+A future **NECK GYM** mode can teach and practice unlocked techniques independently of campaign failure/rewards.
+
+It can serve as:
+- onboarding/tutorial
+- technique practice
+- newly unlocked move preview
+- timing/momentum training
+- calibration-friendly low-pressure environment
+
+This is not required for the first core prototype.
+
+## 28. Visual direction
+
+### North star
+
+The desired tone is inspired by the **serious, dark, exaggerated adult-metal-animation energy associated with Metalocalypse**, but Headbang Heroes must develop its own original characters, silhouettes, rendering language, UI and world design. This is a tonal/reference north star, not an instruction to imitate protected character designs or distinctive artwork.
+
+Working shorthand:
+
+**dark adult metal cartoon × readable mobile game × extreme caricature**.
+
+### Tone principle
+
+The world treats headbanging with absurd seriousness.
+
+The comedy should come from treating ridiculous stakes as completely legitimate: headbang technique can be discussed like elite athletic training; Headbang Masters are culturally important figures; THE NECK is treated as an intimidating legendary presence rather than a wink-at-the-camera joke.
+
+### Character principles
+
+- stylized human anatomy
+- strong, immediately readable silhouettes
+- exaggerated shoulders, hands, heads, necks and hair where useful
+- enough structural consistency to support modular apparel
+- expressive faces capable of escalating dramatically during performance
+- hair is a major gameplay-feedback surface
+- characters may deform beyond idle proportions at high HYPE
+
+Avatar presentation states should conceptually escalate:
+
+**IDLE → BANG → COMBO → HIGH HYPE → POSSESSED**
+
+Skill should therefore alter not only score but the visual intensity of the avatar.
+
+### Mobile readability
+
+The player/avatar should occupy a large portion of the portrait playfield. The head and timing cue must remain readable on a phone screen. Background detail must never compete with rhythm information.
+
+The timing UI may use clearer/brighter values than the darker world art so gameplay remains instantly legible.
+
+### Backgrounds
+
+Genre/world backgrounds remain primarily static 2D artwork with restrained parallax, particles, lighting and crowd reactions. This supports visual variety without turning the project into a 3D environment pipeline.
+
+### Boss silhouettes
+
+Each Headbang Master should exaggerate the visual language of their world. Examples of direction, not final designs:
+- Heavy: iconic/classic imposing metal frontman energy
+- Thrash: lean, kinetic, aggressive silhouette
+- Doom: monumental, heavy, slow visual mass
+- Death: dense physicality/technical menace
+- Black: severe, elongated or spectral silhouette
+- THE NECK: deliberately breaks the established anatomy scale through impossible neck/trapezius mass
+
+### Art discovery
+
+Before production art, create multiple original Headbang Heroes concept directions using the same gameplay composition. Evaluate at least:
+- clean/readable cartoon
+- darker metal-comic treatment
+- grotesque/exaggerated cartoon
+
+The likely target is a hybrid that preserves mobile readability while allowing extreme character deformation and adult-metal tone.
