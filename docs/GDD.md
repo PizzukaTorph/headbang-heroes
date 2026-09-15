@@ -603,3 +603,58 @@ Before production art, create multiple original Headbang Heroes concept directio
 - grotesque/exaggerated cartoon
 
 The likely target is a hybrid that preserves mobile readability while allowing extreme character deformation and adult-metal tone.
+
+
+## 29. World identity lineup — working names
+
+Each campaign world is a materialization of its reference metal genre. Environment, boss silhouette, chart language and taught technique should reinforce the same identity. The campaign progressively moves from recognizable real-world metal spaces into increasingly impossible mythic environments.
+
+### World I — IRON ROOTS
+- Genre: Heavy Metal
+- Environment: large old-school metal club; walls of amplifiers, denim/leather visual language, classic stage energy
+- Boss: **THE KING** — archetypal heavy-metal sovereign; imposing but still recognizably human
+- Technique: Classic Bang
+
+### World II — MOSH DISTRICT
+- Genre: Thrash Metal
+- Environment: battered warehouse/club, bent barriers, graffiti, huge mosh-pit energy
+- Boss: **THE RIOT** — lean, nervous, hyper-kinetic and aggressively fast
+- Technique: Downbang
+
+### World III — THE ABYSS
+- Genre: Doom Metal
+- Environment: cyclopean ruined cathedral, fog, candles and monumental amplifier stacks
+- Boss: **THE MONOLITH** — enormous and extremely slow; every movement should feel impossibly heavy
+- Technique: Doom Hold
+
+### World IV — THE CATACOMBS
+- Genre: Death Metal
+- Environment: underground catacombs converted into an oppressive extreme-metal venue; macabre/cartoon rather than explicit splatter
+- Boss: **THE BUTCHER** — dense, physical and technically threatening; increasingly exaggerated neck anatomy foreshadows the endgame
+- Technique: Sidebang
+
+### World V — FROZEN VOID
+- Genre: Black Metal
+- Environment: frozen outdoor stage / forest / mountain darkness, snow and fire; an original reinterpretation of black-metal visual language
+- Boss: **THE WRAITH** — tall, spectral, near-inhuman silhouette with extreme hair motion and supernatural-looking Windmill mastery
+- Technique: Windmill
+
+### World VI — HELL
+- Genre: All Metal / mixed mastery
+- Environment: an impossible infernal metal arena built around/above an endless pit; no longer grounded in reality
+- Boss: **THE NECK** — final master and deliberate breaking point of the game's established anatomy scale
+- Technique: Whiplash / mastery of all previous techniques
+
+### Escalation
+
+Environmental escalation:
+
+**Club → Warehouse → Cathedral → Catacombs → Frozen Wilderness → Literal Hell**
+
+Boss escalation:
+
+**THE KING → THE RIOT → THE MONOLITH → THE BUTCHER → THE WRAITH → THE NECK**
+
+The first boss remains plausibly human. Each subsequent world pushes anatomy, movement and environment further into myth until THE NECK requires no literal explanation. The game should treat THE NECK as a legendary fact rather than over-explaining the character.
+
+All world and boss names above are working names until final naming/brand review.
