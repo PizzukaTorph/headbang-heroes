@@ -128,25 +128,25 @@ namespace HeadbangHeroes.Core
 
         void OnCue(ChartEvent ev, double approachTime) => cue?.Show(ev.time, approachTime);
 
-        void OnBang(float direction)
+        void OnBang(BangDirection direction)
         {
             if (scheduler == null || !scheduler.HasActiveEvent) return;
 
-            var dir = direction < 0 ? BangDirection.Left : BangDirection.Right;
+            var dir = direction;
             var eventIntensity = scheduler.ActiveEvent.intensity;
 
             // Sample motion quality from the head's momentum leading into the beat,
             // before we apply the new impulse from this tap.
-            var motionQuality = head != null ? head.SampleMotionQuality(direction) : 1f;
+            var motionQuality = head != null ? head.SampleMotionQuality(dir) : 1f;
 
             if (!scheduler.TryJudge(dir, motionQuality, calibrationOffset, out var result))
                 return; // early out-of-window tap: event left intact, nothing consumed.
 
             score.Apply(result);
             if (result.judgment != Judgment.Miss)
-                head?.Bang(direction, eventIntensity);
+                head?.Bang(dir, eventIntensity);
             else
-                head?.Bang(direction, 0.35f); // small nudge so wrong taps still feel physical
+                head?.Bang(dir, 0.35f); // wrong taps still invert/launch physically
 
             cue?.Hide();
             hud?.Show(result, score.Combo, score.Score);
