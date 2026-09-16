@@ -38,6 +38,9 @@ Owns DSP timing, scheduling, pause/resume/retry synchronization, input time-doma
 ### `chart-content`
 Owns Song/Chart schemas, RuntimeChart compilation, candidate matching, RestEvent semantics, validation, content packaging and remote-content compatibility.
 
+### `hh-midi-validator`
+Owns strict validation of `.hh.mid` authoring files against `HH_MIDI_STANDARD_V1.md`, including track/note semantics, modifiers, Rest/Windmill intervals, tempo metadata, ambiguity checks and golden-sample regression.
+
 ### `presentation-avatar`
 Owns gameplay cues, body response, hair, venue/background, haptics and avatar presentation while preserving strict downstream-only behavior.
 
@@ -59,6 +62,18 @@ gameplay-core
 presentation-avatar
         ↓
 meta-profile (only if run result/progression changes)
+        ↓
+qa-guardian
+```
+
+For HH MIDI authoring/import work:
+
+```text
+hh-midi-validator
+        ↓
+chart-content
+        ↓
+rhythm-audio / gameplay-core when semantics require it
         ↓
 qa-guardian
 ```
