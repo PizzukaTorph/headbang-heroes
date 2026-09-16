@@ -1,173 +1,247 @@
-# Roadmap
+# Headbang Heroes — Roadmap
 
-## P0 — Prototype: Make The Headbang Fun
+## Principle
 
-Goal: validate the core interaction.
+The roadmap exists to protect execution order, not to collect every future idea.
 
-Deliverables:
-- Unity mobile project baseline
-- one original/test song
-- deterministic audio clock
-- audio + MIDI/event chart ingestion
-- closing-circle cue
-- basic directional/tap input
-- custom head momentum/inertia model
-- timing judgment windows
-- first Motion Quality metric
-- first Technique validation
-- score + combo
-- HYPE/crowd feedback stub
-- calibration/debug overlay
-- placeholder avatar
-- basic hit/miss feedback
-- Android/iOS device test
+Primary milestone logic:
 
-Exit gate: a short song is fun enough to replay for score without metagame.
+> **POC proves the mechanic. MVP proves the game.**
 
-## P1 — Vertical Slice
+The POC must make the headbang fun.
+The MVP must prove that the same foundation scales across four complete real songs.
 
-Goal: demonstrate the complete product fantasy.
+---
 
-- 3–5 tracks spanning different tempos/styles
-- 2–3 headbang techniques
-- improved head/hair animation
-- first polished cartoon avatar
-- cosmetic customization sample
-- 2–3 static genre venues
-- results/rank screen
-- basic THE PIT song select
-- tutorial
-- local XP/level progression stub
-- local HH economy stub
-- first named combo chain
-- production-quality UX direction
+# P0 — POC: Make The Headbang Fun
 
-Exit gate: external testers understand the game, perceive skill growth, and ask to replay/try another song.
+## Goal
 
-## P2 — MVP
+Prove one complete song and the core neck/rhythm loop end-to-end.
 
-- 6 initial genre archetypes
-- at least 1 representative track per genre
-- Road to the Pit first 6-world campaign framework
-- 6 core headbang techniques
-- modular avatar customization
-- apparel/cosmetic unlock economy
-- persistent profile
-- XP + levels
-- HH soft currency
-- shop foundation
-- THE PIT catalog mode
-- multiple chart difficulties
-- leaderboard backend
-- global/friends/weekly per-song boards
-- asynchronous friend/random challenges
-- chart versioning
-- licensing ledger
-- accessibility and latency calibration
-- initial backend hosted on M0THER
-- cross-platform account model foundation
+## Required gameplay
 
-## P3 — v1
+- authoritative DSP/audio clock
+- one complete authored chart, initially Normal
+- CURRENT / NEXT cue flow
+- semantic directional input
+- Classic Bang Horizontal + Vertical sufficient to validate the core
+- physical input always affects the neck
+- continuous neck simulation
+- timing judgment
+- event-local Motion Quality
+- combo / multiplier
+- HYPE
+- THE BANG
+- at least one deterministic Finisher opportunity
+- body response
+- representative hair/secondary motion
+- Results
+- Retry
 
-- complete/polished Road to the Pit arc
-- 6 worlds × 6 levels structure
-- 6 world bosses
-- THE NECK final boss encounter
-- richer technique/combo vocabulary
-- large and expandable song catalog
-- meaningful genre differentiation
-- expanded venues/backgrounds
-- achievements/challenges
-- live operations/content pipeline
-- store/platform compliance
-- privacy-conscious analytics
-- monetization hooks ready for controlled rollout
+## Required technical validation
 
-## Content scale strategy
+- song remains synchronized start-to-finish
+- pause/resume and retry remain synchronized
+- frame pacing does not define timing judgment
+- gameplay-critical neck state moves toward an authoritative fixed-step/otherwise deterministic model before production scoring relies on it
+- malformed chart fails clearly
+- real-device input latency can be inspected/calibrated
 
-The long-term goal is a **large catalog**, potentially hundreds of songs.
+## Shell
 
-Architecture rules:
-- Song, Chart, Artist, Genre and License are independent entities
-- Campaign references catalog content; it does not own it
-- New songs can ship without new narrative content
-- Multiple charts/difficulties can exist per song
-- Catalog browsing lives in THE PIT
-- Content ingestion/licensing/chart authoring must scale without touching core gameplay code
+Enough shell to exercise the loop:
 
-## Online roadmap
+```text
+Home
+→ Song Select
+→ Pre-song
+→ Gameplay
+→ Results
+→ Retry / Continue
+```
 
-### Phase A — asynchronous
-- friend challenge
-- random challenge
-- song/chart/version locked comparisons
-- result history
+No large campaign, backend, shop, realtime multiplayer, community system, or content CMS is required.
 
-### Phase B — realtime Headbang Battle
-- synchronized local song playback
-- compact live score/combo/HYPE state
-- no audio streaming
-- no frame-by-frame physics sync
-- crowd allegiance / CROWD CHOICE presentation
+## Exit gate
 
-Realtime should be added only after the solo/asynchronous loop proves retention.
+A player can finish the song and wants to replay because controlling the neck itself is enjoyable, not because of progression rewards.
 
-## Backend roadmap
+---
 
-Prototype: none required.
+# P1 — Product Vertical Slice
 
-MVP:
-- account/profile
-- XP/level
-- HH wallet
-- inventory
-- score submission
+## Goal
+
+Turn the proven mechanic into a credible miniature Headbang Heroes experience before broadening content.
+
+## Focus
+
+- polished gameplay composition
+- stronger avatar/body/hair presentation
+- first convincing venue/background reaction profile
+- simple avatar customization
+- first-run/tutorial flow
+- settings/calibration
+- local profile/save
+- progression/results integration
+- server-first content path or faithful production-shaped equivalent
+- validated content/package workflow
+
+## Scope guidance
+
+A second/third internal track may be useful for stress-testing tempo/style differences, but P1 is not defined by a fixed song count.
+
+The important question is whether the complete product loop feels coherent around the proven mechanic.
+
+---
+
+# P2 — MVP: Four Real Songs
+
+## Goal
+
+Prove that Headbang Heroes is a small complete game, not a one-song prototype.
+
+## Definition
+
+**Four complete real songs** work end-to-end reliably.
+
+Each must:
+- use the canonical Song/Chart model
+- carry an authored difficulty classification
+- load through the real/final-shaped content pipeline
+- remain synchronized from start to finish
+- resolve timing/motion/technique deterministically
+- support HYPE/THE BANG/Finisher where authored
+- produce correct Results
+- persist records/progression
+- retry cleanly
+- remain playable offline once validly cached where licensing/product rules allow
+
+The MVP does not require every song at every difficulty.
+
+## Supporting MVP product surface
+
+- Home
+- Song Select
+- simple Avatar customization
+- Results / progression
+- Profile/save
+- Settings / calibration / accessibility basics
+- official catalog filters
+- Quick Headbang path
+
+## Explicitly optional / deferrable beyond MVP
+
+- networked Versus
+- complete Story campaign
+- advanced Practice tools
+- Endurance
 - leaderboards
-- challenge service
+- asynchronous challenges
+- shop/large cosmetic catalog
+- community publishing/browser
+- external chart editor
+- full CMS
+- elaborate economy balancing
+- large venue library
 
-Initial hosting target: M0THER.
+If one of these threatens the four-song goal, it loses.
 
-Scale later by separating API, database, realtime coordination and other services if actual load requires it.
+---
 
-Server authority is mandatory for economy and competitive state.
+# P3 — Post-MVP Product Expansion
 
-## Monetization roadmap
+## Goal
 
-Planned model: freemium/free-to-play.
+Expand around the proven four-song product without redefining the core gameplay semantics.
 
-Possible future monetization:
-- apparel/cosmetics
-- gestures
-- cosmetic packs
-- song/band packs where licensing supports it
-- rewarded ads
-- optional remove-ads/support purchase
+Candidate workstreams:
 
-Rules:
-- never interrupt songs with ads
-- no pay-to-win gameplay stats
-- exact ad/IAP placement deferred until retention is understood
-- avoid a second premium currency unless there is a demonstrated need
+### Story
+- structured progression/narrative
+- lightweight scenes/dialogue
+- bosses/rivals
+- authored challenges
+- larger catalog usage
 
-## Post-launch candidates
+### Versus
+- asynchronous competition first where appropriate
+- exact chart/rules version references
+- leaderboard/competitive integrity work
+- realtime battle only after validation
 
-- seasonal events
-- community competitions
-- band spotlights
-- artist submission/audition programs
-- optional future Underground Platform integrations
-- official guest musicians
-- advanced cosmetics and gestures
-- new campaign worlds/bosses
-- new techniques
-- new genre packs
+### Practice
+- phrase/section selection
+- repeat/retry tooling
+- technique-focused practice
+- playback-speed experiments only if musically/technically acceptable
 
-## Explicitly not now
+### Endurance
+- longer sequences
+- cumulative scoring/HYPE management
+- session rules using existing gameplay systems
 
-- realtime multiplayer in prototype
-- full 3D environments
-- procedural chart generation as a dependency
-- AI beat detection as a dependency
-- complex backend before online features
-- large inventory/store implementation before core fun is validated
-- famous-musician likenesses without agreements
+### Content scale
+- larger official catalog
+- improved publication tooling
+- artist/band content workflows
+- richer venues/presentation
+- external chart tooling when authoring scale justifies it
+
+### Community/modding
+- local/community packages
+- curated publishing/trust rules
+- official/community separation
+- rights/audio provenance constraints
+
+---
+
+# P4 — Mature v1 / Live Product
+
+Possible mature-product capabilities after the core and expansion modes prove worthwhile:
+
+- polished Story arc
+- strong Versus offering
+- larger official music catalog
+- robust content release pipeline
+- achievements/challenges
+- social/leaderboards as justified
+- store/platform compliance if monetization is introduced
+- privacy-conscious analytics
+- live content cadence
+- curated community ecosystem if viable
+
+These are not foundation requirements.
+
+---
+
+# Cross-cutting roadmap rules
+
+## Gameplay before meta
+
+No progression, economy, story, or online feature may be used to hide weak neck gameplay.
+
+## Content before complexity
+
+Once the mechanic works, proving multiple real songs is more valuable than accumulating secondary systems.
+
+## One gameplay language
+
+Modes compose the same core chart/neck/scoring/HYPE systems. Do not fork separate gameplay implementations per mode.
+
+## Server-first content, offline-capable play
+
+Compatible official content can be delivered remotely and cached locally. Remote content never introduces unknown gameplay semantics.
+
+## No power progression
+
+Progression unlocks expression/content, not mechanical advantage.
+
+## Monetization later
+
+No gameplay ads, shop complexity, premium-currency design, or reward-loop optimization is required to prove POC/MVP. Monetization is a separate later design problem.
+
+## Real-device validation
+
+Audio/input latency, touch ergonomics, performance, and haptics must be validated on actual iOS/Android devices early and repeatedly.
