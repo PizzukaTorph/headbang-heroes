@@ -1,17 +1,16 @@
 # Game Flow v1
 
-> Status: baseline shell/navigation contract for Headbang Heroes. The goal is to keep the route into gameplay fast while leaving room for future game modes, account customization and avatar customization.
+## Status
+
+Canonical shell/navigation contract for Headbang Heroes.
 
 ## North-star rule
 
-**The shell must not become the game. The game is headbanging.**
+> **The shell must not become the game. The game is headbanging.**
 
-Two practical consequences:
-
-- From **Home to Gameplay**: as few taps as practical.
-- From **Results to Retry**: one tap.
-
-The navigation should remain simple enough that players spend most of their time either playing, choosing content, or customizing their identity.
+Practical consequences:
+- Home → Gameplay: as few taps as practical
+- Results → Retry: one tap
 
 ## High-level flow
 
@@ -22,7 +21,7 @@ HOME
   ↓
 PLAY
   ↓
-[MODE SELECT — bypassed while only one mode exists]
+[MODE SELECT — bypassed when only one relevant mode exists]
   ↓
 SONG SELECT
   ↓
@@ -39,351 +38,254 @@ CONTINUE / RETRY
 
 ## Boot
 
-Boot should be minimal.
-
 Responsibilities:
-
-- studio/game logo as appropriate
-- load profile/save data
-- initialize required services/content
+- studio/game splash as appropriate
+- load local profile/save
+- initialize required services
+- load local catalog/cache
+- refresh remote catalog opportunistically when online
 - detect first-run state
 
-Avoid long unskippable intros or redundant splash sequences.
+Do not require network availability merely to launch with valid local profile/content.
 
-## First-run flow
+## First-run
 
-The first run should get the player to the core mechanic quickly.
-
-Preferred baseline:
+Preferred first-run flow:
 
 ```text
 BOOT
-  ↓
-CREATE / CHOOSE BASE AVATAR
-  ↓
-VERY SHORT TUTORIAL
-  ↓
-FIRST SONG
-  ↓
-RESULTS
-  ↓
-HOME
+→ CREATE / CHOOSE BASE AVATAR
+→ VERY SHORT TUTORIAL
+→ FIRST SONG
+→ RESULTS
+→ HOME
 ```
 
-Do not force a deep avatar creator before the player has experienced the game.
+Do not force a deep character creator before first play.
 
-The first-run avatar step should be fast enough to establish ownership/identity without delaying the first headbang session.
+The avatar step should create enough ownership for the player to think “that’s me” and move on.
 
 ## Home
 
-Home is the central shell node.
-
 Baseline destinations:
+- PLAY
+- AVATAR
+- PROFILE
+- SETTINGS
 
-- **PLAY**
-- **AVATAR**
-- **PROFILE**
-- **SETTINGS**
+PLAY is dominant.
 
-PLAY is the dominant primary action.
+The avatar is the dominant visual object on Home and uses the selected idle presentation where appropriate.
 
-### Avatar-centric Home
+The Home screen should show the player, not aggressively sell to the player.
 
-The player's own avatar should be the dominant visual element of the Home screen.
+## Modes
 
-The avatar may appear large in a 3/4 presentation over a restrained background/backdrop and should use its selected idle style.
+Current planned modes:
+1. Story
+2. Quick Headbang
+3. Versus
+4. Practice
+5. Endurance
 
-This gives customization visible value outside gameplay and makes the player's identity part of the shell itself.
-
-Conceptual layout:
-
-```text
-+-----------------------------+
-| profile / level / HH        |
-|                             |
-|                             |
-|        PLAYER AVATAR        |
-|         large 3/4           |
-|         idle active         |
-|                             |
-|                             |
-|          [ PLAY ]           |
-|                             |
-| AVATAR  PROFILE  SETTINGS   |
-+-----------------------------+
-```
-
-The Home screen should show the player, not aggressively sell things to the player.
-
-## Play and future Mode Select
-
-The architecture should support multiple game modes from the beginning even if v1 ships with only one active mode.
-
-Target structure:
+When multiple implemented modes exist:
 
 ```text
-PLAY
-  ↓
-MODE SELECT
-  ├─ Mode 1
-  ├─ Mode 2
-  ├─ Mode 3
-  └─ Mode 4
+HOME
+→ PLAY
+→ MODE SELECT
+   ├── Story
+   ├── Quick Headbang
+   ├── Versus
+   ├── Practice
+   └── Endurance
 ```
 
-There are already multiple future mode concepts in mind, so the shell should not hard-code PLAY directly to one permanent mode forever.
+If only one relevant mode exists, bypass Mode Select.
 
-However:
+Do not show fake/unimplemented functional modes in production UI.
 
-- if only one mode exists, **bypass Mode Select**
-- do not show an empty or fake mode-selection screen
-- introduce the mode-selection step only when it creates a real player choice
-
-This keeps v1 fast without blocking future expansion.
+Detailed mode contracts live in `GAME_MODES_V1.md`.
 
 ## Song Select
 
-Song Select should combine the content choice and difficulty choice in one context wherever practical.
+Song Select selects playable authored content.
 
-Show enough information to make a decision without turning the screen into a statistics dashboard.
+Important model:
+
+> **The player selects a song/chart; the game does not assume every song has four difficulty variants.**
 
 Baseline information:
-
-- song/title/artist metadata as available
-- difficulty selector
-- best score for selected difficulty
+- artwork
+- title / artist
+- authored difficulty
+- duration
+- best score
 - best grade
-- longest combo or another compact personal record if useful
-- clear PLAY/START action
+- download/cache state if relevant
+- lock/unlock state if relevant
+- compact genre/subgenre metadata where useful
 
-Avoid requiring separate screens for song choice and difficulty unless later UX testing proves it beneficial.
+Official catalog filters:
 
-## Pre-Song
+```text
+ALL | EASY | NORMAL | HARD | EXTREME
+```
 
-Pre-Song should be brief.
+### Multiple charts for one song
+
+If a song has more than one authored chart, available alternatives may be selected in the song detail/pre-song context.
+
+Do not show a redundant difficulty selector for songs that have only one playable chart.
+
+## Pre-song
+
+Keep brief.
 
 Purpose:
+- confirm song/chart
+- show authored difficulty
+- show current avatar
+- optionally preview notable technique vocabulary
+- ensure/download required content before gameplay
 
-- confirm selected song
-- confirm difficulty
-- show current avatar/equipment state
-- optionally preview notable technique vocabulary present in the chart
+Primary action: START.
 
-Examples of useful technique preview:
-
-- Classic
-- Vertical
-- Windmill
-- Deep
-
-This is especially useful while players are still learning the visual grammar.
-
-The pre-song screen should not become a loadout-management bottleneck.
-
-Primary action: **START**.
+Do not turn Pre-song into a loadout-management screen.
 
 ## Gameplay
 
-Gameplay follows the contracts defined in:
-
+Gameplay follows:
 - `GAMEPLAY_UX_V1.md`
 - `GAMEPLAY_SCREEN_V1.md`
 - `SCORING_SYSTEM_V1.md`
 - `BODY_SYSTEM_V1.md`
 - `HAIR_SYSTEM_V1.md`
+- `TECHNICAL_CONTRACTS_V1.md`
 
-The shell must hand control over cleanly and avoid overlaying unrelated navigation or monetization UI during active play.
+No unrelated shell/monetization UI overlays active play.
 
 ## Results
 
 Results follows `RESULTS_SCREEN_V1.md`.
 
-The results flow is presentation-first:
-
-1. final grade / emotional impact
+Flow:
+1. grade / emotional impact
 2. performance report
 3. progression rewards
 
-Baseline post-song actions:
-
-- **RETRY**
-- **CONTINUE**
+Actions:
+- RETRY
+- CONTINUE
 
 ## Retry
 
-Retry must be deliberately fast.
-
-From Results:
+One tap from Results.
 
 ```text
 RETRY
-  ↓
-brief countdown / pre-roll
-  ↓
-GAMEPLAY
+→ brief deterministic pre-roll/countdown
+→ GAMEPLAY
 ```
 
-Do not route the player back through Home, Song Select or a full Pre-Song screen when retrying the exact same configuration.
-
 Retry preserves:
-
 - song
-- difficulty
-- current avatar/equipment
-- current game mode
+- chart
+- avatar
+- mode
+- relevant settings/calibration
 
-This is important for score chasing and rhythm-game flow.
+No route back through Home/Song Select is required.
 
 ## Continue
 
-CONTINUE returns the player to the nearest useful shell context.
+Return to the nearest useful context.
 
-Default behavior:
+Default:
+- normal run → Song Select for current mode
+- mode-specific runs → appropriate mode context
 
-- after a normal song run: return to Song Select for the current mode
-- if shell architecture later requires a different local context, preserve the principle of minimizing redundant navigation
-
-Home remains available but does not need to be the destination after every run.
+Do not bounce through Home unnecessarily.
 
 ## Reward Reveal
 
-Do not create a separate reward screen after every normal song.
+Routine XP/HH belongs in Results.
 
-Routine rewards such as:
-
-- XP
-- HH currency
-
-should be included directly in Results.
-
-Use a dedicated Reward Reveal only for meaningful events such as:
-
+Dedicated reward reveal is optional and reserved for meaningful events such as:
 - level up
-- new cosmetic unlock
-- new song unlock
-- new difficulty unlock
-- major milestone reward
+- new cosmetic/content unlock
+- meaningful milestone
 
-Conceptually:
-
-```text
-RESULTS
-  ├─ normal rewards → CONTINUE / RETRY
-  └─ meaningful unlock → REWARD REVEAL → CONTINUE / RETRY
-```
-
-This keeps ordinary runs fast while allowing major unlocks to feel special.
+Do not stack nested reward modals.
 
 ## Avatar
 
-AVATAR is the character-customization area.
-
-It owns presentation choices such as:
-
-- face/body variants
+AVATAR owns presentation choices:
+- body/face
 - hair
-- beard
-- piercings
-- makeup / corpse paint
-- tattoos
-- apparel
-- special cosmetics
-- performance style
-- idle style
+- beard/makeup/piercings/tattoos
+- apparel/special
+- Performance Style
+- Idle Style
 
-Avatar customization is separate from account/profile identity.
+Avatar choices never grant gameplay power.
 
-Avatar customization must not grant gameplay power.
+The UI contract lives in `AVATAR_CUSTOMIZATION_UX_V1.md`.
 
 ## Profile
 
-PROFILE represents the player's account/progression identity rather than the avatar's appearance.
-
-Candidate content includes:
-
-- player name
+PROFILE owns player identity/progression information:
+- display name
 - level / XP
-- HH balance
-- best records
-- aggregate performance stats
-- badges/titles/profile flair in future versions
+- HH
+- records
+- aggregate stats
+- future badges/titles
 
-Keep Profile informational and identity-focused rather than mechanically powerful.
+Profile is separate from avatar appearance.
 
 ## Settings
 
-SETTINGS owns system-level preferences such as:
-
+SETTINGS owns:
 - audio
 - graphics/performance
 - controls
+- calibration
 - accessibility
-- feedback intensity
+- haptics
 
-Accessibility options should include the ability to reduce flashes, shake and intense presentation independently from scoring/gameplay state.
+Reduced flashes/shake/haptics options must not change scoring potential.
 
-## Account vs Avatar
+## Offline behavior
 
-Keep these concepts distinct:
+With valid local profile and downloaded content, network loss must not block:
+- launch
+- song play
+- retry
+- local record/progression update
+- avatar/settings changes
 
-**Profile / Account**
-- who the player is in the progression system
-- level, stats, records, identity metadata
+Remote sync/catalog refresh may resume later.
 
-**Avatar**
-- how the player's performer looks and presents
-- cosmetics, performance style, idle style
+## Guardrails
 
-This separation avoids mixing permanent profile identity with character loadout/customization.
+- PLAY is primary Home action.
+- Mode Select exists only when it creates a real choice.
+- Song Select is chart-aware and does not assume four difficulties per song.
+- Pre-song stays short.
+- Routine rewards remain inside Results.
+- Retry is one tap.
+- Avatar dominates Home more than promotional UI.
+- Profile and Avatar remain separate concepts.
+- Shell navigation never overshadows gameplay.
 
-## Monetization / shell guardrails
-
-Current direction:
-
-- no persistent ads during gameplay
-- no aggressive monetization takeover on Home
-- no forced store screen in the core loop
-- do not interrupt Retry with monetization surfaces
-
-Monetization, if introduced later, must remain separate from the core gameplay/navigation contract.
-
-## Navigation guardrails
-
-- PLAY is the primary Home action.
-- Mode Select exists only when multiple active modes justify it.
-- Song and difficulty selection should stay compact.
-- Pre-Song must remain brief.
-- Results carries routine rewards directly.
-- Reward Reveal is exceptional, not mandatory after every run.
-- Retry is one tap from Results.
-- Do not return to Home unnecessarily between songs.
-- Avatar customization is visible and valuable through the Home avatar presentation.
-- The player's avatar, not promotional UI, should dominate Home visually.
-
-## v1 flow acceptance criteria
+## v1 acceptance criteria
 
 The flow is behaving correctly when:
-
-- a returning player can reach gameplay quickly
-- a new player reaches the first playable song without a long setup process
-- Retry does not require redundant navigation
-- routine rewards do not add unnecessary screens
-- meaningful unlocks still receive special presentation
-- Home clearly prioritizes PLAY and the player's avatar
-- future Mode Select can be inserted without redesigning the entire shell
-- Profile and Avatar remain conceptually separate
-- shell navigation never overshadows the headbang gameplay itself
-
-## Scope boundary
-
-This document defines the navigation/shell contract.
-
-It intentionally does not fully define:
-
-- the exact four future game modes
-- detailed avatar creator UX
-- detailed Profile information architecture
-- exact visual styling of menu screens
-- monetization systems
-
-Those should be specified separately without breaking this flow contract.
+- returning player reaches gameplay quickly
+- first-run player reaches a real song quickly
+- songs with one chart do not show pointless difficulty navigation
+- songs with multiple charts can expose those choices without redesigning Song Select
+- retry is immediate
+- local/offline content remains usable
+- future Mode Select can expand to all five planned modes without changing gameplay semantics
