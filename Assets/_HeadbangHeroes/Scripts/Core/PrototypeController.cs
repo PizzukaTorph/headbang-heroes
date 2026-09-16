@@ -130,24 +130,23 @@ namespace HeadbangHeroes.Core
 
         void OnBang(BangDirection direction)
         {
-            if (scheduler == null || !scheduler.HasActiveEvent) return;
+            // Physical input is always accepted. Tapping early, late, on the wrong zone, or
+            // with no active chart event still changes the neck state; chart judgment is separate.
+            var intensity = scheduler != null && scheduler.HasActiveEvent
+                ? scheduler.ActiveEvent.intensity
+                : 1f;
 
-            var dir = direction;
-            var eventIntensity = scheduler.ActiveEvent.intensity;
+            // Sample arrival quality before this tap changes the motion.
+            var motionQuality = head != null ? head.SampleMotionQuality(direction) : 1f;
+            head?.Bang(direction, intensity);
 
-            // Sample motion quality from the head's momentum leading into the beat,
-            // before we apply the new impulse from this tap.
-            var motionQuality = head != null ? head.SampleMotionQuality(dir) : 1f;
+            if (scheduler == null || !scheduler.HasActiveEvent)
+                return;
 
-            if (!scheduler.TryJudge(dir, motionQuality, calibrationOffset, out var result))
-                return; // early out-of-window tap: event left intact, nothing consumed.
+            if (!scheduler.TryJudge(direction, motionQuality, calibrationOffset, out var result))
+                return; // early tap changed motion, but did not consume the authored event.
 
             score.Apply(result);
-            if (result.judgment != Judgment.Miss)
-                head?.Bang(dir, eventIntensity);
-            else
-                head?.Bang(dir, 0.35f); // wrong taps still invert/launch physically
-
             cue?.Hide();
             hud?.Show(result, score.Combo, score.Score);
 
