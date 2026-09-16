@@ -99,6 +99,21 @@ Example:
 
 The exact cue scheduling remains chart/audio-clock authoritative; player input must not be allowed to shift authored song timing. Visually, however, the handoff should read as one bang preparing the next bang.
 
+### Inversion can happen anywhere
+
+A Classic Bang tap is always a valid request to invert/launch the neck motion. The player does **not** need to reach a predefined side position before inversion is allowed.
+
+If the head is still travelling toward LEFT and the player taps LEFT, that tap simply **anticipates the inversion** at the head's current position and begins the transition back toward RIGHT. The same rule applies symmetrically on the opposite side.
+
+This produces three natural cases:
+- **early inversion** — the player reverses before sufficient travel has developed; amplitude/flow are reduced
+- **well-prepared inversion** — the player reaches a strong travel state and reverses near the authored beat; timing and Motion Quality can both be high
+- **late inversion** — the head continues farther toward its physical limit before the player reverses; timing is late and momentum/flow may also degrade
+
+The motion model must not reject, gate or snap an early inversion merely because the avatar has not reached an expected pose. Position is an input to Motion Quality, not a prerequisite for accepting input.
+
+This rule is fundamental to player agency: **the game accepts the bang the player performs and judges its quality rather than deciding whether the player is allowed to perform it.**
+
 ### Anti-spam emerges from motion
 
 Rapidly alternating LEFT/RIGHT taps must not produce a full-quality headbang merely because the input sequence is technically correct.
