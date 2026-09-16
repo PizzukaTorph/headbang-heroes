@@ -11,6 +11,28 @@ Primary milestone logic:
 The POC must make the headbang fun.
 The MVP must prove that the same foundation scales across four complete real songs.
 
+Implementation work is expected to be done with **Kiro as the primary implementation assistant**, using the repository specialist agents as focused reviewers/guardians.
+
+Canonical implementation loop:
+
+```text
+human decision / scoped task
+        ↓
+precise Kiro prompt
+        ↓
+Kiro implementation
+        ↓
+relevant specialist agent review
+        ↓
+QA Guardian adversarial review
+        ↓
+GitHub diff / test / device check
+        ↓
+accept or iterate
+```
+
+Do not ask Kiro to "fix the game" or refactor multiple unrelated systems at once.
+
 ---
 
 # P0 — POC: Make The Headbang Fun
@@ -44,8 +66,8 @@ Prove one complete song and the core neck/rhythm loop end-to-end.
 - song remains synchronized start-to-finish
 - pause/resume and retry remain synchronized
 - frame pacing does not define timing judgment
-- gameplay-critical neck state moves toward an authoritative fixed-step/otherwise deterministic model before production scoring relies on it
-- malformed chart fails clearly
+- gameplay-critical neck state uses an authoritative fixed-step or equivalent deterministic model before production scoring relies on it
+- malformed chart/runtime data fails clearly
 - real-device input latency can be inspected/calibrated
 
 ## Shell
@@ -66,6 +88,194 @@ No large campaign, backend, shop, realtime multiplayer, community system, or con
 ## Exit gate
 
 A player can finish the song and wants to replay because controlling the neck itself is enjoyable, not because of progression rewards.
+
+---
+
+# P0A — Core Runtime Refactor
+
+## Goal
+
+Move the current M0 Unity prototype from experimental code to the canonical runtime contracts without broadening scope.
+
+This is the immediate next implementation phase.
+
+## Work package 1 — Neck runtime
+
+Primary agents:
+- `gameplay-core`
+- `architecture-guardian`
+- `qa-guardian`
+
+Kiro tasks:
+- replace/refactor legacy `HeadMotionModel` toward canonical `NeckMotionModel`
+- remove render-frame-dependent gameplay-critical integration
+- introduce authoritative fixed-step or equivalent deterministic simulation
+- preserve continuous player ownership after MISS / wrong / early / late input
+- formalize first-bang setup/unprepared semantics
+- capture pre-inversion neck state/history
+- replace run-global Motion Quality peak behavior with event/gesture-local evaluation
+- keep tuning values configurable
+
+Exit gate:
+- equivalent authored input produces materially equivalent gameplay-domain state across different render FPS
+- spam degrades movement quality through physics rather than arbitrary cooldowns
+- MISS never snaps/resets/fakes neck state
+
+## Work package 2 — Rhythm timing and event resolution
+
+Primary agents:
+- `rhythm-audio`
+- `gameplay-core`
+- `chart-content`
+- `qa-guardian`
+
+Kiro tasks:
+- make AudioClock/song-time the only judgment time domain
+- convert semantic input timestamps into authoritative song-time before matching/judgment
+- preserve scheduled playback, pause/resume and retry synchronization
+- replace permanent single-active-event assumptions with deterministic bounded candidate matching
+- formalize early/wrong/late consumption semantics
+- separate TimingJudgment from MotionQuality
+- establish explicit event-resolution ordering
+
+Exit gate:
+- overlapping candidate windows resolve deterministically
+- early physical input can move the neck without accidentally consuming a future event
+- wrong-direction input in an eligible window follows the canonical MISS rule
+- pause/resume/retry do not create clock drift or stale candidates
+
+## Work package 3 — Runtime chart and Rest
+
+Primary agents:
+- `chart-content`
+- `gameplay-core`
+- `qa-guardian`
+
+Kiro tasks:
+- introduce production-shaped immutable/prevalidated RuntimeChart data
+- keep raw MIDI/authoring formats out of gameplay runtime
+- support MotionEvent and RestEvent
+- implement Authored Rest evaluation with settling phase + stillness evaluation phase
+- retain Natural Rest as absence of required events
+- preserve stable chart/version/rules identity
+
+Important scope rule:
+
+The actual `.hh.mid` validator/compiler belongs to the future **external asset/chart management tool**. Unity only needs the runtime-side structures and temporary/dev fixtures necessary to test the game.
+
+Exit gate:
+- gameplay consumes runtime chart data rather than repeatedly parsing authoring sources
+- Authored Rest behaves fairly after legitimate incoming momentum
+- unsupported runtime semantics fail explicitly
+
+## Work package 4 — Scoring / HYPE / THE BANG
+
+Primary agents:
+- `gameplay-core`
+- `qa-guardian`
+
+Kiro tasks:
+- implement/align EventOutcome
+- score from Timing + MotionQuality + technique/context
+- canonical combo/multiplier behavior
+- canonical HYPE gain
+- THE BANG activation/state window
+- deterministic Finisher eligibility/resolution
+- build authoritative RunResult data
+- avoid circular Scoring ↔ HYPE dependencies by snapshotting reward/context before outcome application
+
+Exit gate:
+- score is deterministic from authoritative event outcomes
+- THE BANG cannot self-refill through its own multiplier
+- Finisher uses normal gameplay execution, not a separate QTE
+
+---
+
+# P0B — POC Presentation Integration
+
+## Goal
+
+Make the canonical core readable and satisfying without allowing presentation to influence authoritative gameplay.
+
+Primary agents:
+- `presentation-avatar`
+- `gameplay-core`
+- `qa-guardian`
+
+Kiro tasks:
+- CURRENT / NEXT cue rendering
+- head/neck-centered visual hierarchy
+- body response driven only by neck motion
+- hair secondary motion
+- first venue/background reaction layer
+- judgment feedback
+- HYPE READY / THE BANG / Finisher presentation
+- central haptics semantics
+- compact topbar
+
+Exit gate:
+- player can primarily watch the avatar rather than stare at UI
+- removing body/hair/venue presentation cannot change score
+- cues remain readable on a real phone
+
+---
+
+# P0C — POC Product Loop
+
+## Goal
+
+Turn the core mechanic into one complete retryable song experience.
+
+Primary agents:
+- `meta-profile`
+- `presentation-avatar`
+- `qa-guardian`
+
+Kiro tasks:
+- Home → Song Select → Gameplay → Results
+- authoritative RunResult → ResultsService
+- S/A/B/C/D result presentation
+- local best record
+- minimum XP/HH progression integration
+- save/profile round-trip
+- Retry in one tap
+- minimal settings/calibration
+
+Exit gate:
+- one song can be started, completed, scored, saved and retried repeatedly without manual repair/reset
+
+---
+
+# P0D — Device Validation
+
+## Goal
+
+Prove that the mechanic survives actual mobile timing and ergonomics.
+
+Primary agent:
+- `qa-guardian`
+
+Support:
+- `rhythm-audio`
+- `gameplay-core`
+- `presentation-avatar`
+
+Validate at minimum:
+- iOS real device
+- Android real device when available
+- 30/60/90/120 Hz render conditions where testable
+- frame hitch during cue approach
+- repeated pause/resume
+- repeated retry
+- large calibration offsets
+- left/right thumb reach
+- cardinal input ambiguity
+- cue readability
+- haptic usefulness/noise
+- sustained play comfort
+
+Exit gate:
+- no major timing or control defect appears only outside Editor/Desktop testing
 
 ---
 
@@ -93,6 +303,22 @@ Turn the proven mechanic into a credible miniature Headbang Heroes experience be
 A second/third internal track may be useful for stress-testing tempo/style differences, but P1 is not defined by a fixed song count.
 
 The important question is whether the complete product loop feels coherent around the proven mechanic.
+
+## External asset/chart tool boundary
+
+Begin the external tool only when manual asset/chart handling starts creating real friction.
+
+Planned responsibilities:
+- import audio
+- manage song metadata
+- author/import `.hh.mid`
+- validate `HH_MIDI_STANDARD_V1`
+- compile HH MIDI → canonical ChartDefinition/runtime payload
+- inspect sections/phrases/events
+- validate package assets, versions and provenance
+- eventually package/publish official content
+
+Do not turn this into a second game engine or an MVP blocker.
 
 ---
 
@@ -141,7 +367,6 @@ The MVP does not require every song at every difficulty.
 - asynchronous challenges
 - shop/large cosmetic catalog
 - community publishing/browser
-- external chart editor
 - full CMS
 - elaborate economy balancing
 - large venue library
@@ -187,7 +412,7 @@ Candidate workstreams:
 - improved publication tooling
 - artist/band content workflows
 - richer venues/presentation
-- external chart tooling when authoring scale justifies it
+- external asset/chart tool matured as content scale justifies it
 
 ### Community/modding
 - local/community packages
@@ -222,6 +447,24 @@ These are not foundation requirements.
 
 No progression, economy, story, or online feature may be used to hide weak neck gameplay.
 
+## Kiro is an implementer, not the design authority
+
+Kiro must work from `AGENTS.md`, `docs/FOUNDATION.md`, the relevant canonical specs, and the assigned specialist-agent briefs.
+
+If prototype code conflicts with canonical design, implementation changes; design is not silently redefined to preserve old code.
+
+## Small scoped implementation passes
+
+Prefer a sequence of narrow, testable Kiro tasks over one giant refactor request.
+
+Each pass should state:
+- files/systems in scope
+- systems explicitly out of scope
+- canonical contracts to preserve
+- required tests
+- acceptance criteria
+- relevant specialist agents
+
 ## Content before complexity
 
 Once the mechanic works, proving multiple real songs is more valuable than accumulating secondary systems.
@@ -234,6 +477,12 @@ Modes compose the same core chart/neck/scoring/HYPE systems. Do not fork separat
 
 Compatible official content can be delivered remotely and cached locally. Remote content never introduces unknown gameplay semantics.
 
+## Authoring tool stays external
+
+HH MIDI, asset validation, packaging and content authoring belong to an external toolchain boundary.
+
+Unity/runtime consumes validated/compiled content and must not become the primary asset-authoring application.
+
 ## No power progression
 
 Progression unlocks expression/content, not mechanical advantage.
@@ -245,3 +494,18 @@ No gameplay ads, shop complexity, premium-currency design, or reward-loop optimi
 ## Real-device validation
 
 Audio/input latency, touch ergonomics, performance, and haptics must be validated on actual iOS/Android devices early and repeatedly.
+
+---
+
+# Immediate next action
+
+Start **P0A / Work package 1 — Neck runtime** with Kiro.
+
+Use:
+- `agents/gameplay-core.md`
+- `agents/architecture-guardian.md`
+- `agents/qa-guardian.md`
+- `docs/TECHNICAL_CONTRACTS_V1.md`
+- `docs/FOUNDATION.md`
+
+Do not move to the next work package until the neck simulation contract is demonstrably correct and testable.
