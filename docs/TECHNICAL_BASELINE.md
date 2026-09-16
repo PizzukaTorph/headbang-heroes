@@ -1,24 +1,26 @@
 # Technical Baseline
 
+## Authority
+
+Read `FOUNDATION.md` and `TECHNICAL_CONTRACTS_V1.md` first for canonical ownership/runtime rules.
+
+This document defines the practical Unity baseline.
+
 ## Engine
 
-**Unity 6.6 Supported**, starting from a current 6000.6.x patch.
+Unity 6.6 Supported, current validated 6000.6.x patch.
 
-Why:
-- new project, not production-locked
-- Unity recommends Supported Update releases for new/mid-cycle projects
-- latest platform support and fixes are valuable for a mobile-first rhythm game
-- migrate to Unity 6.7 LTS when it is available and validated
-
-Do not use alpha/beta editor builds.
+- no alpha/beta editor builds
+- migrate to a later LTS/Supported release only after validation
 
 ## Platforms
 
-Mobile only:
+Product targets:
 - Android
 - iOS
 
-Desktop editor play mode exists for development only and is not a supported product target.
+Desktop Editor play mode is development-only.
+
 No WebGL requirement.
 
 ## Presentation
@@ -27,108 +29,169 @@ No WebGL requirement.
 - portrait-first
 - touch-first
 - safe-area aware
-- responsive across common phone aspect ratios
-- 60 FPS baseline target
+- responsive phone aspect ratios
+- 60 FPS presentation baseline
+
+Rendering can vary independently from gameplay simulation timing.
 
 ## Rendering
 
-Start with Unity's 2D workflow and URP only if/where it provides clear value. Avoid expensive rendering features. Static backgrounds and lightweight layered/parallax effects are preferred.
+Use Unity 2D workflow/URP where useful.
+
+Prefer:
+- static layered backgrounds
+- lightweight parallax
+- restrained lighting/particles
+- mobile profiling early
+
+Avoid expensive visual features without demonstrated value.
 
 ## Input
 
 Use Unity Input System.
-Gameplay API must model abstract headbang actions rather than platform-specific touch coordinates so gestures can evolve independently.
 
-## Audio/rhythm architecture
+Physical controls map to semantic gameplay intent through InputRouter.
 
-Audio timing is authoritative.
+Touch coordinates/regions are never chart semantics.
 
-Use DSP/audio-clock timing for gameplay synchronization. Never base scoring on Update(), animation callbacks, coroutines, frame count, or visual ring completion.
+Convert input timestamps into authoritative song-time before domain judgment.
 
-Required systems:
+## Audio/rhythm timing
+
+Audio/DSP clock is authoritative.
+
+Use scheduled playback where appropriate.
+
+Never base authoritative scoring on:
+- Update timing
+- animation callbacks
+- coroutines
+- frame count
+- visual cue completion
+
+Required architecture includes:
 - AudioClock
-- SongDefinition
-- ChartDefinition / RuntimeChart
-- ChartRuntime
+- RuntimeChart / ChartRuntime
 - CueScheduler
 - InputRouter
 - NeckMotionModel
 - JudgmentSystem
 - MotionQualityEvaluator
+- RestEvaluator
 - ScoringSystem
 - HypeSystem
-- RunResultBuilder
-- Calibration/debug overlay
+- GameplayRun
+- calibration/debug tools
 
-The closing-circle cue is a visualization of an already-scheduled event.
+## Neck simulation
 
-Detailed ownership rules are defined in `docs/TECHNICAL_CONTRACTS_V1.md`.
+Prototype may iterate quickly, but production scoring must not depend on render-frame pacing.
+
+Direction:
+- authoritative fixed simulation step (target such as 120 Hz to validate), or deterministic time-evaluated equivalent
+- render interpolation independent of simulation
+- event/gesture-local Motion Quality history
+
+Current M0 `Time.deltaTime` neck integration is experimental and not the final contract.
 
 ## Content pipeline
 
-Source concept:
-audio master + MIDI/gameplay authoring data + metadata
+Canonical flow:
 
-MIDI should be imported/compiled into an internal Headbang Heroes chart representation. Runtime gameplay must not depend on parsing arbitrary MIDI files unless there is a concrete benefit.
+```text
+audio + metadata + chart
+→ validate
+→ compile RuntimeChart
+→ package
+→ publish
+→ server/CDN
+→ client cache
+```
 
-Authoring data should be validated/compiled into immutable runtime-ready chart data before active gameplay.
+MIDI may be used for authoring/import, not required runtime parsing.
 
-The POC may use local bundled content only.
+Compatible official content can be delivered remotely.
 
-Production direction is server-first content delivery with local cache and offline playback of already-valid content. Remote songs/charts/art/backgrounds may be delivered without a client rebuild **only when they use gameplay semantics already supported by the installed client**.
+Remote content cannot introduce gameplay semantics unknown to the installed client.
 
-Do not couple gameplay code directly to one remote hosting provider. Addressables may be introduced when remote asset delivery becomes useful, behind the content boundary described in `TECHNICAL_CONTRACTS_V1.md`.
+## Content hosting
+
+Use a provider abstraction rather than binding gameplay to one vendor.
+
+Possible implementations:
+- local
+- Addressables-backed
+- custom object storage/CDN
+
+MVP trust baseline:
+- HTTPS
+- explicit versions
+- hashes/checksums
+
+Production publication should use trusted/signed release-manifest semantics or equivalent.
 
 ## Persistence
 
-The POC does not require production-grade profile synchronization.
+POC/MVP may use a simple versioned local profile.
 
-Production direction:
-- versioned local-first UserProfile
-- explicit SaveService
-- schema migrations
-- future ProfileSyncService/backend boundary
+SaveService owns serialization/migrations; gameplay systems never write files directly.
 
-Gameplay systems must not write persistence files directly.
+Future sync/economy authority stays behind ProfileSyncService/backend boundaries.
 
 ## Performance rules
 
-- avoid per-frame allocations in gameplay
+- avoid per-frame allocations in gameplay hot paths
 - pool repeated cue/feedback objects where useful
-- profile on real Android and iOS hardware early
-- do not optimize blindly, but protect audio/touch latency
-- gameplay logic must remain framerate-independent
-- do not parse/compile remote authoring content in the active gameplay hot path
+- profile on real Android/iOS hardware early
+- protect audio/touch latency
+- render frame drops must not redefine authored timing or gameplay-critical neck physics
+- do not optimize blindly
+
+## Testing
+
+Use Unity Test Framework.
+
+EditMode/pure tests:
+- chart compile/validation
+- candidate event matching
+- timing boundaries
+- neck simulation
+- Motion Quality history
+- Rest evaluation
+- scoring/HYPE/progression
+- save migrations
+
+PlayMode/device:
+- audio scheduling/sync
+- pause/resume/retry
+- touch/Input System
+- calibration
+- content cache/offline
+- haptics
+- presentation readability
 
 ## Repository layout target
 
-```
+```text
 Assets/
   _HeadbangHeroes/
-    Core/
-      Gameplay/
-      Chart/
-      Scoring/
-      Hype/
-      Models/
+    Art/
+    Audio/
     Content/
-      Catalog/
-      Loading/
-      Validation/
-    Presentation/
-      Avatar/
-      Hair/
-      Venue/
-      Cues/
-      Haptics/
-    UI/
-      Home/
-      SongSelect/
+    Prefabs/
+    Scenes/
+    Scripts/
+      Core/
+      Audio/
+      Charts/
+      Input/
       Gameplay/
-      Results/
-      Avatar/
-    Progression/
-    Persistence/
+      Presentation/
+      UI/
+      Progression/
+      Persistence/
+      Content/
+      Debug/
     Settings/
     Tests/
 Packages/
@@ -136,76 +199,42 @@ ProjectSettings/
 docs/
 ```
 
-Production licensed content may require local ignored locations depending on redistribution rights.
+Do not reorganize purely for aesthetics; migrate toward this structure as production systems replace M0 prototype classes.
 
-## Prototype scene
+## Dependency policy
 
-One scene: `Prototype_Headbang`
+Core target remains mostly vanilla Unity + Headbang Heroes code.
 
-It must prove:
-audio -> scheduled chart event -> closing circle -> touch -> timing judgment -> neck response -> motion quality -> combo/score/HYPE -> feedback.
+Build game-specific core systems ourselves:
+- DSP rhythm timing
+- chart/runtime event model
+- cue scheduling
+- candidate matching/judgment
+- neck simulation
+- Motion Quality
+- scoring/HYPE
+- gameplay presentation orchestration
 
-## POC non-goals
-
-The first one-song POC does not require:
-- backend accounts
-- production profile sync
-- ads
-- IAP
-- multiplayer networking
-- production remote catalog/download UI
-- localization framework
-- elaborate DI framework
-- final content economy
-- asset-store architecture dependencies
-
-These are POC non-goals, not permanent product exclusions. Remote content, persistence and future online systems are allowed by the production architecture when their corresponding design milestone requires them.
-
-## Dependency policy — build the core ourselves
-
-Headbang Heroes should remain deliberately close to vanilla Unity during prototype and early production.
-
-Default rule: **write the game-specific systems ourselves and add a package only when a concrete, measured problem justifies it.** Do not let a rhythm-game framework or asset dictate the game design.
-
-Expected baseline dependencies are Unity's own standard packages/features where useful, especially Input System, Test Framework and the normal 2D/UI/audio stack. Addressables may be adopted when remote delivery provides concrete value.
-
-The following are intentionally custom:
-- DSP-clock rhythm scheduling
-- chart/event model
-- chart runtime/compiler contracts
-- closing-circle cue timing
-- judgment windows and early/late measurement
-- motion-quality evaluation
-- combo and scoring
-- neck momentum/inertia model
-- headbang gesture/technique vocabulary
-- HYPE/THE BANG/Finisher orchestration
-- gameplay feedback orchestration
-
-MIDI may use a small editor/import-time library if it clearly reduces work, but the preferred pipeline compiles MIDI into Headbang Heroes' internal chart format. Runtime gameplay should not depend on a general MIDI framework without a demonstrated need.
-
-Avoid introducing, by default:
-- generic rhythm-game frameworks/kits
-- DOTween as a structural gameplay dependency
-- FMOD/Wwise
+Avoid by default:
+- generic rhythm-game frameworks
+- structural DOTween dependence
+- FMOD/Wwise before measured need
 - third-party physics frameworks
-- networking SDKs before Versus actually requires them
+- networking SDKs before online work
 - dependency-injection frameworks
-- large architecture/framework packages
+- large architecture packages
 
-A dependency is acceptable when all of the following are true:
-1. there is a real current problem, not a hypothetical future one;
-2. the package solves it materially better/safer than a small custom implementation;
-3. mobile cost and maintenance burden are understood;
-4. its license is compatible with the project;
-5. it does not own or distort the core headbang/rhythm design.
+A dependency is justified only when it solves a current concrete problem materially better than a small maintained implementation.
 
-Target mindset: roughly **90–95% Unity + Headbang Heroes code** for the core prototype.
+## POC technical exit gate
 
-## Architecture rule
-
-The project must avoid a God `GameManager`.
-
-Core deterministic flow should remain explicit and testable. Presentation may react through semantic events, but gameplay ownership must remain traceable.
-
-See `docs/TECHNICAL_CONTRACTS_V1.md` for the canonical system boundaries.
+One song proves:
+- synchronized audio/chart
+- readable cues
+- always-responsive neck input
+- meaningful momentum
+- deterministic-enough scoring path moving toward authoritative fixed simulation
+- timing vs Motion Quality separation
+- HYPE/THE BANG/Finisher
+- Results/Retry
+- real-device feel worth replaying
