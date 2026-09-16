@@ -16,25 +16,24 @@ Current prototype code is experimental evidence, not automatic specification.
 
 Specialist briefs live in `agents/`.
 
-Use the smallest relevant specialist set for a task. Cross-cutting changes should include the Architecture Guardian and QA/Integration review.
+Use the smallest relevant specialist set for a task. Cross-cutting changes should include the Architecture Guardian and QA Guardian.
 
 - `agents/architecture-guardian.md` — ownership boundaries, dependency direction, naming, cross-cutting refactors.
-- `agents/rhythm-timing.md` — AudioClock, DSP/song-time, chart scheduling, candidate matching, calibration, sync.
-- `agents/neck-motion.md` — neck simulation, inversion/launch, Motion Quality, first-bang setup, physical Rest inputs.
-- `agents/gameplay-scoring-hype.md` — event outcome, score/combo/multiplier, HYPE, THE BANG, Finisher, RunResult.
-- `agents/chart-content.md` — song/chart schema, authoring, validator/compiler, package/catalog/provenance.
-- `agents/presentation-ux.md` — gameplay UX, avatar/body/hair/venue, tutorial, haptics, accessibility.
-- `agents/progression-save.md` — progression, profile, records, persistence, migration, future sync authority.
-- `agents/qa-integration.md` — acceptance criteria, regression testing, device/integration validation.
+- `agents/gameplay-core.md` — NeckMotionModel, Motion Quality, event resolution, scoring, HYPE/THE BANG/Finisher, GameplayRun boundaries.
+- `agents/rhythm-audio.md` — AudioClock, DSP/song-time, scheduling, pause/resume/retry sync, calibration and timing diagnostics.
+- `agents/chart-content.md` — song/chart schemas, RuntimeChart compilation, candidate matching, Rest semantics, validation, packaging and remote-content compatibility.
+- `agents/presentation-avatar.md` — CURRENT/NEXT, avatar/body/hair/venue, haptics and presentation-only feedback.
+- `agents/meta-profile.md` — Results integration, progression, save/profile, migrations, rewards/economy metadata and future sync boundaries.
+- `agents/qa-guardian.md` — adversarial review for determinism, timing, chart semantics, device edge cases, persistence safety and documentation drift.
 
 Routing examples:
 
-- Refactor `AudioClock` + judgment timing → Rhythm & Timing + QA.
-- Replace `HeadMotionModel` → Neck Motion + Architecture Guardian + QA.
-- Implement THE BANG → Gameplay Scoring & HYPE + Presentation UX + QA.
-- Add a new chart mechanic → Chart & Content + Neck Motion and/or Rhythm/Scoring as relevant + Architecture Guardian.
-- Build remote song delivery → Chart & Content + Architecture Guardian + QA.
-- Save/profile migration → Progression/Save + QA.
+- Refactor `AudioClock` + judgment timing → Rhythm Audio + Gameplay Core + QA Guardian.
+- Replace `HeadMotionModel` → Gameplay Core + Architecture Guardian + QA Guardian.
+- Implement THE BANG → Gameplay Core + Presentation Avatar + QA Guardian.
+- Add/change chart semantics → Chart Content + Gameplay Core + Rhythm Audio as relevant + Architecture Guardian.
+- Build remote song delivery → Chart Content + Architecture Guardian + QA Guardian.
+- Save/profile migration → Meta Profile + QA Guardian.
 
 Specialists do not override canonical docs. If a brief and a canonical spec disagree, the canonical spec wins and the brief must be updated.
 
