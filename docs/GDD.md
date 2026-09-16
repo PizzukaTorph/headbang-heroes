@@ -84,6 +84,25 @@ Conceptually:
 
 The first tap from a neutral/rest state is a setup impulse. Because there is no preceding travel to evaluate, it should not receive ordinary Motion Quality judgment. The following opposite-side tap is the first complete Classic Bang event.
 
+### Classic Bang axes and tap zones
+
+Classic Bang uses the same inversion/launch grammar on two axes:
+
+- **Classic Horizontal** — LEFT ↔ RIGHT
+- **Classic Vertical** — UP ↕ DOWN
+
+These are variants of the same technique, not separate gameplay systems. The movement rules, early inversion behavior, passive continuation after a miss, timing judgment and Motion Quality philosophy are shared.
+
+For Vertical:
+- tap UP → invert at the upper point → launch DOWN
+- tap DOWN → judge/invert at the lower point → launch UP
+
+The active-song screen should not present a permanent visible D-pad. Input uses four large forgiving cardinal tap zones around the avatar/head. Only the currently relevant timing cue needs strong visual emphasis.
+
+The prototype divides the portrait screen into four large cardinal wedges around screen centre (UP, DOWN, LEFT, RIGHT). Spatial precision is deliberately lenient: Headbang Heroes tests rhythmic timing and neck motion, not the player's ability to hit a tiny button.
+
+The closing-circle cue should visually identify the authored next inversion point. The tap zones themselves may remain invisible.
+
 ### Cue handoff
 
 For Classic Bang, the previous input initiates both physical travel and anticipation of the next target.
