@@ -15,6 +15,7 @@ A Headbang Heroes chart represents a performable headbang interpretation of musi
 - `AGENTS.md`
 - `docs/FOUNDATION.md`
 - `docs/SONG_CHART_MODEL_V1.md`
+- `docs/HH_MIDI_STANDARD_V1.md`
 - `docs/DIFFICULTY_MODEL_V1.md`
 - `docs/CONTENT_PIPELINE_V1.md`
 - `docs/CHART_TOOLING_MODDING_V1.md`
@@ -24,6 +25,8 @@ A Headbang Heroes chart represents a performable headbang interpretation of musi
 
 - `SongDefinition`
 - `ChartDefinition`
+- canonical HH MIDI authoring/import semantics
+- `.hh.mid` validator/importer
 - schema/versioning
 - validator/compiler
 - immutable/prevalidated `RuntimeChart`
@@ -42,11 +45,31 @@ A Headbang Heroes chart represents a performable headbang interpretation of musi
 - Difficulty is a property of the authored chart/content; every song does not need four difficulties.
 - Multi-chart songs are supported but optional.
 - Charts represent performable headbang rhythm, not every drum/guitar subdivision.
+- The `.hh.mid` file is the MIDI representation of the HH performance chart; it does not need to be the original song MIDI.
+- Ordinary/reference MIDI tracks never become gameplay automatically. Only canonical `HH_*` semantic tracks compile into HH events.
+- Track identity, note mapping, velocity, duration, modifiers, Rest and metadata must follow `HH_MIDI_STANDARD_V1.md`.
 - A dense 1/32 musical passage may map to slower headbang pulse, Half/Burst, Whiplash, Windmill continuity or other musically justified physical abstraction.
 - Runtime gameplay must not repeatedly parse authoring JSON/MIDI or accumulate beat floats.
 - Stable IDs and chart/rules versions must survive publishing and score attribution.
 - New remote content may not introduce semantics unknown to the installed client.
 - Natural Rest is absence of required events; Authored Rest is explicit interval data.
+
+## HH MIDI validation
+
+Validate at minimum:
+
+- canonical semantic track names
+- supported notes per semantic track
+- tempo/time-signature compatibility with song metadata
+- modifiers attach deterministically
+- velocity/duration are only interpreted where defined
+- Rest intervals are valid
+- Windmill direction/duration are valid
+- no ambiguous same-tick attachment
+- no accidental gameplay generation from reference tracks
+- unsupported `hhMidiStandardVersion` fails clearly
+
+Do not invent undocumented pitch mappings to unblock a chart. Update the standard deliberately when a new semantic is actually required.
 
 ## Candidate matching
 
@@ -84,8 +107,9 @@ Exact thresholds remain data-driven.
 Reject clearly:
 
 - duplicate/invalid IDs
-- unsupported schema/rules version
+- unsupported schema/rules/MIDI-standard version
 - unknown technique/trajectory/modifier
+- invalid HH MIDI semantic note/track combination
 - out-of-bounds events
 - invalid section/phrase ranges
 - invalid Rest durations/phases
@@ -96,8 +120,10 @@ Reject clearly:
 ## Review checklist
 
 1. Is the chart physically performable rather than merely musically dense?
-2. Are authoring and runtime representations properly separated?
-3. Could this chart be added remotely without code changes?
-4. Are version/identity semantics sufficient for saved records and future competition?
-5. Does Rest preserve momentum fairness?
-6. Can candidate selection remain deterministic when event windows overlap?
+2. Is the `.hh.mid` encoding compliant with the canonical standard?
+3. Are authoring and runtime representations properly separated?
+4. Could this chart be added remotely without code changes?
+5. Are version/identity semantics sufficient for saved records and future competition?
+6. Does Rest preserve momentum fairness?
+7. Can candidate selection remain deterministic when event windows overlap?
+8. Are source/reference MIDI tracks safely ignored as gameplay?
