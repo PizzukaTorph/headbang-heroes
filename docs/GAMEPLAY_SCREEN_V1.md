@@ -28,6 +28,17 @@ Keep the timing language simple.
 
 NEXT exists so the player can prepare neck momentum without turning the playfield into a dense note highway.
 
+CURRENT should sit in the actual expected inversion zone rather than merely being somewhere near the avatar:
+
+- LEFT: left side of the head
+- RIGHT: right side of the head
+- UP: just above the head
+- DOWN: below the jaw/neck region without covering the torso
+
+CURRENT and the head/neck should read as one combined gameplay object, not as two separate things the player must alternate attention between.
+
+NEXT should be less prominent, slightly more peripheral and/or more transparent than CURRENT.
+
 ## Top status bar — confirmed v1
 
 Use the **slightly richer** top-bar layout:
@@ -44,6 +55,8 @@ Only persistent/global state belongs here.
 
 Judgments, large combo counts, CURRENT/NEXT cues and momentary score/HYPE deltas do not belong permanently in the top bar.
 
+The top bar should remain compact: target roughly **8–10% of total screen height** rather than becoming a large dashboard.
+
 ## Local feedback
 
 Moment-to-moment feedback appears in loco around the avatar/action area.
@@ -55,6 +68,10 @@ Examples:
 - Small score/HYPE gain popups only when useful.
 
 Transient feedback should be brief and must not obscure the active cue.
+
+Judgment text should tend to sit laterally around the head rather than directly over the face, neck or active target.
+
+Combo should remain relatively quiet at low counts and become more visually expressive at meaningful milestones rather than behaving as a permanently dominant counter. Example milestone emphasis may occur around values such as 10 / 25 / 50 / 100, subject to tuning.
 
 ## HYPE
 
@@ -79,6 +96,8 @@ Working name: **THE BANG**.
 ### Ready state
 
 When HYPE reaches maximum, the HYPE control in the top bar changes visual impact substantially enough to communicate READY peripherally. It may pulse/glow/animate, but must remain readable rather than noisy.
+
+HYPE READY is intentionally the one peripheral UI element allowed to temporarily increase its visual priority enough to enter the player's attention without requiring direct reading.
 
 ### Activation
 
@@ -127,6 +146,72 @@ THE BANG must not become:
 
 The intended feeling is: **the same performance pushed beyond its normal limit**.
 
+## Tuned visual hierarchy
+
+The current hierarchy is:
+
+1. **HEAD / NECK + CURRENT** — primary gameplay focus
+2. **AVATAR BODY** — communicates physical quality and follow-through
+3. **NEXT** — preparation support
+4. **JUDGMENT** — brief local feedback
+5. **HYPE READY** — temporary peripheral alert when available
+6. **COMBO** — local streak feedback, stronger only at milestones
+7. **SCORE / PROGRESS / MULTIPLIER / PAUSE** — passive peripheral information
+
+The key rule is that CURRENT and the head/neck should behave perceptually as one system.
+
+## Relative visual emphasis — starting point
+
+These are tuning targets, not hard implementation constants:
+
+- Avatar: 100% reference emphasis
+- CURRENT: 60–70%
+- NEXT: 25–35%
+- Judgment: 35–45%, transient only
+- Combo: 30–40% when relevant; lower at small streaks
+- HYPE normal: 20–25%
+- HYPE READY: may temporarily rise to roughly 45–55%
+- Passive top-bar state: 10–20%
+
+## Screen-space allocation — starting point
+
+Approximate composition target:
+
+- **Top 8–10%**: status bar
+- **Middle 55–60%**: head / neck / CURRENT / NEXT / upper body
+- **Lower 30–35%**: torso / arms / foreground composition / invisible touch zones
+
+The avatar itself should occupy roughly **55–65% of useful visual height**, subject to device testing and hairstyle size.
+
+## Lower playfield philosophy
+
+The lower part of the screen is intentionally **not a spare HUD strip**.
+
+It is used for:
+
+- the lower visible avatar (torso and arms)
+- multilayer foreground/background composition
+- large invisible thumb interaction regions
+- occasional transient local feedback
+- visual breathing room for body and hair movement
+
+Do not permanently fill the lower screen with dashboard UI.
+
+Do not place persistent ads in active gameplay.
+
+At the current product stage, **active gameplay is ad-free**. If monetization is explored later, ad placement should be considered outside the core playfield rather than consuming the lower interaction area.
+
+## Protected gameplay region
+
+No persistent UI element should cover:
+
+- the face
+- the neck
+- the immediate head trajectory
+- the active CURRENT target
+
+The lower screen should also remain sufficiently clean that the player's thumbs do not constantly obscure important information.
+
 ## Conceptual wireframe
 
 ```text
@@ -149,23 +234,23 @@ The intended feeling is: **the same performance pushed beyond its normal limit**
 |                                          |
 |      PERFECT!              COMBO 26      |
 |                                          |
-|        +score                  +HYPE      |
-|                                          |
-|       multilayer 2D venue/background     |
+|      lower playfield / thumb space       |
+|      torso + arms + foreground layers    |
 |                                          |
 +------------------------------------------+
 ```
 
 This is a hierarchy/layout reference, not pixel-perfect placement.
 
-## Current attention order
+## Validation focus
 
-Initial hierarchy hypothesis:
+The next implementation/playtest pass should validate:
 
-1. avatar/head
-2. CURRENT cue
-3. NEXT cue
-4. local judgment/combo feedback
-5. peripheral top-bar state
-
-This hierarchy is the next design area to refine and validate.
+- whether CURRENT is close enough to the head to be read as one visual system
+- whether NEXT is useful without competing with CURRENT
+- whether the avatar is large enough to make body response readable
+- whether the top bar can be read peripherally
+- whether local judgments and combo avoid covering important motion
+- whether HYPE READY is obvious without becoming distracting
+- whether the lower 30–35% works comfortably as visual breathing room and thumb-control territory
+- whether LEFT / RIGHT / UP / DOWN cues remain readable on actual phone screens
