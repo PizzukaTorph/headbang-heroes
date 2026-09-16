@@ -1,4 +1,5 @@
 using HeadbangHeroes.Audio;
+using HeadbangHeroes.Charts;
 using UnityEngine;
 
 namespace HeadbangHeroes.UI
@@ -20,6 +21,8 @@ namespace HeadbangHeroes.UI
         [SerializeField] RectTransform approachRing;
         [SerializeField] CanvasGroup canvasGroup;
         [SerializeField] float startScale = 2.4f;
+        [SerializeField] Vector2 horizontalOffset = new Vector2(185f, 0f);
+        [SerializeField] Vector2 verticalOffset = new Vector2(0f, 185f);
 
         double targetSongTime;
         double approachSeconds = 1.0;
@@ -29,13 +32,28 @@ namespace HeadbangHeroes.UI
 
         void OnEnable() => ResetCue();
 
-        public void Show(double eventSongTime, double approachDuration)
+        public void Show(double eventSongTime, double approachDuration, BangDirection direction)
         {
             targetSongTime = eventSongTime;
+            PositionFor(direction);
             approachSeconds = System.Math.Max(0.01, approachDuration);
             running = true;
             SetVisible(true);
             Apply(EvaluateProgress());
+        }
+
+        void PositionFor(BangDirection direction)
+        {
+            var rect = transform as RectTransform;
+            if (rect == null) return;
+
+            switch (direction)
+            {
+                case BangDirection.Left: rect.anchoredPosition = -horizontalOffset; break;
+                case BangDirection.Right: rect.anchoredPosition = horizontalOffset; break;
+                case BangDirection.Up: rect.anchoredPosition = verticalOffset; break;
+                case BangDirection.Down: rect.anchoredPosition = -verticalOffset; break;
+            }
         }
 
         public void Hide()
