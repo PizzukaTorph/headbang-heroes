@@ -1,216 +1,132 @@
 # Gameplay Screen v1
 
-> Status: confirmed active-gameplay screen direction for Headbang Heroes. Pixel placement, exact timing values and touch ergonomics remain prototype/playtest work.
+## Status
+
+Canonical active-gameplay screen direction.
+
+Exact pixel placement, timing values, and touch ergonomics remain prototype/playtest work.
 
 ## Composition
 
-The gameplay screen is portrait-oriented and built from four presentation layers:
+Portrait screen with four visual layers:
 
-1. **Static 2D multilayer background**
-2. **3/4 upper-body avatar in the foreground**
-3. **Simple CURRENT / NEXT gameplay cues close to the avatar/head**
-4. **Persistent top status bar plus local transient feedback**
+1. static 2D multilayer background
+2. 3/4 upper-body avatar foreground
+3. CURRENT / NEXT cues close to head/neck
+4. compact top status bar + local transient feedback
 
-The avatar is the primary visual focus. The player should be able to understand most of the performance by watching the avatar rather than reading peripheral UI.
+The avatar is the primary visual focus.
 
 ## Background
 
-Use a static 2D environment assembled from multiple layers rather than a 3D scene.
+Use layered static 2D venue art with restrained parallax/lighting/crowd/haze reactions.
 
-Possible layers include distant venue/stage art, mid-ground speakers/lights/crowd elements and restrained foreground haze or silhouettes. Subtle parallax and HYPE-driven presentation changes are allowed, but the background must never compete with gameplay readability.
+Background must never compete with cue/head readability.
 
 ## CURRENT / NEXT
 
-Keep the timing language simple.
+- CURRENT = strong active inversion/commit cue
+- NEXT = restrained preview for momentum preparation
 
-- **CURRENT**: strong, high-contrast active cue.
-- **NEXT**: restrained ghost/preview cue.
+CURRENT should sit in the actual expected inversion zone:
+- LEFT: left of head
+- RIGHT: right of head
+- UP: above head
+- DOWN: below jaw/neck without blocking torso
 
-NEXT exists so the player can prepare neck momentum without turning the playfield into a dense note highway.
+CURRENT and head/neck should read as one perceptual gameplay system.
 
-CURRENT should sit in the actual expected inversion zone rather than merely being somewhere near the avatar:
+## Top bar
 
-- LEFT: left side of the head
-- RIGHT: right side of the head
-- UP: just above the head
-- DOWN: below the jaw/neck region without covering the torso
+Canonical layout:
 
-CURRENT and the head/neck should read as one combined gameplay object, not as two separate things the player must alternate attention between.
+```text
+[PAUSE] [SCORE] [SONG PROGRESS] [MULTIPLIER] [HYPE]
+```
 
-NEXT should be less prominent, slightly more peripheral and/or more transparent than CURRENT.
+Target roughly 8–10% total screen height.
 
-## Top status bar — confirmed v1
-
-Use the **slightly richer** top-bar layout:
-
-`[PAUSE]   [SCORE]   [SONG PROGRESS]   [MULTIPLIER]   [HYPE]`
-
-Only persistent/global state belongs here.
-
-- **Pause**: compact control.
-- **Score**: persistent score total.
-- **Song Progress**: low-noise indication of remaining song progress.
-- **Multiplier**: compact current scoring multiplier.
-- **HYPE**: meter plus interaction target when full.
-
-Judgments, large combo counts, CURRENT/NEXT cues and momentary score/HYPE deltas do not belong permanently in the top bar.
-
-The top bar should remain compact: target roughly **8–10% of total screen height** rather than becoming a large dashboard.
+Top bar is passive/global state only.
 
 ## Local feedback
 
-Moment-to-moment feedback appears in loco around the avatar/action area.
+- judgment near cue/head but not over face/neck
+- combo near shoulder/torso-side area
+- score/HYPE deltas only when useful
 
-Examples:
+Keep low combo counts quiet; emphasize milestones more strongly.
 
-- PERFECT / GREAT / GOOD / MISS near the head/cue region.
-- Combo count near a shoulder/torso-side region.
-- Small score/HYPE gain popups only when useful.
+## HYPE READY
 
-Transient feedback should be brief and must not obscure the active cue.
+When HYPE reaches maximum, the top-bar HYPE control may temporarily increase visual priority enough to communicate READY peripherally.
 
-Judgment text should tend to sit laterally around the head rather than directly over the face, neck or active target.
+The player manually taps it to activate THE BANG.
 
-Combo should remain relatively quiet at low counts and become more visually expressive at meaningful milestones rather than behaving as a permanently dominant counter. Example milestone emphasis may occur around values such as 10 / 25 / 50 / 100, subject to tuning.
+## THE BANG / Finisher
 
-## HYPE
+THE BANG is the temporary enhanced-performance state.
 
-HYPE represents how hard the current performance is hitting, not simply how many chart events have been completed.
+Normal gameplay continues.
 
-It may be generated by:
+The first deterministic suitable authored/performed opportunity inside the window may resolve as a **Finisher**.
 
-- successful moves
-- strong Motion Quality
-- maintained combo/flow
-- technically demanding authored moments
-- clean execution across successive events
+`Finisher` is the canonical payoff term. `Special Bang` is legacy terminology.
 
-Exact numerical weighting is a tuning concern.
+The screen may intensify body/hair/venue/UI response, but readability remains dominant.
 
-As HYPE increases, the whole presentation may intensify through stronger avatar motion, hair/body exaggeration, crowd/background response, lighting/VFX and restrained camera punch.
+## Visual hierarchy
 
-## HYPE MAX — THE BANG
+1. HEAD / NECK + CURRENT
+2. AVATAR BODY
+3. NEXT
+4. JUDGMENT
+5. HYPE READY when available
+6. COMBO
+7. SCORE / PROGRESS / MULTIPLIER / PAUSE
 
-Working name: **THE BANG**.
+## Starting emphasis targets
 
-### Ready state
-
-When HYPE reaches maximum, the HYPE control in the top bar changes visual impact substantially enough to communicate READY peripherally. It may pulse/glow/animate, but must remain readable rather than noisy.
-
-HYPE READY is intentionally the one peripheral UI element allowed to temporarily increase its visual priority enough to enter the player's attention without requiring direct reading.
-
-### Activation
-
-THE BANG is activated manually by **tapping the HYPE control in the top bar**.
-
-Activation is not automatic. The player may hold a full meter for a favorable phrase or high-value moment.
-
-### Hybrid behavior — confirmed direction
-
-THE BANG uses a hybrid model:
-
-1. Tapping HYPE starts a short enhanced-performance window.
-2. Normal headbang gameplay continues; no new control language or detached minigame is introduced.
-3. During the window, scoring/presentation are amplified.
-4. The first suitable strong moment within that window becomes a memorable **Special Bang** payoff using the neck action already being performed.
-
-Candidate enhanced-window effects:
-
-- increased scoring value / multiplier opportunity
-- stronger reward for good Motion Quality
-- maximum avatar/body/hair performance intensity
-- stronger background/crowd/light response
-- more energetic but readable UI feedback
-
-### Special Bang
-
-The Special Bang must feel like a limit-break payoff without becoming a separate QTE.
-
-The exact deterministic trigger remains open for prototype testing. Candidate rules include:
-
-- first high-quality accented event after activation
-- first authored strong beat/phrase accent
-- first event above a defined Motion Quality threshold
-
-The chosen rule must be predictable and understandable to the player.
-
-### Scope constraints
-
-THE BANG must not become:
-
-- a new unrelated input scheme
-- a detached QTE
-- a long alternate mode
-- automatic activation
-- a replacement for normal neck gameplay
-
-The intended feeling is: **the same performance pushed beyond its normal limit**.
-
-## Tuned visual hierarchy
-
-The current hierarchy is:
-
-1. **HEAD / NECK + CURRENT** — primary gameplay focus
-2. **AVATAR BODY** — communicates physical quality and follow-through
-3. **NEXT** — preparation support
-4. **JUDGMENT** — brief local feedback
-5. **HYPE READY** — temporary peripheral alert when available
-6. **COMBO** — local streak feedback, stronger only at milestones
-7. **SCORE / PROGRESS / MULTIPLIER / PAUSE** — passive peripheral information
-
-The key rule is that CURRENT and the head/neck should behave perceptually as one system.
-
-## Relative visual emphasis — starting point
-
-These are tuning targets, not hard implementation constants:
-
-- Avatar: 100% reference emphasis
+Tuning guidance only:
+- Avatar: 100% reference
 - CURRENT: 60–70%
 - NEXT: 25–35%
-- Judgment: 35–45%, transient only
-- Combo: 30–40% when relevant; lower at small streaks
+- Judgment: 35–45%, transient
+- Combo: 30–40% at meaningful moments
 - HYPE normal: 20–25%
-- HYPE READY: may temporarily rise to roughly 45–55%
-- Passive top-bar state: 10–20%
+- HYPE READY: may rise to ~45–55%
+- passive top-bar state: 10–20%
 
-## Screen-space allocation — starting point
+## Screen-space guidance
 
-Approximate composition target:
+Approximate target:
+- top 8–10%: status bar
+- middle 55–60%: head/neck/CURRENT/NEXT/upper body
+- lower 30–35%: torso/arms/foreground + invisible thumb regions
 
-- **Top 8–10%**: status bar
-- **Middle 55–60%**: head / neck / CURRENT / NEXT / upper body
-- **Lower 30–35%**: torso / arms / foreground composition / invisible touch zones
+Avatar roughly 55–65% useful visual height, subject to hairstyle/device testing.
 
-The avatar itself should occupy roughly **55–65% of useful visual height**, subject to device testing and hairstyle size.
+## Lower playfield
 
-## Lower playfield philosophy
+The lower screen is not a spare HUD strip.
 
-The lower part of the screen is intentionally **not a spare HUD strip**.
+Use it for:
+- visible torso/arms
+- foreground composition
+- large comfortable invisible touch regions
+- occasional transient feedback
+- breathing room for body/hair movement
 
-It is used for:
-
-- the lower visible avatar (torso and arms)
-- multilayer foreground/background composition
-- large invisible thumb interaction regions
-- occasional transient local feedback
-- visual breathing room for body and hair movement
-
-Do not permanently fill the lower screen with dashboard UI.
-
-Do not place persistent ads in active gameplay.
-
-At the current product stage, **active gameplay is ad-free**. If monetization is explored later, ad placement should be considered outside the core playfield rather than consuming the lower interaction area.
+No persistent gameplay ads.
 
 ## Protected gameplay region
 
-No persistent UI element should cover:
+No persistent element may cover:
+- face
+- neck
+- immediate head trajectory
+- CURRENT target
 
-- the face
-- the neck
-- the immediate head trajectory
-- the active CURRENT target
-
-The lower screen should also remain sufficiently clean that the player's thumbs do not constantly obscure important information.
+Frequent thumb interactions should avoid covering critical visual timing information.
 
 ## Conceptual wireframe
 
@@ -220,37 +136,37 @@ The lower screen should also remain sufficiently clean that the player's thumbs 
 |                                    HYPE  |
 |                                   [READY]|
 +------------------------------------------+
-|                                          |
 |                 NEXT                     |
 |                  .                       |
-|                                          |
 |                CURRENT                   |
 |                   O                      |
-|                                          |
 |                [ HEAD ]                  |
 |                 [NECK]                   |
 |             [ SHOULDERS ]                |
 |               [ TORSO ]                  |
-|                                          |
 |      PERFECT!              COMBO 26      |
 |                                          |
 |      lower playfield / thumb space       |
-|      torso + arms + foreground layers    |
-|                                          |
 +------------------------------------------+
 ```
 
-This is a hierarchy/layout reference, not pixel-perfect placement.
+## Dense-chart readability
+
+Do not visualize every source musical subdivision as a separate discrete cue.
+
+The chart represents performable headbang rhythm. Dense phrases may use slower pulse, Half/Burst, Windmill continuity, or selected accents.
+
+The screen must remain readable as choreography, not become a traditional note highway around the avatar.
 
 ## Validation focus
 
-The next implementation/playtest pass should validate:
-
-- whether CURRENT is close enough to the head to be read as one visual system
-- whether NEXT is useful without competing with CURRENT
-- whether the avatar is large enough to make body response readable
-- whether the top bar can be read peripherally
-- whether local judgments and combo avoid covering important motion
-- whether HYPE READY is obvious without becoming distracting
-- whether the lower 30–35% works comfortably as visual breathing room and thumb-control territory
-- whether LEFT / RIGHT / UP / DOWN cues remain readable on actual phone screens
+Validate:
+- CURRENT/head read as one system
+- NEXT helps preparation
+- avatar/body response readable
+- top bar peripheral
+- judgments/combos non-obstructive
+- HYPE READY noticeable but controlled
+- lower playfield comfortable for thumbs
+- cardinal cues readable on real phones
+- dense passages remain visually performable
