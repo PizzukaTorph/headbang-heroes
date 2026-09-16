@@ -2,11 +2,9 @@
 
 ## Goal
 
-Persist all user metadata required to reconstruct progression, identity, customization, records, settings, and calibration across sessions and updates.
+Persist user metadata required to reconstruct identity, progression, customization, records, settings, accessibility, and calibration.
 
-> Save data describes the player, not the song catalog.
-
----
+> **Save data describes the player, not the song catalog.**
 
 ## High-level model
 
@@ -15,14 +13,14 @@ UserProfile
 ├── identity
 ├── progression
 ├── avatar
-├── unlocks
+├── unlocks / entitlements
 ├── records
-├── settings
+├── settings / accessibility
 ├── calibration
 └── schema/version metadata
 ```
 
-Suggested conceptual shape:
+Conceptual fields:
 
 ```text
 playerId
@@ -32,23 +30,21 @@ level
 xp
 hhCurrency
 
-avatarDefinition / equipped cosmetics
-performanceStyle
-idleStyle
+avatarSelections
+performanceStyleId
+idleStyleId
 
 ownedCosmetics[]
-unlockedSongs[]
 unlockedContent[]
 
 records[]
   songId
   chartId
   chartVersion
+  rulesVersion
   bestScore
   bestGrade
   longestCombo
-  bestPerfectCount
-  bestGreatCount
   bestFinisherCount
 
 settings
@@ -68,74 +64,83 @@ saveSchemaVersion
 updatedAt
 ```
 
-Exact serialization format is an implementation detail; the logical contract is what matters here.
-
----
+Exact serialization is implementation detail.
 
 ## Local-first behavior
 
-The game should remain usable without a live connection.
+The game must remain useful offline.
 
-Preferred direction:
+For POC/MVP:
 
 ```text
-LOCAL SAVE = immediate gameplay authority
-SERVER PROFILE = sync/backup/cross-device authority when available
+LOCAL SAVE = immediate authority for local play
+SERVER = optional future sync / validation / economy authority by domain
 ```
 
-The client writes locally immediately, then synchronizes when online.
-
-A network outage must not prevent:
-
-- launching the game
-- playing downloaded songs
+Network outage must not block:
+- launching with valid local profile
+- playing cached songs
 - earning local run results
 - changing avatar/settings
 - retrying
 
-Pending progression can synchronize later.
+Pending synchronization can occur later.
 
----
+## Do not use one generic sync rule
 
-## Conflict principles
+Different profile domains need different conflict/authority policies.
 
-Do not invent a complex generic merge engine if domain-specific rules are clearer.
+### Records
 
-Candidate rules:
-
-- best score/grade/combo records: keep the better valid record
-- unlock sets: union when both sides are valid
-- settings/avatar selection: latest valid user choice
-- currency/progression: server-authoritative once a production backend exists, with explicit transaction handling
-- unsupported/corrupt fields: preserve recoverable profile state and surface diagnostics
-
-Exact production sync semantics can be implemented later, but IDs and versioning must support them from the start.
-
----
-
-## Record identity
-
-Records must reference the exact playable content contract:
+Compatible records reference:
 
 ```text
 songId
 chartId
 chartVersion
-rulesVersion where required
+rulesVersion
 ```
 
-Do not compare scores blindly across incompatible competitive chart/rules versions.
+When both sides contain valid compatible records, preserve the better result according to explicit record semantics.
 
----
+Do not compare scores across incompatible chart/rules versions as if identical.
+
+### Unlocks
+
+Legitimate non-consumable unlock sets may union when both sides are trusted/valid.
+
+### Settings / avatar loadout
+
+Use latest valid user choice where appropriate.
+
+Missing/retired cosmetic IDs must fall back gracefully without invalidating the profile.
+
+### Currency / purchases / entitlements
+
+Once a production online economy exists, HH balance and paid entitlements must not be treated as ordinary last-write-wins fields.
+
+Preferred production direction:
+- server-authoritative transaction/ledger model
+- client may show/use validated cached state offline according to product policy
+- reconciliation is explicit
+- no blind union/max/latest merge for currency
+
+POC/MVP do not require the production ledger backend.
+
+## Local provisional progression
+
+Before server economy exists, XP/HH can be stored locally for MVP progression testing.
+
+This is a product-development stage, not a claim that future competitive/economic state will trust arbitrary client values.
+
+Keep the save schema and services structured so authority can move behind `ProfileSyncService` without gameplay systems knowing.
 
 ## Avatar persistence
 
-Save the avatar as semantic selections, not as baked visuals.
-
-Examples:
+Persist semantic selections, not baked images:
 
 ```text
-presentation/body choice
+presentation/body preset
 faceId
 hairId
 beardId
@@ -148,67 +153,69 @@ performanceStyleId
 idleStyleId
 ```
 
-Missing/retired cosmetic IDs must fail gracefully to a valid fallback rather than making the whole profile unloadable.
+Body/avatar choices remain presentation-only.
 
----
+## Settings vs scoring
 
-## Settings vs gameplay state
+Accessibility presentation options must not change scoring potential.
 
-User settings must not change scoring potential unless explicitly defined as calibration.
+Calibration is different: it aligns perception/input timing and therefore is stored explicitly and auditable.
 
-Accessibility options such as reduced flash/shake are presentation-only.
-
-Calibration offsets affect synchronization of perception/input and therefore must be stored explicitly and auditable.
-
----
+Calibration must not silently widen timing windows.
 
 ## Versioning and migration
 
-Every save requires `saveSchemaVersion`.
+Every profile has `saveSchemaVersion`.
 
-On load:
+Load flow:
 
 ```text
-read version
+read
+→ identify schema version
 → migrate forward if supported
 → validate
-→ load profile
+→ load
 ```
 
-Never rely on the assumption that all installed users always run a profile written by the current exact version.
+Migration should be deterministic, monotonic where practical, narrow, and unit-tested.
 
-Migration should be deterministic and preferably monotonic.
-
-Keep migrations narrow and testable.
-
----
+Never assume every user's save was written by the current exact app build.
 
 ## Failure handling
 
-The save system should support:
+SaveService should support:
+- atomic/transactional local write where practical
+- previous-known-good/recovery strategy
+- validation before replacing valid profile data
+- development diagnostics
+- isolation so a cosmetic/settings failure does not destroy progression
 
-- atomic/transactional local writes where practical
-- previous-known-good backup or equivalent recovery strategy
-- validation before replacing a valid profile
-- clear diagnostics in development builds
+## Service boundary
 
-A failed cosmetic/settings write must not destroy progression.
+```text
+Gameplay/Progression
+        ↓
+    UserProfile
+        ↓
+    SaveService
+        ↕
+ProfileSyncService (future)
+        ↕
+      Backend
+```
 
----
+Gameplay systems never write files or HTTP state directly.
 
 ## MVP minimum
 
-POC may use a minimal local profile.
-
-MVP should persist at least:
-
+Persist at least:
 - identity/display name if used
 - XP / level / HH
 - avatar selections
-- owned/unlocked content
+- unlocked/owned content used by MVP
 - per-chart best score/grade/combo
-- settings
+- settings/accessibility
 - calibration
 - schema version
 
-Online account/cross-device sync is desirable architecture, not a blocker for proving the four-song MVP.
+Online cross-device sync is architecture, not a blocker for the four-song MVP.
