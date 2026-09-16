@@ -1,4 +1,4 @@
-# Game Design Document v0.3
+# Game Design Document v0.4
 
 ## 1. High concept
 
@@ -50,14 +50,81 @@ Internally, the system tracks signed timing error:
 
 ### Movement
 
-Input applies intent/impulse to the head system. Head state includes at minimum:
+Input applies intent/impulse to the head system. It does **not** directly position the head.
+
+Head state includes at minimum:
 - direction
 - angular position
 - angular velocity
 - momentum/inertia
 - recovery/neutral tendency
+- physical movement limit / neck range
 
 The preferred model is a deterministic/custom motion model rather than Rigidbody2D-driven gameplay.
+
+The head is therefore always a continuous simulated object. Player input changes its motion; it does not teleport it between authored poses.
+
+### Classic Bang — inversion/launch model
+
+Classic Bang is the baseline expression of the movement model and establishes the grammar for the prototype.
+
+The screen has LEFT and RIGHT tap zones. A tap represents an **inversion/launch point**, not the direction the head should move toward.
+
+Therefore:
+- tap LEFT → commit/invert on the left side → head launches toward RIGHT
+- tap RIGHT → judge the right-side arrival/inversion → head launches toward LEFT
+- tap LEFT → judge the left-side arrival/inversion → head launches toward RIGHT
+- repeat
+
+The beat is associated with the **inversion/launch**, not with the middle of the travel.
+
+Conceptually:
+
+`TAP LEFT → travel right → TAP RIGHT / BANG → travel left → TAP LEFT / BANG → ...`
+
+The first tap from a neutral/rest state is a setup impulse. Because there is no preceding travel to evaluate, it should not receive ordinary Motion Quality judgment. The following opposite-side tap is the first complete Classic Bang event.
+
+### Cue handoff
+
+For Classic Bang, the previous input initiates both physical travel and anticipation of the next target.
+
+Example:
+1. player taps LEFT
+2. the head starts travelling RIGHT
+3. the RIGHT timing target/cue begins its countdown/convergence toward the authored beat
+4. player taps RIGHT
+5. timing and head state are judged
+6. the head inverts/launches LEFT
+7. the LEFT cue becomes the next target
+
+The exact cue scheduling remains chart/audio-clock authoritative; player input must not be allowed to shift authored song timing. Visually, however, the handoff should read as one bang preparing the next bang.
+
+### Anti-spam emerges from motion
+
+Rapidly alternating LEFT/RIGHT taps must not produce a full-quality headbang merely because the input sequence is technically correct.
+
+Every tap requests another inversion/impulse. If the player taps LEFT/RIGHT/LEFT/RIGHT too quickly, the head repeatedly reverses before it can build useful travel and amplitude. The visible motion becomes small and weak.
+
+This is intentional.
+
+Spam protection should therefore emerge primarily from the movement model and Motion Quality rather than from an arbitrary input cooldown.
+
+Correctly paced play gives the head time to travel, build momentum and reach a strong inversion state. Over-fast play produces reduced amplitude/poor flow even when some taps happen to land inside timing windows.
+
+### Miss and passive continuation
+
+A MISS must **not** freeze, snap, reset or otherwise artificially stop the head.
+
+If the expected opposite-side tap does not occur:
+1. the head continues according to its current velocity and inertia
+2. it approaches/reaches the physical neck movement limit
+3. the motion naturally loses energy
+4. the recovery/neutral tendency begins to influence the head
+5. the player can attempt to recover on a later event
+
+The player misses the beat, not ownership of the neck simulation.
+
+This continuity is important both visually and mechanically: mistakes should disturb flow and make recovery harder without turning the avatar into a binary hit/miss animation state machine.
 
 ### Critical design constraint
 
@@ -66,6 +133,18 @@ A PERFECT tap with poor head state should not score identically to a perfectly p
 The intended feel is:
 
 prepare movement → acquire speed → arrive near beat → invert/commit → hit judgment → carry momentum into next beat.
+
+For Classic Bang specifically, the opposite-side tap should evaluate at least:
+- authored timing error
+- expected side/direction
+- amplitude / how far the head actually travelled
+- useful angular velocity/momentum at arrival
+- inversion quality
+- continuity/flow from the preceding movement
+
+These movement components feed Motion Quality rather than replacing Timing.
+
+Example: a PERFECT-timed tap after frantic micro-inversions may have excellent Timing but poor Motion Quality because the head barely travelled. A slightly less accurate GREAT with a large, controlled, well-prepared swing may look and feel substantially better while still retaining the lower Timing component in deterministic scoring.
 
 ## 5. Headbang progression
 
