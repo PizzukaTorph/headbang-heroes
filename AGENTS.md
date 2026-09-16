@@ -22,6 +22,7 @@ Use the smallest relevant specialist set for a task. Cross-cutting changes shoul
 - `agents/gameplay-core.md` — NeckMotionModel, Motion Quality, event resolution, scoring, HYPE/THE BANG/Finisher, GameplayRun boundaries.
 - `agents/rhythm-audio.md` — AudioClock, DSP/song-time, scheduling, pause/resume/retry sync, calibration and timing diagnostics.
 - `agents/chart-content.md` — song/chart schemas, RuntimeChart compilation, candidate matching, Rest semantics, validation, packaging and remote-content compatibility.
+- `agents/hh-midi-validator.md` — strict `.hh.mid` format validation against `docs/HH_MIDI_STANDARD_V1.md`, including semantic tracks/notes, modifiers, Rest/Windmill intervals, timing metadata, ambiguity diagnostics and golden-sample regression.
 - `agents/presentation-avatar.md` — CURRENT/NEXT, avatar/body/hair/venue, haptics and presentation-only feedback.
 - `agents/meta-profile.md` — Results integration, progression, save/profile, migrations, rewards/economy metadata and future sync boundaries.
 - `agents/qa-guardian.md` — adversarial review for determinism, timing, chart semantics, device edge cases, persistence safety and documentation drift.
@@ -32,6 +33,7 @@ Routing examples:
 - Replace `HeadMotionModel` → Gameplay Core + Architecture Guardian + QA Guardian.
 - Implement THE BANG → Gameplay Core + Presentation Avatar + QA Guardian.
 - Add/change chart semantics → Chart Content + Gameplay Core + Rhythm Audio as relevant + Architecture Guardian.
+- Add/change `.hh.mid` encoding or importer validation → HH MIDI Validator + Chart Content + QA Guardian; add Rhythm Audio if tempo/offset semantics change.
 - Build remote song delivery → Chart Content + Architecture Guardian + QA Guardian.
 - Save/profile migration → Meta Profile + QA Guardian.
 
