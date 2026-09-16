@@ -103,6 +103,105 @@ The prototype divides the portrait screen into four large cardinal wedges around
 
 The closing-circle cue should visually identify the authored next inversion point. The tap zones themselves may remain invisible.
 
+### Neck Gameplay Vocabulary v1
+
+This vocabulary is the canonical extensible model for authored neck gameplay. New mechanics should compose these dimensions where possible instead of becoming isolated one-off systems.
+
+#### Technique
+
+- **Classic** — rhythmic inversion/launch. Baseline technique; supports Horizontal and Vertical trajectories.
+- **Half** — reduced/partial excursion for faster controlled passages.
+- **Deep** — slow, wide, deliberate movement emphasizing amplitude and control.
+- **Whiplash** — fast, violent committed motion, expected to use a flick/swipe-like input rather than ordinary alternating taps.
+- **Windmill** — continuous circular neck motion, with rotational phase, direction and continuity as core quality signals.
+- **Rest** — intentional stillness/recovery. Rest is part of the gameplay vocabulary, not merely missing chart data.
+
+These names define gameplay families, not animation clips. Presentation may vary without changing their semantics.
+
+#### Trajectory
+
+Trajectory describes the path/axis independently from Technique.
+
+Initial vocabulary:
+- **Horizontal** — LEFT ↔ RIGHT
+- **Vertical** — UP ↕ DOWN
+- **Circular** — continuous rotation
+- **CenterEdge** — neutral/centre ↔ authored extreme
+
+The model is intentionally extensible. A future trajectory may be added without redefining existing techniques.
+
+#### Modifier
+
+Modifiers alter an authored technique without necessarily creating another technique family.
+
+Initial vocabulary:
+- **None**
+- **Double** — closely spaced repeated action/inversion
+- **Hold** — sustain a required state/phase for an authored duration
+- **Accent** — stronger committed event
+- **Burst** — short rapid authored sequence
+
+Example compositions:
+- `Classic + Horizontal`
+- `Classic + Vertical`
+- `Classic + Horizontal + Double`
+- `Deep + Vertical + Hold`
+- `Windmill + Circular + Clockwise` (rotational direction may be represented as technique-specific authored data)
+- `Half + CenterEdge + Burst`
+
+Exact combinations must still be validated through playtesting; the vocabulary does not imply that every Cartesian combination is desirable.
+
+#### Rest semantics
+
+Rest has two distinct authored meanings:
+
+**Natural Rest**
+- represented by the absence of required events
+- the player is free to move or stop
+- the neck simulation continues normally
+- inertia decays through damping/recovery toward neutral
+- no penalty exists merely because the player is still moving
+
+**Authored Rest**
+- represented explicitly by chart data
+- means the player is expected to become/stay sufficiently still for an authored interval
+- residual movement is measured rather than forcibly cancelled
+- the neck must never snap/reset to neutral when Rest begins
+- success therefore includes controlling/bleeding existing momentum before or during the required stillness window
+- exact thresholds and score/combo/HYPE consequences remain tuning decisions
+
+This allows musical stop moments such as:
+
+`BANG → BANG → BANG → REST → BANG`
+
+The chart can therefore author both **required motion** and **required non-motion**.
+
+#### Shared motion principles
+
+Unless a technique explicitly defines a different control contract, all neck gameplay follows these principles:
+
+1. **Continuous simulation** — the neck remains simulated between and through chart events.
+2. **Input changes motion; it does not teleport pose.**
+3. **Player agency** — valid physical input is accepted even when early, late or suboptimal; quality/judgment describes the result.
+4. **Momentum matters** — preceding movement can improve or compromise the next authored action.
+5. **Misses do not reset the neck.**
+6. **Motion Quality is distinct from Timing.**
+7. **Visual complexity may grow from the same gameplay state** (hair, torso follow-through, stance, VFX) without requiring additional player verbs.
+
+#### Extension rule
+
+> **Adding a new neck mechanic must not require changing the semantics of existing mechanics.**
+
+Before adding a new mechanic, classify it in this order:
+1. Can it be expressed as an existing Technique with another Trajectory?
+2. Can it be expressed with a Modifier?
+3. Is it technique-specific authored data?
+4. Only then: does it require a genuinely new Technique or Trajectory?
+
+New mechanics extend the vocabulary; they do not reinterpret old chart semantics.
+
+This is an architectural/design constraint intended to keep charting, input, scoring, animation and future content compatible as the game grows.
+
 ### Cue handoff
 
 For Classic Bang, the previous input initiates both physical travel and anticipation of the next target.
