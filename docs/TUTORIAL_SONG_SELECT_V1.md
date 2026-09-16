@@ -6,140 +6,129 @@ The tutorial should feel like playing a very easy Headbang Heroes song, not read
 
 > **Teach one thing, make the player do it immediately, then keep the music moving.**
 
-The preferred tutorial vehicle is a super-Easy song or specially authored onboarding chart.
+Use a super-Easy authored song/chart or a specially authored onboarding track.
 
----
+## Teaching gates
 
-## Tutorial presentation
+For v1, avoid real-time audio time-stretch as a dependency.
 
-When introducing a new concept:
+Preferred instructional flow:
 
 ```text
-music approaches teaching moment
-→ controlled slowdown / near-pause
+approach a safe authored teaching point
+→ controlled pause/freeze gate or musically safe stop
 → short overlay
-→ player performs the shown action
-→ music resumes
+→ player performs/acknowledges the concept
+→ deterministic resume / pre-roll
 ```
 
-Do not leave long instruction screens between gameplay moments.
+If later testing proves true slowdown useful, it can be evaluated as a separate audio feature. It is not required for onboarding.
 
-The slowdown is instructional presentation; the authored musical timeline/runtime must remain deterministic and explicitly handle the tutorial state rather than drifting accidentally.
-
----
+The authored song timeline must remain deterministic; tutorial presentation must never create accidental drift.
 
 ## Initial teaching order
 
 Suggested first-run sequence:
-
 1. LEFT / RIGHT input
-2. inversion idea: tap on the side where the cue closes, neck launches away
-3. CURRENT / NEXT visual grammar
+2. inversion idea: tap where the cue closes; neck launches away
+3. CURRENT / NEXT
 4. PERFECT / GREAT / GOOD / MISS
-5. first simple Vertical command
-6. Natural Rest and/or one simple Authored Rest
+5. simple Vertical action
+6. Natural Rest and/or simple Authored Rest
 7. HYPE accumulation
 8. HYPE READY + THE BANG activation
-9. Finisher payoff on an intentionally obvious candidate
+9. obvious Finisher opportunity
 
-Do not teach the full advanced vocabulary in the first tutorial.
+Do not teach the complete advanced vocabulary immediately.
 
-Half, Deep, Whiplash, Windmill, Burst and advanced combinations can be learned through later content, contextual onboarding, or Practice.
+Half, Deep, Whiplash, Windmill, Burst, and dense combinations belong in later content/contextual onboarding/Practice.
 
----
+## Tutorial controls
 
-## Tutorial input philosophy
+Use the real gameplay mapping and real neck/body response.
 
-Do not replace the real controls with fake tutorial controls.
+Do not substitute fake tutorial-only controls.
 
-The player should learn the actual gameplay mapping and see the actual neck/body response.
+Failure should produce immediate retry/re-explanation rather than punitive run failure.
 
-Failure during the tutorial should prefer immediate retry/re-explanation over punitive run failure.
+The first bang from neutral may be explained simply as the setup that starts the swing; the tutorial does not need to expose Motion Quality implementation terminology.
 
----
-
-## Replaying / skipping
+## Replay / skip
 
 After first completion:
-
-- tutorial can be replayed from an appropriate menu/help/practice entry
-- tutorial prompts can be skipped by experienced players
+- tutorial can be replayed
+- experienced players may skip prompts
 - normal songs should not repeatedly interrupt with basic onboarding
 
 ---
 
 # Song Select
 
-Song Select should be visually simple and optimized for getting into a song quickly.
+Song Select exists to get the player into playable authored content quickly.
 
-Conceptual song card/list item:
+Conceptual card:
 
 ```text
 [COVER]
-
 ARTIST
 SONG TITLE
-
-NORMAL / HARD / EXTREME
-
+HARD
 Best Grade: A
 Best Score: 1,284,530
 ```
 
 Recommended information:
-
-- artwork/cover
+- artwork
 - artist
-- song title
-- authored difficulty
+- title
+- authored chart difficulty
 - duration
 - best grade
 - best score
-- locked/unlocked state
-- download/cache state when remote content is used
-- small genre/subgenre label where useful
+- lock state when relevant
+- download/cache state
+- compact genre/subgenre where useful
 
-Optional future detail:
-
-- audio preview
+Optional later:
+- preview audio
 - longest combo
-- chart version/debug info in development builds
+- development-only chart/version data
 
-Do not turn the main list into a statistics dashboard.
-
----
+Do not turn the list into a statistics dashboard.
 
 ## Difficulty browsing
 
-For the official catalog, preferred top-level filters:
+Official catalog filters:
 
 ```text
 ALL | EASY | NORMAL | HARD | EXTREME
 ```
 
-The system must not assume every song has all difficulty variants.
+Difficulty is primarily a chart/content classification.
 
-Difficulty is primarily a property of the available authored chart/content.
+A song does not need all difficulty variants.
 
-If a song later has multiple charts, the available alternatives can be shown in its detail/pre-song state.
+## Multiple charts on one song
 
----
+If the selected song has exactly one playable chart:
+- show its authored difficulty
+- do not add a pointless difficulty-selection step
+
+If it has multiple playable charts:
+- expose the available chart/difficulty alternatives in the detail/pre-song context
+- preserve the short path to PLAY
 
 ## Official content first
 
-v1/MVP song browsing focuses on official content only.
+MVP browsing focuses on official content.
 
-Community content is a future catalog dimension and should not complicate the initial Song Select.
-
-Potential future split:
+Future split may be:
 
 ```text
 OFFICIAL | COMMUNITY
 ```
 
-Do not implement it before community publishing exists.
-
----
+Do not implement community navigation before community publishing exists.
 
 ## Interaction
 
@@ -147,13 +136,11 @@ Primary path:
 
 ```text
 Song Select
-→ tap song
-→ short pre-song/detail state
+→ tap playable song/chart
+→ short detail/pre-song
 → PLAY
 ```
 
-The number of required taps should remain small.
+Downloaded valid songs remain playable offline.
 
-Locked songs should clearly communicate lock state and unlock requirement without pushing the player through unrelated menus.
-
-Downloaded songs should remain directly playable offline.
+Locked/unavailable content should explain the reason without routing the player through unrelated menus.
