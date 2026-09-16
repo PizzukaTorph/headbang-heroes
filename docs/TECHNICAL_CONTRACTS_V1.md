@@ -2,23 +2,19 @@
 
 ## Status
 
-This document defines the architectural contracts for Headbang Heroes.
+Canonical architectural contract for Headbang Heroes.
 
-It translates the game design into technical ownership boundaries without introducing unnecessary enterprise complexity.
+The goal is clear ownership without enterprise ceremony:
 
-The goal is simple:
+> Gameplay logic, presentation, content delivery, and persistence must evolve largely independently.
 
-> Gameplay logic, presentation, content delivery and persistence must be able to evolve largely independently.
+No DI framework, global event bus, or strict Clean Architecture implementation is required. Explicit responsibilities and deterministic gameplay boundaries are required.
 
-This document does **not** require a dependency-injection framework, a global event bus, dozens of assemblies, or a strict Clean Architecture implementation.
-
-It does require clear ownership, one-way dependencies where practical, and explicit boundaries between deterministic gameplay state and presentation/infrastructure.
+See `FOUNDATION.md` for document authority.
 
 ---
 
-# 1. Architectural shape
-
-Headbang Heroes is divided conceptually into four layers:
+# 1. Conceptual layers
 
 ```text
 DOMAIN
@@ -27,19 +23,20 @@ DOMAIN
 - timing judgment
 - motion quality
 - scoring
-- HYPE / THE BANG / Finisher rules
+- HYPE / THE BANG / Finisher
+- authored Rest evaluation
 
 APPLICATION
-- gameplay run orchestration
-- results assembly
-- progression application
+- GameplayRun orchestration
+- RunResult assembly
+- Results
+- Progression
 
 INFRASTRUCTURE
-- remote/local content
-- cache
+- content provider/catalog/cache
 - audio asset loading
 - save persistence
-- profile sync
+- future profile sync
 
 PRESENTATION
 - cues
@@ -49,400 +46,357 @@ PRESENTATION
 - haptics
 ```
 
-Preferred dependency direction:
-
-```text
-Presentation
-     ↓
-Application
-     ↓
-Domain
-
-Infrastructure → Application
-```
-
-The Domain must not depend on:
-
-- Unity UI
-- remote servers
-- HTTP
-- save files
-- artwork
-- haptics
-- scene hierarchy
-- frame timing
+The Domain must not depend on UI, scene hierarchy, HTTP, save files, artwork, haptics, or render frame timing.
 
 ---
 
-# 2. Primary runtime flow
-
-Conceptually:
+# 2. Canonical runtime flow
 
 ```text
 ContentCatalog
-      ↓
-SongLoader ──────────────┐
-      │                  │
-      ▼                  ▼
- ChartRuntime         AudioClock
-      │                  │
-      └────────┬─────────┘
-               ▼
-           GameplayRun
-               │
-         ┌─────┴─────┐
-         ▼           ▼
-    InputRouter   CueScheduler
-         │
-         ▼
-  NeckMotionModel
-         │
-   ┌─────┴─────────────┐
-   ▼                   ▼
-JudgmentSystem   MotionQualityEvaluator
-   │                   │
-   └─────────┬─────────┘
-             ▼
-       ScoringSystem
-             │
-             ▼
-        HypeSystem
-             │
-             ▼
-     RunResultBuilder
-             │
-             ▼
-       ResultsService
-             │
-             ▼
-    ProgressionService
-             │
-             ▼
-         SaveService
+   ↓
+SongLoader
+   ↓
+RuntimeChart + Audio
+   ↓
+GameplayRun
+   ├── AudioClock
+   ├── ChartRuntime
+   ├── InputRouter
+   ├── NeckMotionModel
+   ├── JudgmentSystem
+   ├── MotionQualityEvaluator
+   ├── RestEvaluator
+   ├── ScoringSystem
+   └── HypeSystem
+          ↓
+   RunResultBuilder
+          ↓
+   ResultsService
+          ↓
+   ProgressionService
+          ↓
+   SaveService
 ```
 
-Presentation systems observe semantic state/events and react to them. They do not own authoritative gameplay outcomes.
+Presentation observes semantic state/events and reacts downstream.
 
 ---
 
-# 3. AudioClock
-
-## Ownership
-
-`AudioClock` is the authoritative gameplay clock.
+# 3. AudioClock owns time
 
 Hard rule:
 
-> **AudioClock owns time.**
+> **AudioClock owns authoritative song time.**
 
-Gameplay judgment must never use `Time.time`, animation completion, coroutine timing, frame counts, or cue completion as the authoritative song position.
-
-## Required implementation direction
-
-Use Unity's DSP/audio clock as the basis of gameplay time.
-
-A run should establish a scheduled start point such as:
-
-```text
-songStartDspTime
-```
+Use Unity DSP/audio timing as the source of truth.
 
 Conceptually:
 
 ```text
-songTime = dspTime - songStartDspTime + calibrationOffset
+songTime = dspTime - songStartDspTime + songStartOffset + calibration
 ```
 
-Unity's scheduled audio playback should be used where appropriate so playback start is not dependent on the frame in which `Update()` happens to execute.
+Scheduled playback should be used so start timing is not bound to an arbitrary `Update()` frame.
 
-## Responsibilities
+Judgment must never use as authority:
+- `Time.time`
+- animation completion
+- coroutine completion
+- frame count
+- visual cue completion
 
-- establish precise song start
-- expose authoritative song time
-- pause/resume/restart semantics
-- calibration offsets
-- support deterministic cue/judgment scheduling
-- future seek support for Practice mode
-
-## Does not own
-
-- score
-- chart semantics
-- input
-- visual cue animation
-- progression
+Responsibilities:
+- scheduled start
+- authoritative song time
+- pause/resume/restart re-anchoring
+- calibration application
+- future Practice seek support
 
 ---
 
-# 4. Authoring data vs RuntimeChart
+# 4. One canonical time domain for inputs
 
-Human/editor-facing data and gameplay-runtime data are not required to be identical.
+Raw device/input timestamps must be converted as early as practical into authoritative `songTime`.
+
+`BangInput` entering gameplay-domain resolution should conceptually contain:
+
+```text
+BangInput
+- semantic direction/action
+- songTime
+- optional source/device metadata for diagnostics
+```
+
+Do not compare an Input System timestamp directly to a chart timestamp unless both have first been mapped into the same authoritative time domain.
+
+---
+
+# 5. Authoring data vs RuntimeChart
 
 Preferred pipeline:
 
 ```text
 SongDefinition + ChartDefinition
-              ↓
-         validation
-              ↓
-         compilation
-              ↓
-         RuntimeChart
+        ↓
+validation
+        ↓
+compilation
+        ↓
+RuntimeChart
 ```
 
 `RuntimeChart` should be:
-
 - immutable during a run
 - ordered
 - prevalidated
 - cheap to query
-- already resolved to deterministic timing information suitable for the AudioClock
+- resolved to deterministic event timing
+- tagged with song/chart/rules versions
 
-Do not repeatedly parse authoring JSON, MIDI semantics, beat fractions or tempo maps inside the hot gameplay loop.
+Do not repeatedly parse JSON/MIDI/beat fractions/tempo maps in the gameplay hot path.
 
 ---
 
-# 5. ContentCatalog
+# 6. ContentCatalog / ContentProvider
 
-`ContentCatalog` owns discovery and availability of playable content.
+`ContentCatalog` owns playable-content discovery and local availability.
 
-## Responsibilities
+Recommended provider boundary:
 
-- read local content manifest/cache
-- fetch remote manifest when available
-- compare package/chart/art/audio versions
-- validate hashes/checksums where applicable
-- expose download/availability state
-- ensure required content is locally available before a run
-- allow offline use of valid cached content
+```text
+ContentCatalog
+   ↓
+IContentProvider
+   ├── LocalContentProvider
+   ├── AddressablesContentProvider
+   └── RemoteCdnContentProvider
+```
 
-## Does not own
-
-- chart judgment
-- gameplay rules
-- progression
-- Unity scene flow
-
-Remote content may provide new songs, charts, art and backgrounds.
-
-Remote content must never silently introduce gameplay semantics unsupported by the installed client.
+Responsibilities:
+- local manifest/cache
+- remote manifest refresh
+- version comparison
+- hashes/checksums
+- download state
+- offline availability
+- client/rules compatibility
 
 Rule:
 
 > **Content can change remotely. Runtime rules cannot.**
 
----
-
-# 6. ContentProvider boundary
-
-Do not hardwire the game to one hosting technology.
-
-Recommended abstraction:
-
-```text
-ContentCatalog
-      ↓
-IContentProvider
-      ├── LocalContentProvider
-      ├── AddressablesContentProvider
-      └── RemoteCdnContentProvider
-```
-
-The exact implementation may evolve.
-
-Unity Addressables are compatible with this direction because remote catalogs/assets can be hosted outside the application build. Unity CCD is optional, not architectural destiny.
-
-Headbang Heroes should be able to move between custom CDN/object storage, Addressables hosting, or another provider without rewriting gameplay systems.
+Remote content may add known songs/charts/art/venue assets. Unsupported semantics require a client update.
 
 ---
 
 # 7. SongLoader
 
-`SongLoader` prepares content for a run.
-
-## Input
+Input:
 
 ```text
 songId
 chartId
 ```
 
-## Output
-
-Conceptually:
+Output:
 
 ```text
 LoadedSong
 - SongDefinition
 - RuntimeChart
 - audio reference
-- venue/background definition
+- presentation/venue references
 ```
 
-## Responsibilities
-
-- resolve package references
-- load validated metadata
-- resolve audio and presentation assets
-- verify chart/client compatibility
-- produce run-ready immutable inputs
-
-## Does not own
-
-- score
-- timing judgment
-- profile data
-- HYPE
+SongLoader prepares validated run-ready inputs. It does not judge, score, grant progression, or mutate profile state.
 
 ---
 
-# 8. ChartRuntime
+# 8. ChartRuntime owns authored chronology
 
-`ChartRuntime` owns authored gameplay chronology for the active run.
-
-Hard rule:
-
-> **ChartRuntime owns authored gameplay chronology.**
-
-## Responsibilities
-
-- ordered runtime events
-- next/current/upcoming event lookup
-- section/phrase lookup
-- chart IDs and version metadata
+Responsibilities:
+- ordered unresolved/resolved events
+- candidate lookup around song-time
+- sections/phrases
+- chart/version identity
 - efficient time-range queries
 
-It does not judge player input.
-
-It does not move the neck.
-
-It does not render cues.
+It does not judge input, move the neck, or render cues.
 
 ---
 
-# 9. CueScheduler
+# 9. Dense-event candidate matching
 
-`CueScheduler` converts upcoming chart events into presentation timing.
+Do not rely on one mutable `activeEvent` forever.
 
-Conceptually:
+For an input at authoritative song-time, search a bounded set of unresolved candidate events around that time.
+
+Candidate selection should consider:
+- timing proximity
+- whether the event is eligible
+- direction/action compatibility
+- technique/trajectory context
+
+Desired semantics:
+- input too early for all candidates: physical neck response still occurs, no event consumed
+- compatible input inside a window: best candidate is resolved
+- wrong semantic input inside the best eligible window: matched event is consumed as MISS unless a technique explicitly defines otherwise
+- expired unresolved event: resolves MISS according to scheduler/runtime rules
+
+This is required for dense charts and prevents “next array item” behavior from becoming gameplay law.
+
+---
+
+# 10. CueScheduler
 
 ```text
 ChartRuntime + AudioClock
-           ↓
-      CueScheduler
-           ↓
-       CURRENT/NEXT
+        ↓
+CueScheduler
+        ↓
+CURRENT / NEXT presentation state
 ```
 
-## Responsibilities
-
-- decide cue spawn/approach timing
-- promote NEXT to CURRENT
-- expose normalized cue progress
-- retire expired cues
-
-## Contract
-
-Cue visuals represent already-authored timing.
-
-Changing closing-circle animation, easing, color or rendering must not change judgment timing.
+Hard rule:
 
 > **The cue visualizes time. It does not define time.**
 
+Changing cue animation/easing/rendering must never move authored judgment timing.
+
 ---
 
-# 10. InputRouter
+# 11. InputRouter
 
-`InputRouter` translates physical interaction into semantic gameplay intent.
+Maps physical touch/gesture interaction to semantic intent.
 
-Conceptually:
-
-```text
-screen interaction
-      ↓
-touch mapping
-      ↓
-BangInput
-```
-
-Example:
-
-```text
-BangInput
-- direction
-- inputTimestamp
-- optional device/source metadata
-```
+It owns ergonomics/mapping, not correctness.
 
 Hard rule:
 
 > **InputRouter describes player intent; it does not judge it.**
 
-The physical touch region is not chart data.
+Touch zones are not chart data.
 
-This allows the game to change four-wedge mapping, thumb-zone mapping or future accessibility layouts without changing charts or neck semantics.
-
-Unity Input System is the preferred platform input layer.
+This allows four wedges, lower thumb zones, contextual mappings, and future accessibility mappings without changing chart semantics.
 
 ---
 
-# 11. NeckMotionModel
+# 12. NeckMotionModel owns physical neck state
 
-`NeckMotionModel` owns the authoritative physical neck state.
-
-Hard rule:
-
-> **NeckMotionModel owns physical neck state.**
-
-## Responsibilities
-
-- position/displacement
+Authoritative gameplay state includes as needed:
+- displacement/angle
 - velocity
-- acceleration/momentum
-- inversion
-- damping
-- travel/limits
-- trajectory-relevant state
-- energy/amplitude behavior
+- acceleration/change of momentum
+- inversion state
+- damping/recovery
+- physical limits
+- trajectory components
+- event-local motion history
 
-Every valid semantic BangInput affects the neck, including input that is:
+Every valid semantic BangInput affects neck state, including early/late/wrong/no-event input.
 
-- early
-- late
-- wrong
-- outside a scoring event
+A MISS never freezes/snaps/resets motion.
 
-This preserves the core gameplay contract:
-
-> **The player misses the beat, not ownership of the neck simulation.**
-
-## Does not own
-
-- PERFECT/GREAT/GOOD/MISS
-- score
-- XP
-- results
-- avatar art
-
-Prefer a deterministic/custom movement model over gameplay-critical Rigidbody2D behavior.
+The model does not own score, XP, results, avatar art, or UI.
 
 ---
 
-# 12. JudgmentSystem
+# 13. Gameplay-critical simulation step
 
-`JudgmentSystem` answers one question:
+The final scoring simulation must not depend on render frame pacing.
 
-> When did the player act relative to the authored event?
+The current M0 `Time.deltaTime` integrator is prototype behavior only.
 
-Input:
+Production direction:
 
 ```text
-BangInput
-+ candidate ChartEvent
-+ AudioClock
+AUTHORITATIVE FIXED SIMULATION
+(e.g. target 120 Hz, to validate)
+        ↓
+NeckMotionState
+        ↓
+RENDER INTERPOLATION
 ```
 
-Output concept:
+An analytically time-evaluated deterministic solution is also acceptable if it proves cleaner.
+
+Requirements:
+- identical input/chart/config should produce materially equivalent gameplay state across render frame rates
+- rendering may run independently
+- dropped render frames must not silently change scoring physics
+
+---
+
+# 14. Motion history is event-local
+
+Do not use run-global maxima such as a `peakAmplitude` that only resets at song restart as authoritative Motion Quality evidence.
+
+MotionQualityEvaluator should consume a bounded recent history or per-gesture/per-event accumulator.
+
+Useful signals may include:
+- amplitude developed since relevant preparation/inversion
+- incoming velocity/energy
+- direction coherence
+- inversion quality
+- continuity from preceding movement
+
+History reset/rollover semantics must be explicit and testable.
+
+---
+
+# 15. First Bang / setup state
+
+The first bang from neutral has no preceding travel to judge normally.
+
+Canonical state:
+
+```text
+UNPREPARED / SETUP
+→ first physical launch
+→ subsequent inversion can become first complete Bang
+```
+
+The setup input may still receive timing feedback where useful, but normal Motion Quality derived from preceding travel is not required.
+
+Exact score treatment remains configurable; the system must not fabricate normal incoming-motion quality from nothing.
+
+---
+
+# 16. Event resolution order
+
+Canonical MotionEvent resolution:
+
+```text
+1. physical input arrives
+2. InputRouter maps semantic BangInput
+3. convert to authoritative song-time
+4. snapshot PRE-INVERSION NeckMotionState/history
+5. apply physical neck input immediately
+6. find eligible unresolved authored candidate
+7. resolve TimingJudgment
+8. evaluate MotionQuality from PRE-INVERSION snapshot/history
+9. validate technique / trajectory / modifier semantics
+10. read current THE BANG / Finisher context
+11. build authoritative EventOutcome
+12. ScoringSystem applies score / combo / multiplier
+13. HypeSystem updates HYPE / THE BANG / Finisher state
+14. semantic presentation events are emitted
+```
+
+Steps 4→5 are deliberate: judge the movement arriving into the inversion while preserving immediate physical ownership of the neck.
+
+Presentation cannot reorder or alter this outcome.
+
+---
+
+# 17. JudgmentSystem
+
+Answers:
+
+> When did the player act relative to the matched authored event?
+
+Output:
 
 ```text
 TimingJudgment
@@ -451,76 +405,78 @@ TimingJudgment
 - matchedEventId
 ```
 
-Negative error = early.
-Positive error = late.
+Timing windows are configuration.
 
-Hard rule:
-
-> **Judgment owns timing quality.**
-
-It does not own motion quality.
+Judgment does not own Motion Quality.
 
 ---
 
-# 13. MotionQualityEvaluator
+# 18. MotionQualityEvaluator
 
-`MotionQualityEvaluator` evaluates how well the requested movement was physically executed.
+Answers:
+
+> How well did the neck physically arrive/perform for this authored action?
 
 Input:
-
-```text
-ChartEvent
-+ NeckMotionState/history
-```
+- matched event
+- pre-inversion NeckMotionState
+- bounded motion history
 
 Output:
+- normalized MotionQuality
+- optional diagnostic components
 
-```text
-MotionQuality
-```
+Timing Quality and Motion Quality remain separate signals.
 
-Potential factors:
-
-- useful amplitude
-- preparation
-- inversion quality
-- velocity/energy
-- direction consistency
-- technique-specific requirements
-
-Hard rule:
-
-> **Timing Quality and Motion Quality are separate signals.**
-
-A PERFECT timing input can still have weak motion quality.
-
-A GREAT can have excellent movement quality.
-
-Difficulty must not artificially change the neck simulation itself; higher motion demand should emerge from harder authored choreography.
+Difficulty never applies a hidden Motion Quality penalty.
 
 ---
 
-# 14. ScoringSystem
+# 19. RestEvaluator
 
-`ScoringSystem` owns score, combo and multiplier state for the current run.
+Natural Rest requires no event/evaluator.
 
-Inputs include:
+Authored `RestEvent` is interval-based.
 
-- TimingJudgment
-- MotionQuality
-- technique/modifier data
-- current multiplier
-- THE BANG scoring modifier where configured
+Preferred contract:
 
-Outputs include:
+```text
+RestEvent
+- start/end or beat + duration
+- settling portion/profile
+- stillness evaluation portion/profile
+- stillness thresholds
+```
 
+Runtime semantics:
+
+```text
+REST START
+→ settling phase: player may bleed existing momentum
+→ evaluation phase: residual movement is measured
+→ RestOutcome
+```
+
+The evaluator must never snap the neck to neutral.
+
+Candidate stillness signals may include velocity, displacement, energy, and stability over the evaluation interval.
+
+Exact thresholds and score/combo consequences are tuning data.
+
+---
+
+# 20. ScoringSystem
+
+Owns:
 - event score
 - total score
-- combo changes
+- combo
 - longest combo
-- completed combos
-- multiplier state
-- PERFECT/GREAT/GOOD/MISS counts
+- completed combo metric
+- multiplier/progress
+- judgment counts
+
+Inputs include authoritative EventOutcome, current multiplier state, and THE BANG scoring context.
 
 Hard rule:
 
@@ -528,602 +484,240 @@ Hard rule:
 
 UI never calculates score.
 
-Presentation never changes score.
-
 ---
 
-# 15. HypeSystem
+# 21. HypeSystem
 
-`HypeSystem` owns:
-
+Owns:
 - HYPE amount
-- READY state
-- THE BANG activation
-- THE BANG active window
-- Finisher eligibility/resolution state
+- READY
+- THE BANG activation/window
+- Finisher eligibility/resolution
 
-Baseline HYPE event contribution remains:
+Baseline HYPE:
 
 ```text
-PERFECT = +2
-GREAT   = +1
-GOOD    = +0
-MISS    = +0
+PERFECT +2
+GREAT   +1
+GOOD     0
+MISS     0
 ```
 
 MISS does not remove accumulated HYPE.
 
-THE BANG may apply configured scoring/presentation amplification.
+Canonical terminology:
+- THE BANG = state
+- Finisher = payoff
 
-HYPE generation during THE BANG must be separately configured so a self-sustaining activation loop cannot occur accidentally.
-
-Finisher candidate markers remain chart metadata; Finisher resolution remains deterministic.
-
-Hard rule:
-
-> **HypeSystem owns HYPE/THE BANG/Finisher state.**
+HYPE refill behavior during THE BANG must be independently configurable to prevent accidental infinite loops.
 
 ---
 
-# 16. GameplayRun
+# 22. GameplayRun
 
-`GameplayRun` is the application-level orchestrator for one song attempt.
+Application-level orchestrator for one attempt.
 
-It is not a God Object.
-
-## Responsibilities
-
-- coordinate run start/end
+Responsibilities:
+- start/end/pause/resume/abort/retry lifecycle
 - connect already-defined services
-- pause/resume/abort/retry lifecycle
-- own run-level state references
-- trigger result finalization
+- retain run identity/state references
+- finalize RunResult
 
-It delegates domain work to domain systems.
-
-Avoid putting scoring formulas, chart parsing, save serialization, avatar animation or HTTP code inside `GameplayRun`.
+It must not absorb domain formulas, JSON parsing, HTTP, avatar animation, or save serialization.
 
 ---
 
-# 17. Presentation contract
+# 23. Presentation contract
 
 Hard rule:
 
 > **Presentation reads gameplay state; presentation never determines gameplay state.**
 
-Presentation systems may subscribe to semantic events/state such as:
-
-- judgment occurred
-- combo changed
-- HYPE changed
-- HYPE ready
-- THE BANG started
-- Finisher triggered
-- run completed
-
-They may not feed authoritative visual state back into score/timing/neck simulation.
-
----
-
-# 18. BodyResponseController
-
-Input:
-
-```text
-NeckMotionState
-+ PerformanceStyle
-+ HYPE presentation state
-```
-
-Output:
-
-- shoulder response
-- torso follow-through
-- arm response
-- optional BodyRoot response
-
-One-way dependency:
-
-```text
-Gameplay → Neck → Body
-```
-
-Never:
-
-```text
-Body animation → gameplay result
-```
-
----
-
-# 19. HairResponseController
-
-Input:
-
-```text
-NeckMotionState
-+ inversion impulses
-+ HYPE presentation state
-+ HairProfile
-```
-
-Output:
-
-- hair segment transforms
-- delayed follow-through
-- overshoot/recovery
-
-Hair is presentation-only.
-
-Hair physics, clipping or animation failure must not alter judgment or score.
-
----
-
-# 20. VenueResponseController
-
-Input semantic presentation signals:
-
-```text
-PerformanceIntensity
-HYPE
-THE BANG
-Finisher
-```
-
-Possible outputs:
-
-- parallax strength
-- crowd response
-- lights
-- haze
-- camera impulse
-
-Venue/background presentation is explicitly downstream of gameplay.
-
----
-
-# 21. HapticsService
-
-Headbang Heroes does not add gameplay sound effects over the music by default.
-
-Gameplay feedback may use visual response and haptics.
-
-`HapticsService` centralizes platform-specific vibration behavior.
-
-Semantic inputs may include:
-
-- Perfect
-- Miss
+Semantic events may include:
+- JudgmentOccurred
+- ComboChanged
+- HypeChanged
 - HypeReady
-- TheBangActivated
-- Finisher
+- TheBangStarted
+- FinisherTriggered
+- RunCompleted
 
-Settings control whether haptics are enabled and, where supported, their intensity/profile.
+Prefer direct typed calls/interfaces for deterministic core flow and semantic events for downstream UI/presentation.
 
-No gameplay system should call low-level device vibration APIs directly.
+Avoid an opaque universal event bus.
 
 ---
 
-# 22. RunResultBuilder
+# 24. Body / Hair / Venue
 
-At the end of a run, one authoritative object is built:
+`BodyResponseController` consumes NeckMotionState + PerformanceStyle + presentation intensity.
 
-```text
-RunResult
-```
+`HairResponseController` consumes NeckMotionState + inversion/energy + HairProfile + presentation intensity.
 
-It contains the finalized values required by Results and Progression, including:
+`VenueResponseController` consumes semantic presentation signals such as HYPE/THE BANG/Finisher.
 
+All are downstream only.
+
+No body/hair/venue animation state feeds scoring or neck physics.
+
+---
+
+# 25. HapticsService
+
+No default gameplay SFX are layered over the song.
+
+Haptics may react to semantic events such as Perfect, Miss, HypeReady, TheBangActivated, Finisher.
+
+Platform vibration APIs stay behind `HapticsService` and obey accessibility/settings.
+
+---
+
+# 26. RunResultBuilder / ResultsService
+
+One authoritative `RunResult` is finalized at end of run.
+
+Contains at minimum:
+- songId
+- chartId/version
+- rulesVersion
 - score
 - final grade
-- PERFECT/GREAT/GOOD/MISS counts
-- longest combo
-- completed combo count
+- judgment counts
+- longest/completed combo metrics
 - total HYPE earned
-- Finishers executed
 - THE BANG activations
-- derived result tags
-- song/chart/version identity
+- Finishers executed
+- result tags
 
 Hard rule:
 
 > **Results renders RunResult; it does not rebuild it.**
 
----
-
-# 23. ResultsService
-
-`ResultsService` consumes an authoritative `RunResult` and produces presentation-ready result information.
-
-Responsibilities may include:
-
-- contextual result comment selection
-- grade presentation data
-- stat ordering
-- reward summary integration
-
-It does not recalculate score.
+ResultsService may select commentary/presentation data but does not recalculate score.
 
 ---
 
-# 24. ProgressionService
+# 27. ProgressionService
 
-`ProgressionService` consumes:
+Consumes:
 
 ```text
-RunResult
-+ current UserProfile
+RunResult + UserProfile
 ```
 
-and produces:
+Produces:
 
 ```text
 ProgressionOutcome
-- XP earned
-- HH earned
+- XP
+- HH
 - level change
 - unlocks
-- milestone rewards
+- milestones
 - record updates
 ```
 
-Hard rule:
-
-> **Progression consumes RunResult; it does not participate in gameplay.**
-
-The gameplay scene must not grant currency directly.
+Progression does not participate in active gameplay.
 
 ---
 
-# 25. SaveService
+# 28. SaveService / ProfileSyncService
 
-`SaveService` persists user metadata and progression state.
+SaveService owns local versioned persistence and migration.
 
-Conceptual ownership:
+Gameplay systems do not write files directly.
+
+Future online sync:
 
 ```text
-UserProfile
-- identity
-- level / XP / HH
-- avatar loadout
-- owned/unlocked cosmetics
-- unlocked songs/content
-- best records
-- settings
-- accessibility
-- calibration
-- save schema version
+SaveService ↔ ProfileSyncService ↔ Backend
 ```
 
-Responsibilities:
+Conflict/authority is domain-specific:
+- validated best records: keep best compatible record
+- legitimate unlock sets: union where appropriate
+- settings/loadout: latest valid choice
+- HH/paid entitlements/economy: server-authoritative ledger once backend economy exists
 
-- local persistence
-- schema versioning
-- migration
-- atomic/defensive write behavior
-- corruption fallback strategy
-- future sync hooks
-
-Hard rule:
-
-> **Gameplay systems do not write files.**
-
-For early versions, a simple versioned JSON representation is acceptable provided the save contract is not coupled to one serializer implementation.
-
-Do not use ScriptableObjects as the authoritative persistent user save.
+Do not treat currency as a last-write-wins field.
 
 ---
 
-# 26. ProfileSyncService
+# 29. Configuration
 
-Future online synchronization belongs behind a separate boundary:
-
-```text
-SaveService
-    ↕
-ProfileSyncService
-    ↕
-backend
-```
-
-The game should remain usable offline with valid local data/content.
-
-Conflict policy may differ by data class:
-
-- best records → preserve better valid record
-- unlock sets → union where legitimate
-- settings/loadout → latest valid update
-- server-governed economy → server-authoritative when online economy exists
-
-Exact backend policy can evolve without changing gameplay domain code.
-
----
-
-# 27. ScriptableObject policy
-
-ScriptableObjects are encouraged for static/configuration data and reusable profiles, for example:
-
-```text
-TimingConfig
-ScoringConfig
-HypeConfig
-NeckPhysicsConfig
-DifficultyConfig
-EconomyConfig
-PerformanceStyleConfig
-HairProfile
-VenueProfile
-```
-
-They are not the default answer for mutable runtime state.
-
-They are not the authoritative user save.
-
-They are not required for every architecture boundary.
-
-Use them where Unity's inspector/data workflow provides actual value.
-
----
-
-# 28. Event policy
-
-Events are useful primarily for downstream presentation and cross-system notifications.
+Tunable values belong in configuration rather than scattered code constants.
 
 Examples:
+- TimingConfig
+- ScoringConfig
+- HypeConfig
+- NeckPhysicsConfig
+- MotionQualityConfig
+- RestEvaluationConfig
+- DifficultyConfig
+- EconomyConfig
+- PerformanceStyleConfig
+- HairProfile
+- VenueProfile
 
-```text
-JudgmentOccurred
-ComboChanged
-HypeChanged
-HypeReady
-TheBangStarted
-FinisherTriggered
-RunCompleted
-```
-
-Do not build an opaque universal event bus where core domain flow becomes impossible to trace.
-
-Preferred rule:
-
-- direct typed calls/interfaces for core deterministic gameplay flow
-- semantic events for UI/presentation/reactive systems
-
-ScriptableObject Event Channels may be used selectively where they improve Unity-side decoupling, but are not a mandatory global pattern.
+ScriptableObjects are suitable where Unity editor workflow adds value, but are not the default mutable runtime state and are not authoritative save files.
 
 ---
 
-# 29. Configuration policy
+# 30. Testing contract
 
-Tuneable values belong in configuration, not scattered constants.
-
-Examples:
-
-```text
-TimingConfig
-ScoringConfig
-HypeConfig
-NeckPhysicsConfig
-DifficultyConfig
-EconomyConfig
-BodyStyleConfig
-HairProfile
-```
-
-Avoid gameplay formulas hidden across MonoBehaviours.
-
-Data-driven does not mean every value must be remote-configurable.
-
-Core gameplay rule changes still require compatible client code/versioning.
-
----
-
-# 30. Unity project layout target
-
-Recommended organization:
-
-```text
-Assets/_HeadbangHeroes/
-├── Core/
-│   ├── Gameplay/
-│   ├── Chart/
-│   ├── Scoring/
-│   ├── Hype/
-│   └── Models/
-│
-├── Content/
-│   ├── Catalog/
-│   ├── Loading/
-│   └── Validation/
-│
-├── Presentation/
-│   ├── Avatar/
-│   ├── Hair/
-│   ├── Venue/
-│   ├── Cues/
-│   └── Haptics/
-│
-├── UI/
-│   ├── Home/
-│   ├── SongSelect/
-│   ├── Gameplay/
-│   ├── Results/
-│   └── Avatar/
-│
-├── Progression/
-├── Persistence/
-├── Settings/
-└── Tests/
-```
-
-Do not create dozens of assembly definitions before a concrete need exists.
-
----
-
-# 31. Testing contract
-
-Use Unity Test Framework with a bias toward testing pure domain logic outside scene-heavy Play Mode where possible.
-
-## Edit Mode candidates
-
+EditMode/pure-domain tests should cover:
 - chart validation/compilation
-- timing-window math
-- JudgmentSystem
-- MotionQuality calculations
-- scoring
-- combo/multiplier
-- HYPE state transitions
-- Finisher resolution
-- progression calculations
+- timing judgment boundaries
+- candidate matching
+- wrong-direction consumption
+- setup-first-bang semantics
+- neck integrator behavior at authoritative step
+- Motion Quality history/reset semantics
+- Rest settling/evaluation
+- scoring/combo/multiplier
+- HYPE/THE BANG/Finisher state
+- grade/progression calculations
 - save migrations
 
-## Play Mode/device candidates
-
-- DSP/audio synchronization
-- scheduled playback
-- touch mapping
-- pause/resume
-- restart
-- cue synchronization
-- scene/service integration
-- actual mobile latency
-
-Critical behavior must still be validated on real Android/iOS hardware.
+PlayMode/device tests should cover:
+- DSP start alignment
+- pause/resume/retry sync
+- Input System integration
+- cue scheduling
+- real-device calibration/latency
+- haptics
+- background/foreground readability
+- content download/cache/offline behavior
 
 ---
 
-# 32. Performance contract
+# 31. Prototype status
 
-Gameplay logic must be framerate-independent.
+Current M0 classes such as the existing `PrototypeController`, `HeadMotionModel`, single-active-event scheduler behavior, hardcoded timing constants, and render-frame integration are experimental proof-of-concept code.
 
-Protect the audio/input path from unnecessary work.
+They may demonstrate valid design ideas, but they do not outrank this contract.
 
-Baseline rules:
+Refactor production code toward these ownership boundaries rather than extending the prototype indefinitely.
 
-- avoid avoidable per-frame allocations
-- prevalidate/compile charts
-- pool repeated cue/feedback objects where useful
-- avoid parsing remote/authoring data during active gameplay
-- profile on real devices
-- do not optimize speculative non-problems
-
-60 FPS remains the baseline presentation target, but scoring/timing correctness must not depend on hitting exactly 60 FPS.
+Canonical naming going forward:
+- gameplay simulation concept: `NeckMotionModel`
+- visual head transform: presentation concern
 
 ---
 
-# 33. Anti-God-Object rule
+# 32. Anti-spaghetti rules
 
-A central lifecycle/orchestration object may exist.
-
-A generic dumping-ground manager may not.
-
-Hard rule:
-
-> **No system becomes “the place where we put stuff because we do not know where else to put it.”**
-
-If a proposed responsibility does not clearly belong to a system, define its owner before adding it.
-
-Avoid a `GameManager` that simultaneously owns:
-
-- audio
-- charts
-- scoring
-- saves
-- UI
-- progression
-- HTTP
-- avatar animation
-
----
-
-# 34. Dependency policy
-
-Stay close to vanilla Unity for the core game.
-
-Use Unity standard packages/features where they clearly fit, especially:
-
-- Unity Input System
-- Unity audio/DSP scheduling
-- Unity Test Framework
-- Addressables if/when remote asset delivery becomes necessary
-
-Third-party packages are justified only by a current measured need.
-
-Do not adopt a framework that owns or distorts the headbang/rhythm design.
-
----
-
-# 35. Research-backed implementation notes
-
-The following Unity platform facts reinforce these contracts:
-
-- DSP/audio timing and scheduled playback are appropriate for precise musical scheduling.
-- Unity Input System separates logical actions from physical bindings/devices.
-- ScriptableObjects are useful for separating reusable/static data from logic, but should not become the default mutable runtime state container.
-- Event-channel patterns are useful for decoupled notifications when applied selectively.
-- Addressables support remote content catalogs/assets and do not require Unity CCD specifically.
-- Remote asset/content delivery cannot replace client code when new gameplay semantics require code changes.
-- Unity Test Framework supports Edit Mode and Play Mode test strategies that match HH's pure-domain versus scene/device split.
-
-These platform features support the architecture; they do not define the game architecture by themselves.
-
----
-
-# 36. Canonical ownership rules
-
-These rules summarize the technical contract:
-
-> **AudioClock owns time.**
-
-> **ChartRuntime owns authored gameplay chronology.**
-
-> **InputRouter describes player intent; it does not judge it.**
-
-> **NeckMotionModel owns physical neck state.**
-
-> **JudgmentSystem owns timing quality.**
-
-> **MotionQualityEvaluator owns movement quality.**
-
-> **ScoringSystem owns score/combo/multiplier.**
-
-> **HypeSystem owns HYPE/THE BANG/Finisher state.**
-
-> **Presentation reads gameplay state; presentation never determines gameplay state.**
-
-> **Results renders RunResult; it does not rebuild it.**
-
-> **Progression consumes RunResult; it does not participate in gameplay.**
-
-> **SaveService persists profile state; gameplay systems do not write files.**
-
-> **Remote content may add content, but may not introduce runtime rules unknown to the installed client.**
-
----
-
-# 37. Acceptance criteria for the architecture
-
-The architecture is considered healthy when all of the following are true:
-
-- scoring logic can be unit-tested without a Unity scene
-- changing touch-zone ergonomics does not require changing chart files
-- changing cue visuals does not change judgment timing
-- changing body/hair art does not affect score
-- a new song using existing mechanics can be added as content without changing gameplay code
-- a new mechanic that requires new runtime semantics requires an explicit client/version change
-- Results can render exclusively from RunResult/ProgressionOutcome
-- SaveService can change serialization details without modifying scoring/gameplay systems
-- offline cached songs remain playable without the content server
-- pause/resume/retry do not move authored event timing relative to the authoritative audio clock
-- no single manager accumulates unrelated responsibilities
-
----
-
-## Final principle
-
-Headbang Heroes should be architecturally simple to follow even as the content becomes more complex.
-
-The target is not maximum abstraction.
-
-The target is:
-
-> **Explicit ownership, deterministic gameplay, replaceable infrastructure, presentation downstream of gameplay, and no spaghetti.**
+- AudioClock owns time.
+- RuntimeChart/ChartRuntime owns authored chronology.
+- InputRouter maps intent, not correctness.
+- NeckMotionModel owns physical neck state.
+- JudgmentSystem owns timing quality.
+- MotionQualityEvaluator owns movement quality.
+- RestEvaluator owns authored stillness resolution.
+- ScoringSystem owns score/combo/multiplier.
+- HypeSystem owns HYPE/THE BANG/Finisher state.
+- Presentation never determines gameplay outcomes.
+- Progression consumes RunResult.
+- SaveService persists; gameplay never writes files.
+- No class becomes a generic dumping ground because responsibility is unclear.
