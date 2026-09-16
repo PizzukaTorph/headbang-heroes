@@ -12,6 +12,32 @@ If documents disagree, follow the authority order defined in `docs/FOUNDATION.md
 
 Current prototype code is experimental evidence, not automatic specification.
 
+## Specialist agent routing
+
+Specialist briefs live in `agents/`.
+
+Use the smallest relevant specialist set for a task. Cross-cutting changes should include the Architecture Guardian and QA/Integration review.
+
+- `agents/architecture-guardian.md` — ownership boundaries, dependency direction, naming, cross-cutting refactors.
+- `agents/rhythm-timing.md` — AudioClock, DSP/song-time, chart scheduling, candidate matching, calibration, sync.
+- `agents/neck-motion.md` — neck simulation, inversion/launch, Motion Quality, first-bang setup, physical Rest inputs.
+- `agents/gameplay-scoring-hype.md` — event outcome, score/combo/multiplier, HYPE, THE BANG, Finisher, RunResult.
+- `agents/chart-content.md` — song/chart schema, authoring, validator/compiler, package/catalog/provenance.
+- `agents/presentation-ux.md` — gameplay UX, avatar/body/hair/venue, tutorial, haptics, accessibility.
+- `agents/progression-save.md` — progression, profile, records, persistence, migration, future sync authority.
+- `agents/qa-integration.md` — acceptance criteria, regression testing, device/integration validation.
+
+Routing examples:
+
+- Refactor `AudioClock` + judgment timing → Rhythm & Timing + QA.
+- Replace `HeadMotionModel` → Neck Motion + Architecture Guardian + QA.
+- Implement THE BANG → Gameplay Scoring & HYPE + Presentation UX + QA.
+- Add a new chart mechanic → Chart & Content + Neck Motion and/or Rhythm/Scoring as relevant + Architecture Guardian.
+- Build remote song delivery → Chart & Content + Architecture Guardian + QA.
+- Save/profile migration → Progression/Save + QA.
+
+Specialists do not override canonical docs. If a brief and a canonical spec disagree, the canonical spec wins and the brief must be updated.
+
 ## Product principle
 
 Headbang Heroes is a rhythm game about **headbanging**, not a generic note-tapping game with a metal skin.
