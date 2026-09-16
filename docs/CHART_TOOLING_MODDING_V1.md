@@ -19,6 +19,7 @@ Headbang Heroes should not invent a separate "mod format" if the canonical `Song
 The game runtime should consume validated chart data independently from whether that data was authored:
 
 - internally by the development team
+- through canonical HH MIDI (`*.hh.mid`)
 - through an official external editor
 - through community tooling
 - through future import/conversion pipelines
@@ -34,20 +35,51 @@ A playable song package can conceptually resolve to:
 ```text
 Song Package
 ├── SongDefinition
-├── one or more ChartDefinition files
+├── one or more ChartDefinition / compiled chart payloads
 ├── audio asset
 ├── optional artwork
 ├── optional background/presentation assets
 └── package/provenance metadata
 ```
 
-The MVP does not need a formal distributable package format yet.
+Authoring sources such as `.hh.mid` do not need to ship to the runtime client unless useful for tooling/debugging.
 
 The important architectural rule is that Unity-specific scene/prefab state must **not** be required to describe a song chart.
 
 ---
 
-# 2. External Headbang Heroes Chart Editor
+# 2. Canonical HH MIDI authoring
+
+`HH_MIDI_STANDARD_V1.md` defines the canonical MIDI interchange convention.
+
+Core idea:
+
+> **The HH MIDI describes the Headbang Heroes performance chart, not necessarily the original song instrumentation.**
+
+A source song may have no MIDI at all.
+
+When source/arrangement MIDI exists, it may be used as reference material while dedicated semantic tracks such as:
+
+```text
+HH_CLASSIC
+HH_HALF
+HH_DEEP
+HH_WHIPLASH
+HH_WINDMILL
+HH_REST
+HH_MOD
+HH_META
+```
+
+encode the actual gameplay choreography.
+
+Technique is primarily represented by track identity; direction/action by the standard note mapping; velocity by intensity; duration by interval semantics only where explicitly defined.
+
+The compiler must ignore ordinary non-`HH_*` reference tracks for gameplay unless an explicit assist/import feature is invoked.
+
+---
+
+# 3. External Headbang Heroes Chart Editor
 
 A future standalone tool can sit entirely outside the game runtime.
 
@@ -58,57 +90,64 @@ Conceptual workflow:
 ```text
 IMPORT AUDIO
       ↓
-SONG METADATA
+OPTIONAL IMPORT SOURCE MIDI
       ↓
 BPM / OFFSET / TIME SIGNATURE
       ↓
-TIMELINE AUTHORING
+AUTHOR HH PERFORMANCE LAYER
       ↓
 SECTIONS / PHRASES
       ↓
-GAMEPLAY EVENTS
-      ↓
-REST / ACCENT / FINISHER MARKERS
+REST / MODIFIERS / FINISHER MARKERS
       ↓
 VALIDATION
       ↓
 PLAYTEST / PREVIEW
+      ↓
+EXPORT .hh.mid and/or canonical chart source
+      ↓
+COMPILER
       ↓
 EXPORT SONG PACKAGE
 ```
 
 The editor should not need intimate knowledge of Unity internals.
 
-Its contract is the data schema.
+Its contract is the canonical HH semantics.
 
 ---
 
-# 3. Editor responsibilities
+# 4. Editor responsibilities
 
 A future editor may support:
 
 - importing MP3/WAV/OGG or another supported audio source
+- importing optional source/reference MIDI
 - assigning title, artist, album, genre, subgenre, artwork and credits
 - defining BPM and time signature
 - defining audio/chart offset
 - editing future tempo maps where needed
 - defining sections and phrases
-- placing MotionEvents on a musical timeline
-- placing Authored Rest events
+- authoring HH technique lanes/tracks
+- placing MotionEvents visually
+- placing Authored Rest intervals
 - setting Technique
 - setting Trajectory
 - setting Direction
 - setting Modifier
 - marking Accent events
 - marking Finisher candidates
+- editing velocity/intensity
+- editing meaningful note duration
 - previewing CURRENT/NEXT gameplay cues
 - displaying musical subdivisions
-- snapping to 1/4, 1/8, 1/16, 1/32 and other supported grids
+- snapping to useful grids without implying one input per subdivision
 - validating event combinations
 - checking duplicate/conflicting events
 - checking invalid durations
 - checking events outside song bounds
 - previewing approximate gameplay flow
+- importing/exporting canonical HH MIDI
 - exporting canonical chart data
 - incrementing chart versions
 
@@ -116,7 +155,7 @@ These are future capabilities, not all-or-nothing requirements for the first edi
 
 ---
 
-# 4. Tooling must remain data-driven
+# 5. Tooling must remain data-driven
 
 The editor should derive available authoring vocabulary from typed gameplay definitions where practical.
 
@@ -146,36 +185,41 @@ Modifier
 
 The editor must not invent a parallel semantic vocabulary that then needs translation into the game.
 
-If Headbang Heroes adds a new gameplay concept, the schema/compiler/editor pipeline should evolve together.
+The HH MIDI standard is itself a mapping onto these canonical semantics, not a separate gameplay language.
+
+If Headbang Heroes adds a new gameplay concept, the schema/compiler/editor/MIDI convention should evolve together.
 
 ---
 
-# 5. Compile / validation boundary
+# 6. Compile / validation boundary
 
-Authoring data and runtime data may differ.
+Authoring data and runtime data are deliberately different concerns.
 
-Recommended long-term pipeline:
+Recommended pipeline:
 
 ```text
-Canonical authoring files
+Audio + metadata + .hh.mid / editor source
         ↓
-Schema validation
+HH MIDI/import validation
+        ↓
+Canonical ChartDefinition
         ↓
 Semantic validation
         ↓
 Chart compiler
         ↓
-Deterministic runtime chart
+Deterministic RuntimeChart
         ↓
 Headbang Heroes
 ```
 
-This allows the authoring format to remain readable while the runtime receives precomputed, ordered, deterministic event timing.
+This allows authoring to remain readable/editable while the runtime receives precomputed, ordered, deterministic event timing.
 
-The compiler/validator should eventually be reusable outside Unity.
+The compiler/validator should be reusable outside Unity.
 
 That makes it suitable for:
 
+- DAW/Guitar Pro authoring workflows
 - external editor validation
 - CI validation of official content
 - community mod validation
@@ -183,7 +227,33 @@ That makes it suitable for:
 
 ---
 
-# 6. Modding direction
+# 7. DAW / Guitar Pro workflow
+
+The MIDI convention intentionally uses ordinary MIDI primitives:
+
+- named tracks
+- notes
+- velocity
+- note duration
+- tempo/time-signature data
+- marker/text events
+
+This allows authoring in DAWs and, where export behavior is adequate, Guitar Pro.
+
+Tool-specific behavior is not canonical. Any exported `.hh.mid` must pass HH validation before it is considered publishable.
+
+The validator should diagnose common destructive export behavior such as:
+
+- lost/renamed semantic tracks
+- quantized event positions
+- dropped markers
+- changed PPQ/timing resolution
+- invalid note remapping
+- stripped durations
+
+---
+
+# 8. Modding direction
 
 Modding is a plausible future extension, not an MVP commitment.
 
@@ -205,11 +275,11 @@ Possible future workflows could include:
 - curated in-game browser
 - workshop-style distribution
 
-Do not couple the chart schema to any one storefront or workshop provider.
+Do not couple the chart schema or HH MIDI standard to any one storefront or workshop provider.
 
 ---
 
-# 7. Official vs community content
+# 9. Official vs community content
 
 Official and community content can share the same gameplay schema while remaining distinguishable by metadata/trust.
 
@@ -234,11 +304,9 @@ It can later drive:
 - update behavior
 - moderation/curation flows
 
-The MVP does not need to implement `ContentOrigin` yet unless useful.
-
 ---
 
-# 8. Competitive / leaderboard isolation
+# 10. Competitive / leaderboard isolation
 
 If community content eventually exists, official competitive records must not blindly mix with arbitrary modified charts.
 
@@ -250,7 +318,7 @@ chartId
 chartVersion
 rulesVersion
 contentOrigin
-contentHash / packageHash (future)
+contentHash / packageHash
 ```
 
 Possible policy:
@@ -259,17 +327,15 @@ Possible policy:
 - curated charts → curated records
 - modified/local charts → local/community records
 
-Exact leaderboard design is future work.
-
 The important rule is that modding must not destroy score comparability.
 
 ---
 
-# 9. Audio and rights boundary
+# 11. Audio and rights boundary
 
 A modding-capable chart format does **not** imply that copyrighted audio may be redistributed by Headbang Heroes or its community tooling.
 
-The architecture should keep these concerns separate:
+The architecture keeps these concerns separate:
 
 ```text
 chart authoring capability != distribution rights
@@ -285,7 +351,7 @@ The exact legal/content distribution policy must be defined before public mod sh
 
 ---
 
-# 10. Presentation assets
+# 12. Presentation assets
 
 A future song package may optionally reference presentation content such as:
 
@@ -302,37 +368,33 @@ Community presentation assets must never be allowed to redefine scoring or gamep
 
 ---
 
-# 11. Schema evolution
+# 13. Schema and MIDI-standard evolution
 
-Modding makes backward compatibility more important.
-
-Canonical content should eventually carry a schema version separate from chart version.
+Canonical content carries versions for separate concerns.
 
 Conceptually:
 
 ```text
-schemaVersion: 1
-chartVersion: 4
-rulesVersion: 2
+schemaVersion
+chartVersion
+rulesVersion
+hhMidiStandardVersion
 ```
 
 Meaning:
 
-- `schemaVersion` = shape/meaning of the data format
+- `schemaVersion` = canonical chart data shape/meaning
 - `chartVersion` = revision of this authored chart
 - `rulesVersion` = gameplay/scoring interpretation version
+- `hhMidiStandardVersion` = MIDI authoring/interchange mapping version
 
-Future tools should either:
+Future tools should either read compatible older versions, migrate explicitly, or fail with a useful validation error.
 
-- read compatible older schema versions
-- migrate them explicitly
-- or fail with a useful validation error
-
-Never silently reinterpret an old chart under incompatible semantics.
+Never silently reinterpret an old chart or old `.hh.mid` under incompatible semantics.
 
 ---
 
-# 12. Stable IDs matter even more with mods
+# 14. Stable IDs
 
 Stable song/chart/event IDs support:
 
@@ -344,41 +406,18 @@ Stable song/chart/event IDs support:
 - score attribution
 - future workshop references
 
-Community tooling should generate valid stable IDs rather than relying solely on filenames.
+MIDI authors are not required to manually name every note. The compiler may generate deterministic event IDs for v1; a future editor may embed explicit IDs for stronger round-trip behavior.
 
 ---
 
-# 13. Future package manifest
-
-A formal package manifest may eventually look conceptually like:
-
-```json
-{
-  "schemaVersion": 1,
-  "packageId": "community.example.songpack",
-  "origin": "community",
-  "songDefinition": "song.json",
-  "charts": ["chart.normal.json"],
-  "audio": "audio/song.ogg",
-  "artwork": "art/cover.png"
-}
-```
-
-This is illustrative only.
-
-Do not freeze the package manifest before actual tooling/mod distribution requirements exist.
-
----
-
-# 14. MVP implications
+# 15. MVP implications
 
 The MVP does **not** need:
 
 - public mod loading
 - workshop integration
 - a standalone editor
-- package signing
-- package hashes
+- advanced round-trip metadata
 - community browser
 - moderation
 - downloadable custom content
@@ -387,49 +426,60 @@ The MVP **should** preserve these architectural conditions:
 
 1. song/chart data is externalizable and serializable
 2. the chart schema is not Unity-scene-dependent
-3. IDs and versions are stable
-4. gameplay semantics are typed and documented
-5. runtime compilation/validation has a clear boundary
-6. one song can be represented completely through data + assets
-
-If those conditions hold, future tooling becomes an extension instead of a rewrite.
+3. canonical HH MIDI can be authored outside Unity
+4. IDs and versions are stable enough for run attribution
+5. gameplay semantics are typed and documented
+6. runtime compilation/validation has a clear boundary
+7. one song can be represented completely through data + assets
 
 ---
 
-# 15. North-star workflow
+# 16. North-star workflow
 
-The long-term ideal is simple:
+Short term:
+
+```text
+DAW / Guitar Pro
+↓
+author HH_* MIDI tracks against audio
+↓
+export .hh.mid
+↓
+validate / compile
+↓
+play in Headbang Heroes
+```
+
+Long term:
 
 ```text
 creator opens HH Chart Editor
 ↓
-loads a song
-↓
-maps musical structure
+loads audio / optional reference MIDI
 ↓
 authors headbang choreography
 ↓
 validates
 ↓
-exports
+exports canonical HH source/package
 ↓
-Headbang Heroes loads the same core format used by official songs
+Headbang Heroes consumes the same gameplay schema used by official songs
 ```
-
-That is the architectural target.
 
 ---
 
 ## Final guardrails
 
-> **Do not build a second chart language for modding.**
+> **Do not build a second gameplay language for modding.**
+
+> **HH MIDI is an authoring convention, not the runtime gameplay model.**
 
 > **Do not make Unity scene data part of the song definition.**
+
+> **Do not turn source MIDI instrumental density into required input density automatically.**
 
 > **Do not couple chart authoring to a future distribution platform.**
 
 > **Do not let optional community presentation data affect gameplay/scoring.**
 
-> **Do not promise public mod distribution before rights, integrity, and moderation requirements are designed.**
-
-> **Build the canonical data contract so the official pipeline can become the foundation of future community tooling.**
+> **Build the official authoring pipeline so future community tooling extends it instead of replacing it.**
