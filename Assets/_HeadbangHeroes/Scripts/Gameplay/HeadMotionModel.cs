@@ -1,3 +1,4 @@
+using HeadbangHeroes.Charts;
 using UnityEngine;
 
 namespace HeadbangHeroes.Gameplay
@@ -15,6 +16,7 @@ namespace HeadbangHeroes.Gameplay
     public sealed class HeadMotionModel : MonoBehaviour
     {
         [SerializeField] Transform head;
+        [SerializeField] float verticalVisualScale = 0.45f;
 
         [Header("Motion (deterministic spring-damper)")]
         [SerializeField] float impulse = 190f;
@@ -29,38 +31,62 @@ namespace HeadbangHeroes.Gameplay
         [Tooltip("Peak amplitude (deg) at or above which amplitude contribution to motion quality is maximal.")]
         [SerializeField] float qualityReferenceAmplitude = 24f;
 
-        HeadMotionState state = HeadMotionState.CreateDefault();
+        HeadMotionState horizontalState = HeadMotionState.CreateDefault();
+        HeadMotionState verticalState = HeadMotionState.CreateDefault();
+        Vector2 neutralHeadPosition;
 
-        public float Angle => state.angle;
-        public float Velocity => state.velocity;
+        // Legacy/debug aliases remain horizontal for the current HUD.
+        public float Angle => horizontalState.angle;
+        public float Velocity => horizontalState.velocity;
+        public float HorizontalAngle => horizontalState.angle;
+        public float VerticalAngle => verticalState.angle;
+        public float HorizontalVelocity => horizontalState.velocity;
+        public float VerticalVelocity => verticalState.velocity;
 
         /// <summary>Largest absolute angle observed since the last <see cref="ResetMotion"/>.</summary>
-        public float PeakAmplitude => state.peakAmplitude;
+        public float PeakAmplitude => Mathf.Max(horizontalState.peakAmplitude, verticalState.peakAmplitude);
 
         /// <summary>True on the frame the head crosses the neutral axis (a real "swing" happened).</summary>
-        public bool InvertedThisFrame => state.invertedThisFrame;
+        public bool InvertedThisFrame => horizontalState.invertedThisFrame || verticalState.invertedThisFrame;
 
-        void Awake() => ApplyTuning();
+        void Awake()
+        {
+            if (head != null) neutralHeadPosition = head.localPosition;
+            ApplyTuning();
+        }
 
         void OnValidate() => ApplyTuning();
 
         void ApplyTuning()
         {
-            state.tuning = new HeadMotionTuning(
+            var tuning = new HeadMotionTuning(
                 impulse, damping, returnStrength, maxAngle, maxVelocity,
                 qualityReferenceVelocity, qualityReferenceAmplitude);
+            horizontalState.tuning = tuning;
+            verticalState.tuning = tuning;
         }
 
         public void ResetMotion()
         {
             ApplyTuning();
-            state.ResetDynamics();
-            if (head != null) head.localRotation = Quaternion.identity;
+            horizontalState.ResetDynamics();
+            verticalState.ResetDynamics();
+            if (head != null)
+            {
+                head.localRotation = Quaternion.identity;
+                head.localPosition = neutralHeadPosition;
+            }
         }
 
-        public void Bang(float direction, float intensity = 1f)
+        public void Bang(BangDirection inversionPoint, float intensity = 1f)
         {
-            state.ApplyImpulse(direction, intensity);
+            // A tap is an inversion/launch. It is accepted anywhere in travel.
+            // The named zone is where the inversion happens; motion launches to the opposite side.
+            var launch = inversionPoint.LaunchVector();
+            if (inversionPoint.Axis() == BangAxis.Horizontal)
+                horizontalState.ApplyImpulse(launch.x, intensity);
+            else
+                verticalState.ApplyImpulse(launch.y, intensity);
         }
 
         /// <summary>
@@ -68,14 +94,28 @@ namespace HeadbangHeroes.Gameplay
         /// bang in <paramref name="requestedDirection"/> (-1 left, +1 right).
         /// Combines direction coherence, angular velocity and recent peak amplitude.
         /// </summary>
-        public float SampleMotionQuality(float requestedDirection)
-            => state.EvaluateMotionQuality(requestedDirection);
+        public float SampleMotionQuality(BangDirection inversionPoint)
+        {
+            // Judge the motion arriving INTO the inversion point, before applying the new launch.
+            switch (inversionPoint)
+            {
+                case BangDirection.Left: return horizontalState.EvaluateMotionQuality(-1f);
+                case BangDirection.Right: return horizontalState.EvaluateMotionQuality(1f);
+                case BangDirection.Up: return verticalState.EvaluateMotionQuality(1f);
+                case BangDirection.Down: return verticalState.EvaluateMotionQuality(-1f);
+                default: return 0f;
+            }
+        }
 
         void Update()
         {
-            state.Integrate(Time.deltaTime);
+            horizontalState.Integrate(Time.deltaTime);
+            verticalState.Integrate(Time.deltaTime);
             if (head != null)
-                head.localRotation = Quaternion.Euler(0f, 0f, state.angle);
+            {
+                head.localRotation = Quaternion.Euler(verticalState.angle, 0f, horizontalState.angle);
+                head.localPosition = neutralHeadPosition + Vector2.up * (verticalState.angle * verticalVisualScale);
+            }
         }
     }
 
