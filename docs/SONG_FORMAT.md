@@ -1,5 +1,7 @@
 # Song & Chart Format v0.1
 
+> Historical authoring/pipeline notes. The canonical gameplay data contract is now defined in [`SONG_CHART_MODEL_V1.md`](./SONG_CHART_MODEL_V1.md).
+
 ## Principle
 
 Audio playback is authoritative. Gameplay events are authored against musical time and resolved against a high-precision audio clock.
@@ -22,9 +24,12 @@ A song package should eventually resolve to:
 - BPM map
 - time signatures
 - offset/calibration metadata
+- one or more authored charts
 - chart difficulty/version
 - ordered gameplay events
 - licensing/provenance metadata reference
+
+A song is not required to provide Easy/Normal/Hard/Extreme variants. Difficulty belongs to each authored chart. The catalog may instead use different songs as its primary difficulty progression.
 
 ## MIDI convention proposal
 
@@ -41,14 +46,17 @@ Exact note-number mapping must be documented only after the prototype proves whi
 
 ## Event model
 
-Conceptual event:
+Canonical event semantics are defined in `SONG_CHART_MODEL_V1.md`.
 
-- timestamp / musical position
-- event type
+At authoring/runtime boundary, each compiled event must resolve to:
+
+- stable event ID
+- musical position / deterministic timestamp
+- event family
 - direction/gesture where applicable
-- intensity
-- scoring flag
-- optional technique ID
+- technique / trajectory / modifier where applicable
+- optional duration
+- optional Finisher-candidate metadata
 
 Runtime chart data should use precomputed event times suitable for deterministic comparison with the audio clock.
 
@@ -92,10 +100,11 @@ Changing competitive event timing should invalidate/separate incompatible leader
 2. Establish BPM/time-signature map.
 3. Import/create MIDI gameplay track.
 4. Place gameplay events manually.
-5. Compile to internal chart.
-6. Validate visually and by listening.
-7. Playtest on device.
-8. Adjust offset/chart.
-9. Lock/version chart.
+5. Annotate sections, phrases, accents, rests and Finisher candidates as needed.
+6. Compile to internal chart.
+7. Validate visually and by listening.
+8. Playtest on device.
+9. Adjust offset/chart.
+10. Lock/version chart.
 
 Manual authoring is preferred initially over automatic beat detection.
