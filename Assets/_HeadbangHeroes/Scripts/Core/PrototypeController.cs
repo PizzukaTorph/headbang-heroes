@@ -126,7 +126,7 @@ namespace HeadbangHeroes.Core
             Debug.Log($"HH M0 calibration offset: {calibrationOffset * 1000.0:+0;-0;0} ms");
         }
 
-        void OnCue(ChartEvent ev, double approachTime) => cue?.Show(ev.time, approachTime);
+        void OnCue(ChartEvent ev, double approachTime) => cue?.Show(ev.time, approachTime, ev.direction);
 
         void OnBang(BangDirection direction)
         {
