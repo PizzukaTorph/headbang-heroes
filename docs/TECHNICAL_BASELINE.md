@@ -48,50 +48,87 @@ Use DSP/audio-clock timing for gameplay synchronization. Never base scoring on U
 Required systems:
 - AudioClock
 - SongDefinition
-- ChartDefinition
-- ChartScheduler
+- ChartDefinition / RuntimeChart
+- ChartRuntime
+- CueScheduler
 - InputRouter
+- NeckMotionModel
 - JudgmentSystem
-- HeadMotion/HeadPhysics
-- ComboSystem
-- ScoreSystem
-- FeedbackSystem
+- MotionQualityEvaluator
+- ScoringSystem
+- HypeSystem
+- RunResultBuilder
 - Calibration/debug overlay
 
 The closing-circle cue is a visualization of an already-scheduled event.
 
+Detailed ownership rules are defined in `docs/TECHNICAL_CONTRACTS_V1.md`.
+
 ## Content pipeline
 
 Source concept:
-audio master + MIDI gameplay data + metadata
+audio master + MIDI/gameplay authoring data + metadata
 
-MIDI should be imported/compiled into an internal Unity chart representation. Runtime gameplay must not depend on parsing arbitrary MIDI files unless there is a concrete benefit.
+MIDI should be imported/compiled into an internal Headbang Heroes chart representation. Runtime gameplay must not depend on parsing arbitrary MIDI files unless there is a concrete benefit.
+
+Authoring data should be validated/compiled into immutable runtime-ready chart data before active gameplay.
+
+The POC may use local bundled content only.
+
+Production direction is server-first content delivery with local cache and offline playback of already-valid content. Remote songs/charts/art/backgrounds may be delivered without a client rebuild **only when they use gameplay semantics already supported by the installed client**.
+
+Do not couple gameplay code directly to one remote hosting provider. Addressables may be introduced when remote asset delivery becomes useful, behind the content boundary described in `TECHNICAL_CONTRACTS_V1.md`.
+
+## Persistence
+
+The POC does not require production-grade profile synchronization.
+
+Production direction:
+- versioned local-first UserProfile
+- explicit SaveService
+- schema migrations
+- future ProfileSyncService/backend boundary
+
+Gameplay systems must not write persistence files directly.
 
 ## Performance rules
 
 - avoid per-frame allocations in gameplay
-- pool repeated cue/feedback objects
+- pool repeated cue/feedback objects where useful
 - profile on real Android and iOS hardware early
 - do not optimize blindly, but protect audio/touch latency
 - gameplay logic must remain framerate-independent
+- do not parse/compile remote authoring content in the active gameplay hot path
 
 ## Repository layout target
 
 ```
 Assets/
   _HeadbangHeroes/
-    Art/
-    Audio/
-    Prefabs/
-    Scenes/
-    Scripts/
-      Core/
-      Audio/
-      Charts/
-      Input/
+    Core/
       Gameplay/
-      UI/
-      Debug/
+      Chart/
+      Scoring/
+      Hype/
+      Models/
+    Content/
+      Catalog/
+      Loading/
+      Validation/
+    Presentation/
+      Avatar/
+      Hair/
+      Venue/
+      Cues/
+      Haptics/
+    UI/
+      Home/
+      SongSelect/
+      Gameplay/
+      Results/
+      Avatar/
+    Progression/
+    Persistence/
     Settings/
     Tests/
 Packages/
@@ -106,11 +143,23 @@ Production licensed content may require local ignored locations depending on red
 One scene: `Prototype_Headbang`
 
 It must prove:
-audio -> scheduled chart event -> closing circle -> touch -> timing judgment -> head response -> combo/score -> feedback.
+audio -> scheduled chart event -> closing circle -> touch -> timing judgment -> neck response -> motion quality -> combo/score/HYPE -> feedback.
 
-## Non-goals
+## POC non-goals
 
-No backend, accounts, ads, IAP, multiplayer networking, Addressables architecture, localization framework, elaborate DI framework, production save system or asset-store dependency unless the prototype specifically requires it.
+The first one-song POC does not require:
+- backend accounts
+- production profile sync
+- ads
+- IAP
+- multiplayer networking
+- production remote catalog/download UI
+- localization framework
+- elaborate DI framework
+- final content economy
+- asset-store architecture dependencies
+
+These are POC non-goals, not permanent product exclusions. Remote content, persistence and future online systems are allowed by the production architecture when their corresponding design milestone requires them.
 
 ## Dependency policy — build the core ourselves
 
@@ -118,16 +167,19 @@ Headbang Heroes should remain deliberately close to vanilla Unity during prototy
 
 Default rule: **write the game-specific systems ourselves and add a package only when a concrete, measured problem justifies it.** Do not let a rhythm-game framework or asset dictate the game design.
 
-Expected baseline dependencies are Unity's own standard packages/features where useful, especially Input System and the normal 2D/UI/audio stack.
+Expected baseline dependencies are Unity's own standard packages/features where useful, especially Input System, Test Framework and the normal 2D/UI/audio stack. Addressables may be adopted when remote delivery provides concrete value.
 
 The following are intentionally custom:
 - DSP-clock rhythm scheduling
 - chart/event model
+- chart runtime/compiler contracts
 - closing-circle cue timing
 - judgment windows and early/late measurement
+- motion-quality evaluation
 - combo and scoring
-- head momentum/inertia model
+- neck momentum/inertia model
 - headbang gesture/technique vocabulary
+- HYPE/THE BANG/Finisher orchestration
 - gameplay feedback orchestration
 
 MIDI may use a small editor/import-time library if it clearly reduces work, but the preferred pipeline compiles MIDI into Headbang Heroes' internal chart format. Runtime gameplay should not depend on a general MIDI framework without a demonstrated need.
@@ -137,7 +189,7 @@ Avoid introducing, by default:
 - DOTween as a structural gameplay dependency
 - FMOD/Wwise
 - third-party physics frameworks
-- networking SDKs
+- networking SDKs before Versus actually requires them
 - dependency-injection frameworks
 - large architecture/framework packages
 
@@ -149,3 +201,11 @@ A dependency is acceptable when all of the following are true:
 5. it does not own or distort the core headbang/rhythm design.
 
 Target mindset: roughly **90–95% Unity + Headbang Heroes code** for the core prototype.
+
+## Architecture rule
+
+The project must avoid a God `GameManager`.
+
+Core deterministic flow should remain explicit and testable. Presentation may react through semantic events, but gameplay ownership must remain traceable.
+
+See `docs/TECHNICAL_CONTRACTS_V1.md` for the canonical system boundaries.
