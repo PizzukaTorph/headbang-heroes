@@ -330,23 +330,57 @@ Use separate versions for concepts that evolve independently:
 
 Do not compare competitive results blindly across incompatible chart/rules versions.
 
-## Authoring / runtime pipeline
+## Canonical HH MIDI authoring/interchange
+
+Headbang Heroes adopts `docs/HH_MIDI_STANDARD_V1.md` as the canonical MIDI convention for chart authoring/interchange.
+
+Important distinction:
+
+> **The HH MIDI is the MIDI of the Headbang Heroes performance chart, not necessarily the MIDI of the original song.**
+
+An original song MIDI may be absent. If available, it may be retained as reference material, but only dedicated `HH_*` semantic tracks compile into gameplay.
+
+The v1 MIDI grammar uses named technique tracks plus shared semantic note mappings. For example:
 
 ```text
-song metadata
-+ authored chart / MIDI / editor data
-+ tempo information
+HH_CLASSIC + note 36 → Classic / LEFT
+HH_CLASSIC + note 35 → Classic / RIGHT
+HH_CLASSIC + note 41 → Classic / UP
+HH_CLASSIC + note 45 → Classic / DOWN
+```
+
+Technique lives primarily in the track name; direction/action lives in the note number; velocity carries intensity; note duration carries duration only for semantics that explicitly define it.
+
+Modifiers, Authored Rest, Windmill intervals, Finisher candidates and structural markers are defined by the MIDI standard.
+
+The MIDI convention is an authoring contract, not the runtime schema itself.
+
+## Authoring / runtime pipeline
+
+Canonical direction:
+
+```text
+song audio
++ SongDefinition metadata
++ HH authoring MIDI (`*.hh.mid`)
++ optional source/reference MIDI
         ↓
-validator/compiler
+HH MIDI validator/importer
+        ↓
+canonical ChartDefinition
+        ↓
+semantic validator/compiler
         ↓
 immutable RuntimeChart
         ↓
 gameplay
 ```
 
-MIDI is an authoring/interchange source, not a required runtime dependency.
+Alternative future authoring tools may emit the same canonical ChartDefinition directly, but they must preserve the same gameplay semantics.
 
-Candidate semantic MIDI tracks may include HH_BEAT, HH_ACCENT, HH_MOVE, HH_SECTION, HH_FX, but exact mappings are tooling decisions rather than runtime schema law.
+Runtime gameplay must not parse MIDI in the hot path.
+
+MIDI note/channel/instrument details are authoring concerns and must be compiled into typed `MotionEvent` / `RestEvent` semantics before gameplay.
 
 ## Official and community compatibility
 
@@ -361,5 +395,6 @@ MVP may use:
 - single BPM
 - single time signature
 - small vocabulary subset
+- canonical HH MIDI authoring using only the approved semantic tracks for implemented mechanics
 
 This is a subset of the canonical schema, not a disposable temporary format.
