@@ -20,9 +20,13 @@ A new mechanic/event semantic/runtime contract requires a compatible client buil
 
 ```text
 AUTHORING
-  audio + metadata + chart + artwork/background
+  audio + metadata + HH MIDI/chart source + artwork/background
         ↓
-VALIDATION
+HH MIDI / SOURCE VALIDATION
+        ↓
+CANONICAL CHART IMPORT
+        ↓
+SEMANTIC VALIDATION
         ↓
 COMPILATION
         ↓
@@ -43,6 +47,34 @@ The MVP does not need a complex CMS.
 
 A small manifest/API plus object storage/CDN is sufficient.
 
+## Canonical authoring source
+
+For MIDI-based authoring, use `docs/HH_MIDI_STANDARD_V1.md`.
+
+Important distinction:
+
+> **The HH MIDI is the authored Headbang Heroes performance chart, not necessarily the MIDI of the original song.**
+
+A song may have no original MIDI.
+
+Optional source/arrangement MIDI can be retained as authoring reference, but only canonical `HH_*` semantic tracks compile into gameplay.
+
+The first practical workflow can therefore be:
+
+```text
+song audio
++ song/chart metadata
++ <song>.<chart>.hh.mid
+        ↓
+validator/importer
+        ↓
+ChartDefinition
+        ↓
+compiler
+```
+
+Future HH Chart Editor output must remain semantically compatible with this pipeline.
+
 ## Content package
 
 An official package may contain:
@@ -56,7 +88,9 @@ An official package may contain:
 - hashes/checksums
 - provenance reference
 
-The same logical schema should be usable whether authored manually, by internal tooling, or by the future external chart editor.
+Authoring `.hh.mid` files are source assets and do not need to ship in the runtime package.
+
+The same logical schema should be usable whether authored through DAW/Guitar Pro MIDI, internal tooling, or the future external chart editor.
 
 ## Server catalog
 
@@ -122,6 +156,15 @@ Validate at minimum:
 - physically implausible discrete density warnings
 - package hash generation
 - provenance/rights publication state
+
+If the source is `.hh.mid`, also validate:
+- canonical HH track names
+- supported note mappings
+- valid modifier attachment
+- supported velocity/duration semantics
+- tempo/time-signature consistency with content metadata
+- no silent conversion of ordinary reference tracks into gameplay
+- `hhMidiStandardVersion` compatibility where tracked
 
 Invalid content must fail loudly before gameplay.
 
@@ -193,15 +236,15 @@ Preferred future editor output:
 ```text
 Audio
 + SongDefinition
-+ ChartDefinition
++ canonical HH chart source (.hh.mid and/or editor-native source)
 + optional presentation assets
         ↓
-shared validator/compiler
+shared validator/importer/compiler
         ↓
 HH package
 ```
 
-Do not invent a second chart language for mods unless a hard constraint requires it.
+Do not invent a second gameplay language for mods unless a hard constraint requires it.
 
 ## Provider abstraction
 
@@ -217,14 +260,16 @@ Unity CCD may be used but is not architectural destiny.
 ## MVP implementation target
 
 Acceptable MVP:
+- DAW/Guitar Pro-friendly HH MIDI authoring
+- command-line/editor validator/importer
+- compiled canonical chart data
 - static/tiny API-hosted manifest
 - object storage/CDN
 - manual publication process
 - client download/cache
-- validation/compiler tools
 - HTTPS + hashes/version checks
 
-Do not build a full CMS before content volume demands it.
+Do not build a full CMS or standalone chart editor before content volume demands it.
 
 ## Guardrails
 
@@ -235,3 +280,5 @@ Do not build a full CMS before content volume demands it.
 - no unvalidated publication
 - no content authoring coupled to Unity scene internals
 - no assumption that source musical density equals discrete headbang input density
+- no runtime dependency on MIDI parsing
+- no automatic gameplay generation from non-HH reference MIDI tracks
