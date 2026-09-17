@@ -32,7 +32,7 @@ namespace HeadbangHeroes.Core
         [SerializeField] HapticsService haptics;
 
         [SerializeField] bool startOnPlay = true;
-        [SerializeField, Min(0f)] double startSongTime = 22.0;
+        [SerializeField, Min(0f)] double startSongTime = 11.8;
 
         [Header("Playtest controls (Editor / Development builds)")]
         [SerializeField] bool enablePlaytestControls = true;

@@ -79,10 +79,9 @@ namespace HeadbangHeroes.Editor
 
             var song = GetOrCreateSong(audio);
 
-            // The chart events are authored at absolute song times (~23s onward, matching the
-            // real track's M0 segment). Start both the real song and the click-track at ~22s so
-            // the first cue appears within ~1.5s instead of after a 22s silence.
-            var startSongTime = 22.0;
+            // The chart is compiled from the real drum MIDI; the first hit is at ~12.8s.
+            // Start ~1s before so the first cue approaches instead of being skipped.
+            var startSongTime = 11.8;
 
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             scene.name = "Prototype_Headbang";

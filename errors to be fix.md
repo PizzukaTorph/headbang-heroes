@@ -8,35 +8,27 @@ it or move it to a package plan.
 
 ## 1. M0 chart is a synthetic grid, not aligned to the song (ring/cue not in sync)
 
-**Status:** OPEN — deferred (does not block core-loop implementation).
+**Status:** PARTIALLY RESOLVED — chart is now auto-generated from the drum MIDI (kick+snare),
+not a fixed grid. Remaining work is a proper authoring pipeline + verifying the MP3 shares the
+MIDI's start offset.
 
-**What:** `Content/Lab/lab-001-beyond-the-pain-classic-m0.json` is a hand-made metronomic grid:
-76 events spaced at a fixed **+0.80 s** (23.34, 24.14, 24.94, …). It is NOT derived from the
-song. So with a real MP3 the closing ring / ticks do not fall on the actual hits — the mismatch
-is not a constant offset (calibration can't fix it), the rhythm itself is unrelated to the music.
+**What was done (2026-09-17):** `lab-001-beyond-the-pain-classic-m0.json` (version 2) is now
+generated from `06 - Beyond the Pain.mid`: kick(36)+snare(38) note-ons converted to absolute
+seconds via the tempo map (150→140 BPM, 480 tpqn), filtered to a performable pulse (min spacing
+0.34s), sliced 12–55s, alternating Classic Left/Right. `startSongTime` moved to 11.8s (first
+drum hit ~12.8s). Events now land on real drum hits instead of an unrelated 0.8s metronome grid.
 
-**Evidence:**
-- JSON event times increase by exactly 0.80 s for all 76 events.
-- The reference MIDI `Content/Lab/06 - Beyond the Pain.mid` is a valid MIDI (format 1, 5 tracks,
-  480 tpqn, has FF51 tempo + FF58 time-sig) but its tracks are `Traccia 1/2/3/Percussioni` —
-  it has **no `HH_*` semantic tracks** required by `docs/HH_MIDI_STANDARD_V1.md`.
-- There is **no MIDI importer in the runtime**; gameplay reads only the JSON. The `.mid` is inert
-  reference material today.
+**Remaining:**
+- The generator is a heuristic (kick+snare → alternating L/R), not authored choreography. It does
+  not use technique/trajectory/modifier/Rest or musical phrasing.
+- Assumes the local MP3 is the same master the MIDI was authored against. If the MP3 has a
+  different intro/offset, a CONSTANT offset remains — now fixable via calibration ([ / ]), unlike
+  the old mock grid which was rhythmically unrelated.
+- No runtime MIDI importer; the JSON was generated offline by a one-off Python script
+  (/tmp/hh_midi_chart.py, not committed). The canonical path is still the HH MIDI
+  importer/validator (`docs/HH_MIDI_STANDARD_V1.md`).
 
-**Impact:** Playing with the real audio "works" (audio + loop + input + neck + judgment) but the
-choreography is not musically synced. Fine for testing whether the headbang *feels* good; not fine
-for a real performance chart.
-
-**Intended fix (options):**
-- Short term: author a real chart JSON whose event times land on the song's actual hits (derive
-  beats from the MIDI tempo map or tap them out). Fast, unblocks a musically-synced playtest.
-- Canonical: build the HH MIDI importer/validator (`agents/hh-midi-validator.md`,
-  `docs/HH_MIDI_STANDARD_V1.md`) that compiles `HH_*` tracks → `ChartDefinition` → `RuntimeChart`.
-  Requires the source to be re-authored as a proper `.hh.mid` (the current `.mid` lacks `HH_*`
-  tracks), OR the importer maps the `Percussioni` track (kick/snare) to L/R events.
-
-**Owning package:** Chart Content / HH MIDI (post P0A core; see `docs/implementation/`), not the
-current runtime packages.
+**Owning package:** Chart Content / HH MIDI.
 
 ---
 
