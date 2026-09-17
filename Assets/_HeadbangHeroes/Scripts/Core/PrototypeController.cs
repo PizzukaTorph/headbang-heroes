@@ -1,6 +1,7 @@
 using HeadbangHeroes.Audio;
 using HeadbangHeroes.Charts;
 using HeadbangHeroes.Gameplay;
+using HeadbangHeroes.Gameplay.Timing;
 using HeadbangHeroes.Input;
 using HeadbangHeroes.UI;
 using UnityEngine;
@@ -27,7 +28,6 @@ namespace HeadbangHeroes.Core
 
         readonly ComboScore score = new();
         ChartDefinition runtimeChart;
-        double calibrationOffset;   // seconds, applied to judgment time only
 
         void Start()
         {
@@ -82,7 +82,8 @@ namespace HeadbangHeroes.Core
             score.Reset();
             hud?.ResetHud();
             hud?.BindSources(clock, scheduler, head);
-            hud?.SetCalibrationOffset(calibrationOffset);
+            hud?.SetCalibrationOffset(clock.Calibration);
+            input?.SetClock(clock);
             head?.ResetMotion();
             cue?.ResetCue();
             scheduler.Configure(chart);
@@ -121,14 +122,15 @@ namespace HeadbangHeroes.Core
 
         void AdjustCalibration(double deltaSeconds)
         {
-            calibrationOffset += deltaSeconds;
-            hud?.SetCalibrationOffset(calibrationOffset);
-            Debug.Log($"HH M0 calibration offset: {calibrationOffset * 1000.0:+0;-0;0} ms");
+            if (clock == null) return;
+            clock.Calibration += deltaSeconds;         // AudioClock is the single calibration owner
+            hud?.SetCalibrationOffset(clock.Calibration);
+            Debug.Log($"HH M0 calibration offset: {clock.Calibration * 1000.0:+0;-0;0} ms");
         }
 
         void OnCue(ChartEvent ev, double approachTime) => cue?.Show(ev.time, approachTime, ev.direction);
 
-        void OnBang(BangDirection direction)
+        void OnBang(BangInput bang)
         {
             // Physical input is always accepted. Tapping early, late, on the wrong zone, or
             // with no active chart event still changes the neck state; chart judgment is separate.
@@ -137,22 +139,20 @@ namespace HeadbangHeroes.Core
                 : 1f;
 
             // Canonical order: capture pre-inversion evidence + apply the neck impulse immediately,
-            // then judge timing and evaluate motion quality from the pre-inversion snapshot.
-            // With no neck wired we cannot evaluate arrival quality, so we do not fabricate a
-            // full-quality sample.
+            // then resolve the authored candidate and judge timing. With no neck wired we cannot
+            // evaluate arrival quality, so we do not fabricate a full-quality sample.
             var motionQuality = 0f;
             if (head != null)
             {
-                var snapshot = head.Bang(direction, intensity);
+                var snapshot = head.Bang(bang.Direction, intensity);
                 motionQuality = head.ProvisionalMotionQuality(snapshot);
             }
 
-            if (scheduler == null || !scheduler.HasActiveEvent)
-                return;
+            // Candidate resolution never undoes the neck input above.
+            if (scheduler == null || !scheduler.Resolve(bang, out var match))
+                return; // too early / no candidate: neck moved, nothing consumed.
 
-            if (!scheduler.TryJudge(direction, motionQuality, calibrationOffset, out var result))
-                return; // early tap changed motion, but did not consume the authored event.
-
+            var result = new JudgmentResult(match.Judgment, match.SignedError, motionQuality);
             score.Apply(result);
             cue?.Hide();
             hud?.Show(result, score.Combo, score.Score);
@@ -162,7 +162,7 @@ namespace HeadbangHeroes.Core
 
         void OnMiss(ChartEvent ev)
         {
-            score.Apply(new JudgmentResult(Judgment.Miss, JudgmentSystem.Good + 0.001, 0f));
+            score.Apply(new JudgmentResult(Judgment.Miss, scheduler.Timing.GoodWindow + 0.001, 0f));
             cue?.Hide();
             hud?.ShowMiss(score.Combo, score.Score);
             Debug.Log($"MISS (expired) at {ev.time:0.000}s | combo {score.Combo} | score {score.Score}");
