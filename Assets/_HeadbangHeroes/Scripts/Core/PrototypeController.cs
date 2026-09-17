@@ -261,7 +261,11 @@ namespace HeadbangHeroes.Core
                       outcome.ComboAfter, scorer.Scoring.Score);
             RefreshHypeHud();
 
-            Debug.Log($"{outcome.Judgment} {outcome.SignedTimingError * 1000.0:+0;-0;0} ms | motion {outcome.MotionQuality:0.00} | +{outcome.ScoreContribution} | combo {outcome.ComboAfter} | x{outcome.MultiplierAfter} | hype {scorer.Hype.Hype}{(outcome.WasFinisher ? " | FINISHER!" : "")}{(outcome.DuringTheBang ? " | THE BANG" : "")}");
+            // Diagnostic: pressed vs expected direction and why a MISS happened (timing vs wrong-dir).
+            var reason = match.Kind == MatchKind.WrongConsumedMiss
+                ? $" WRONG-DIR (pressed {bang.Direction}, expected {ev.Direction})"
+                : outcome.Judgment == Judgment.Miss ? " TIMING-MISS" : "";
+            Debug.Log($"{outcome.Judgment} {outcome.SignedTimingError * 1000.0:+0;-0;0} ms{reason} | motion {outcome.MotionQuality:0.00} | +{outcome.ScoreContribution} | combo {outcome.ComboAfter} | x{outcome.MultiplierAfter} | hype {scorer.Hype.Hype}{(outcome.WasFinisher ? " | FINISHER!" : "")}{(outcome.DuringTheBang ? " | THE BANG" : "")}");
         }
 
         void PlayJudgmentHaptic(Judgment judgment)
