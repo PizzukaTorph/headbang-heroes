@@ -34,6 +34,17 @@ namespace HeadbangHeroes.Gameplay.Timing
         public RuntimeMotionEvent At(int slot) => events[slot];
         public bool IsResolved(int slot) => slot >= 0 && slot < resolved.Length && resolved[slot];
 
+        /// <summary>
+        /// Gap (seconds) between this event and the previous authored event, or a large value for
+        /// the first event. Used to bound the cue approach so a cue never starts mid-flight at
+        /// dense tempos (which made close speed feel incoherent).
+        /// </summary>
+        public double TimeSincePrevious(int slot)
+        {
+            if (slot <= 0 || slot >= events.Count) return double.MaxValue;
+            return events[slot].Time - events[slot - 1].Time;
+        }
+
         /// <summary>Song-time of the earliest still-unresolved event, or -1 if none remain.</summary>
         public double NextUnresolvedTime()
         {

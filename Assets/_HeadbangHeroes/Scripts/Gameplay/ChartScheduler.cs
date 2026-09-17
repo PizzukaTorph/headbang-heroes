@@ -87,14 +87,23 @@ namespace HeadbangHeroes.Gameplay
                 EventMissed?.Invoke(resolver.At(slot));
             });
 
-            // CURRENT cue: the earliest unresolved event within the presentation lead horizon.
+            // CURRENT cue: the earliest unresolved event. Its approach time is bounded by the gap
+            // to the previous event so the ring always starts from full scale and closes at a rate
+            // proportional to the spacing — consistent within a tempo, instead of appearing
+            // mid-flight and snapping shut at dense tempos.
             if (cueIndex < 0)
             {
                 var idx = resolver.EarliestUnresolvedWithin(now, cueLead);
                 if (idx >= 0)
                 {
-                    cueIndex = idx;
-                    CueActivated?.Invoke(resolver.At(idx), cueLead);
+                    var approach = System.Math.Min(cueLead, resolver.TimeSincePrevious(idx));
+                    // Only start the cue once we are actually within its (bounded) approach window,
+                    // so it begins at full scale rather than partway closed.
+                    if (resolver.At(idx).Time - now <= approach)
+                    {
+                        cueIndex = idx;
+                        CueActivated?.Invoke(resolver.At(idx), approach);
+                    }
                 }
                 else if (resolver.NextUnresolvedTime() < 0d && !chartExhaustedLogged)
                 {
