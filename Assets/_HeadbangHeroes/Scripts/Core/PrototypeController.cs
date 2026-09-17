@@ -300,9 +300,10 @@ namespace HeadbangHeroes.Core
             if (ready && !wasReady) haptics?.Play(HapticEvent.HypeReady);
             wasReady = ready;
 
+            // Show where this tap landed on the cue as a blue ring (early=below, late=above)
+            // so the player can build a mental map and self-calibrate.
+            cue?.ShowHitMarker(outcome.SignedTimingError);
             cue?.Hide();
-            hud?.Show(new JudgmentResult(outcome.Judgment, outcome.SignedTimingError, outcome.MotionQuality),
-                      outcome.ComboAfter, scorer.Scoring.Score);
             RefreshHypeHud();
 
             // Diagnostic: pressed vs expected direction and why a MISS happened (timing vs wrong-dir).
