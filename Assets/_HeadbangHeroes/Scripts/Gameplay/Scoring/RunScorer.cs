@@ -87,8 +87,10 @@ namespace HeadbangHeroes.Gameplay.Scoring
 
             var isHit = e.Judgment != Judgment.Miss;
 
-            // 2) Finisher: the first successfully-performed authored candidate during THE BANG.
-            var isFinisher = isHit && e.FinisherCandidate && ctx.FinisherAvailable;
+            // 2) Finisher: the first authored candidate performed at/above the configured tier
+            //    during THE BANG (GOOD alone does not finish by default).
+            var isFinisher = isHit && e.FinisherCandidate && ctx.FinisherAvailable
+                             && hypeConfig.JudgmentQualifiesForFinisher(e.Judgment);
 
             // 3) Combo / multiplier transition, then read the multiplier that applies to THIS event.
             scoring.ApplyJudgment(e.Judgment);
@@ -101,9 +103,14 @@ namespace HeadbangHeroes.Gameplay.Scoring
                 var timing = scoringConfig.TimingFactor(e.Judgment);
                 var motion = scoringConfig.MotionFactor(e.MotionQuality);
                 var raw = scoringConfig.BaseScore * timing * motion * e.TechniqueFactor * multiplier;
-                if (ctx.DuringTheBang) raw *= ctx.ScoreMultiplier;
+                if (ctx.DuringTheBang)
+                {
+                    raw *= ctx.ScoreMultiplier;
+                    raw *= ctx.MotionRewardMultiplier; // THE BANG amplifies the movement reward too
+                }
                 if (isFinisher) raw *= ctx.FinisherMultiplier;
-                scoreContribution = (long)raw;
+                // A successful hit always scores at least 1 (avoids silent 0 under tiny tuning).
+                scoreContribution = raw >= 1f ? (long)raw : 1L;
                 scoring.AddScore(scoreContribution);
             }
 

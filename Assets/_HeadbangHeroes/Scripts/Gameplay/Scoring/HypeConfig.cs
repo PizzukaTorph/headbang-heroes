@@ -35,13 +35,17 @@ namespace HeadbangHeroes.Gameplay.Scoring
 
         public readonly HypeDuringTheBang HypeMode;
 
+        /// <summary>Minimum timing tier for an authored candidate to become a Finisher (default GREAT).</summary>
+        public readonly Judgment FinisherMinJudgment;
+
         public HypeConfig(
             int perfectHype, int greatHype, int goodHype, int missHype, int maxHype,
             double theBangDuration,
             float theBangScoreMultiplier,
             float theBangMotionRewardMultiplier,
             float theBangFinisherMultiplier,
-            HypeDuringTheBang hypeMode)
+            HypeDuringTheBang hypeMode,
+            Judgment finisherMinJudgment = Judgment.Great)
         {
             PerfectHype = perfectHype;
             GreatHype = greatHype;
@@ -49,11 +53,15 @@ namespace HeadbangHeroes.Gameplay.Scoring
             MissHype = missHype;
             MaxHype = maxHype < 1 ? 1 : maxHype;
             TheBangDuration = theBangDuration <= 0d ? 8d : theBangDuration;
-            TheBangScoreMultiplier = theBangScoreMultiplier;
-            TheBangMotionRewardMultiplier = theBangMotionRewardMultiplier;
-            TheBangFinisherMultiplier = theBangFinisherMultiplier;
+            TheBangScoreMultiplier = SanitizeMultiplier(theBangScoreMultiplier);
+            TheBangMotionRewardMultiplier = SanitizeMultiplier(theBangMotionRewardMultiplier);
+            TheBangFinisherMultiplier = SanitizeMultiplier(theBangFinisherMultiplier);
             HypeMode = hypeMode;
+            FinisherMinJudgment = finisherMinJudgment;
         }
+
+        // A reward multiplier must be a finite, >= 1 value (never shrinks or nullifies reward).
+        static float SanitizeMultiplier(float v) => (float.IsNaN(v) || v < 1f) ? 1f : v;
 
         public static HypeConfig Default => new HypeConfig(
             perfectHype: 2,
@@ -76,6 +84,21 @@ namespace HeadbangHeroes.Gameplay.Scoring
                 case Judgment.Great: return GreatHype;
                 case Judgment.Good: return GoodHype;
                 default: return MissHype;
+            }
+        }
+
+        /// <summary>True when the timing tier is good enough to be a Finisher (Perfect &gt; Great &gt; Good &gt; Miss).</summary>
+        public bool JudgmentQualifiesForFinisher(Judgment judgment)
+            => TierRank(judgment) >= TierRank(FinisherMinJudgment);
+
+        static int TierRank(Judgment j)
+        {
+            switch (j)
+            {
+                case Judgment.Perfect: return 3;
+                case Judgment.Great: return 2;
+                case Judgment.Good: return 1;
+                default: return 0; // Miss
             }
         }
     }

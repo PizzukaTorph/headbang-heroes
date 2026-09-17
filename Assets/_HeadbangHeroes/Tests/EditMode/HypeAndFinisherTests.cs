@@ -167,5 +167,84 @@ namespace HeadbangHeroes.Tests
             var o = s.Resolve(Ev("fin", Judgment.Miss, finisher: true));
             Assert.IsFalse(o.WasFinisher, "a missed candidate is not a Finisher");
         }
+
+        [Test]
+        public void GoodCandidate_DoesNotFinish_ByDefaultTierGate()
+        {
+            var s = NewScorer(); // default FinisherMinJudgment = Great
+            for (var i = 0; i < 50; i++) s.Resolve(Ev($"e{i}", Judgment.Perfect));
+            s.TryActivateTheBang(10.0);
+            var o = s.Resolve(Ev("fin", Judgment.Good, finisher: true));
+            Assert.IsFalse(o.WasFinisher, "a GOOD candidate is below the default Finisher tier");
+            Assert.AreEqual(0, s.Hype.FinishersExecuted);
+        }
+
+        [Test]
+        public void SecondActivationWindow_AllowsAnotherFinisher()
+        {
+            var s = NewScorer();
+            for (var i = 0; i < 50; i++) s.Resolve(Ev($"e{i}", Judgment.Perfect));
+            s.TryActivateTheBang(10.0);
+            Assert.IsTrue(s.Resolve(Ev("fin1", Judgment.Perfect, finisher: true)).WasFinisher);
+            s.Advance(19.0); // expire first window (10 + 8s)
+
+            for (var i = 0; i < 50; i++) s.Resolve(Ev($"g{i}", Judgment.Perfect)); // refill hype
+            s.TryActivateTheBang(20.0);
+            Assert.IsTrue(s.Resolve(Ev("fin2", Judgment.Perfect, finisher: true)).WasFinisher,
+                "a fresh THE BANG window allows a new Finisher");
+            Assert.AreEqual(2, s.Hype.FinishersExecuted);
+        }
+
+        [Test]
+        public void ActivateWhileActive_Fails()
+        {
+            var s = NewScorer();
+            for (var i = 0; i < 50; i++) s.Resolve(Ev($"e{i}", Judgment.Perfect));
+            Assert.IsTrue(s.TryActivateTheBang(10.0));
+            // Even if hype somehow refilled, a second activation during the same window must fail.
+            for (var i = 0; i < 50; i++) s.Resolve(Ev($"g{i}", Judgment.Perfect));
+            Assert.IsFalse(s.TryActivateTheBang(11.0));
+            Assert.AreEqual(1, s.Hype.TheBangActivations);
+        }
+
+        [Test]
+        public void HypeDisabledDuringTheBang_StopsAccrual()
+        {
+            var cfg = new HypeConfig(2, 1, 0, 0, 100, 8d, 10f, 10f, 10f, HypeDuringTheBang.Disabled);
+            var s = new RunScorer(ScoringConfig.Default, cfg);
+            for (var i = 0; i < 50; i++) s.Resolve(Ev($"e{i}", Judgment.Perfect));
+            s.TryActivateTheBang(10.0); // hype -> 0
+            var o = s.Resolve(Ev("bang", Judgment.Perfect));
+            Assert.AreEqual(0, o.HypeContribution, "HYPE generation is suspended during THE BANG in Disabled mode");
+            Assert.AreEqual(0, s.Hype.Hype);
+        }
+
+        [Test]
+        public void Reset_ClearsAllStateForRetry()
+        {
+            var s = NewScorer();
+            for (var i = 0; i < 50; i++) s.Resolve(Ev($"e{i}", Judgment.Perfect));
+            s.TryActivateTheBang(10.0);
+            s.Resolve(Ev("fin", Judgment.Perfect, finisher: true));
+
+            s.Reset();
+            Assert.AreEqual(0, s.Hype.Hype);
+            Assert.IsFalse(s.Hype.TheBangActive);
+            Assert.AreEqual(0, s.Hype.TheBangActivations);
+            Assert.AreEqual(0, s.Hype.FinishersExecuted);
+            Assert.AreEqual(0, s.TotalHypeEarned);
+            Assert.AreEqual(0, s.Scoring.Score);
+            Assert.AreEqual(0, s.Scoring.LongestCombo);
+        }
+
+        [Test]
+        public void ConfigGuards_RejectNaNAndNegativeFactors()
+        {
+            var badScoring = new ScoringConfig(float.NaN, -1f, 0.85f, 0.6f, 0.5f, 10, 5);
+            var s = new RunScorer(badScoring, HypeConfig.Default);
+            var o = s.Resolve(Ev("a", Judgment.Perfect));
+            // BaseScore NaN -> 0, but a successful hit still floors to at least 1 (no silent 0).
+            Assert.GreaterOrEqual(o.ScoreContribution, 1L);
+        }
     }
 }

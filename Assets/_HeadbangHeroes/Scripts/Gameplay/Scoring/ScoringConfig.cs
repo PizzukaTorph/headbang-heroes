@@ -34,14 +34,17 @@ namespace HeadbangHeroes.Gameplay.Scoring
             int hitsPerMultiplierStep,
             int maxMultiplier)
         {
-            BaseScore = baseScore;
-            PerfectTimingFactor = perfectTimingFactor;
-            GreatTimingFactor = greatTimingFactor;
-            GoodTimingFactor = goodTimingFactor;
+            BaseScore = Sanitize(baseScore);
+            PerfectTimingFactor = Sanitize(perfectTimingFactor);
+            GreatTimingFactor = Sanitize(greatTimingFactor);
+            GoodTimingFactor = Sanitize(goodTimingFactor);
             MotionFloor = motionFloor < 0f ? 0f : (motionFloor > 1f ? 1f : motionFloor);
             HitsPerMultiplierStep = hitsPerMultiplierStep < 1 ? 1 : hitsPerMultiplierStep;
             MaxMultiplier = maxMultiplier < 1 ? 1 : maxMultiplier;
         }
+
+        // Guards misconfiguration: NaN/negative factors would silently produce 0/negative scores.
+        static float Sanitize(float v) => (float.IsNaN(v) || v < 0f) ? 0f : v;
 
         public static ScoringConfig Default => new ScoringConfig(
             baseScore: 1000f,
