@@ -70,6 +70,33 @@ namespace HeadbangHeroes.Tests
         }
 
         [Test]
+        public void EarlyBetweenGoodAndWell_ConsumesAsWell()
+        {
+            // Regression: the candidate buffer filter must use the WELL early edge, not GOOD.
+            // A tap earlier than GoodWindow but within WellWindow must consume the cue as WELL,
+            // instead of being dropped as no-consume and later expiring as MISS.
+            var r = Resolver(Ev("m0", 10.0, BangDirection.Left));
+            var buf = new List<MotionCandidate>();
+
+            var earlyError = (Cfg.GoodWindow + Cfg.WellWindow) / 2.0;   // between the two edges
+            Assert.IsTrue(r.Resolve(In(BangDirection.Left, 10.0 - earlyError), buf, out var res),
+                "an early WELL tap must consume the cue");
+            Assert.AreEqual(MatchKind.Hit, res.Kind);
+            Assert.AreEqual(Judgment.Well, res.Judgment);
+        }
+
+        [Test]
+        public void EarlierThanWellEdge_ConsumesNothing()
+        {
+            var r = Resolver(Ev("m0", 10.0, BangDirection.Left));
+            var buf = new List<MotionCandidate>();
+
+            Assert.IsFalse(r.Resolve(In(BangDirection.Left, 10.0 - (Cfg.WellWindow + 0.05)), buf, out var res),
+                "beyond the WELL early edge nothing is judgeable");
+            Assert.IsFalse(res.Consumed);
+        }
+
+        [Test]
         public void NextUnresolvedTime_IsEarliest()
         {
             var r = Resolver(Ev("m0", 10.0, BangDirection.Left), Ev("m1", 20.0, BangDirection.Right));

@@ -81,11 +81,11 @@ namespace HeadbangHeroes.UI
         }
 
         /// <summary>
-        /// Snapshot the approach ring at the moment of the tap: a blue ring drawn CONCENTRIC to the
-        /// target and at the SAME size the closing ring had right now. It freezes "how big the cue
-        /// was when I tapped" — dead-on = coincides with the target ring, early = larger, late =
-        /// smaller. Purely presentation; does not affect judging. The signed error is accepted for
-        /// API symmetry / future use but position stays concentric per design.
+        /// Snapshot the OUTER approach ring at the moment of the tap: a blue ring drawn CONCENTRIC
+        /// to the target, sized to where the closing ring truly was for the tap's timing error
+        /// (early = larger/outer, dead-on = coincides with the target, late = smaller). Computed
+        /// from the signed error so it is frame-independent and ignores the hit-window snap.
+        /// Purely presentation; does not affect judging.
         /// </summary>
         public void ShowHitMarker(double signedErrorSeconds)
         {
@@ -94,9 +94,14 @@ namespace HeadbangHeroes.UI
             // Concentric with the target.
             hitMarker.anchoredPosition = Vector2.zero;
 
-            // Match the approach ring's current scale so the blue ring is as big as the cue is now.
-            var ringScale = approachRing != null ? approachRing.localScale.x : 1f;
-            hitMarker.localScale = Vector3.one * ringScale;
+            // Size the blue ring to the TRUE approach-ring position at the tap moment — i.e. where
+            // the OUTER closing ring actually was, computed from timing. We deliberately do NOT use
+            // approachRing.localScale, because inside the hit window Apply() snaps that ring to the
+            // target (scale 1); that would always draw the marker on the inner target. This way an
+            // early tap draws a larger ring (outer, not yet closed), a dead-on tap coincides with
+            // the target, and a late tap draws a smaller ring.
+            var scale = TimeBasedScaleForError(signedErrorSeconds);
+            hitMarker.localScale = Vector3.one * scale;
 
             if (markerGraphic == null) markerGraphic = hitMarker.GetComponent<UnityEngine.UI.Graphic>();
             markerBaseColor = markerGraphic != null ? markerGraphic.color : Color.white;
@@ -155,6 +160,21 @@ namespace HeadbangHeroes.UI
             var remaining = targetSongTime - clock.SongTime;
             var t = 1.0 - remaining / approachSeconds;
             return Mathf.Clamp01((float)t);
+        }
+
+        /// <summary>
+        /// The approach ring scale implied purely by the tap's timing error, WITHOUT the hit-window
+        /// snap-to-target. error = songTime - eventTime (negative = early), so remaining = -error.
+        /// At the event time (error 0) this is exactly 1 (coincides with the target). Early (error
+        /// &lt; 0) it is &gt; 1 (ring still open, outer); late (error &gt; 0) it continues below 1.
+        /// Used to freeze where the OUTER ring truly was at the moment of the tap, frame-independent.
+        /// </summary>
+        float TimeBasedScaleForError(double signedErrorSeconds)
+        {
+            var remaining = -signedErrorSeconds;                    // >0 early, 0 on-time, <0 late
+            var tRaw = 1.0 - remaining / approachSeconds;           // 0 at ring start, 1 at target, >1 late
+            var scale = Mathf.LerpUnclamped(startScale, 1f, (float)tRaw);
+            return scale < 0.05f ? 0.05f : scale;                   // never invert/vanish entirely
         }
 
         void Apply(float t)

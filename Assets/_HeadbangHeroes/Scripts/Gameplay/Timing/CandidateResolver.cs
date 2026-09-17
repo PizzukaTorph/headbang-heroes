@@ -75,7 +75,10 @@ namespace HeadbangHeroes.Gameplay.Timing
             {
                 if (resolved[i]) continue;
                 var error = input.SongTime - events[i].Time;
-                if (error < -config.GoodWindow || error > config.LateExpiry) continue;
+                // Judgeable/consume window must match EventMatcher: from the WELL early edge to the
+                // late expiry. Using GoodWindow here silently dropped early WELL taps as no-consume,
+                // which then expired as MISS.
+                if (error < -config.WellWindow || error > config.LateExpiry) continue;
                 buffer.Add(new MotionCandidate(i, events[i].Time, events[i].Direction));
             }
 
