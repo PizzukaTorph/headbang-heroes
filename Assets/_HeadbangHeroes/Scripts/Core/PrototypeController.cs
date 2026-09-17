@@ -230,7 +230,12 @@ namespace HeadbangHeroes.Core
             }
 
             if (scheduler == null || !scheduler.Resolve(bang, out var match))
-                return; // too early / no candidate: neck moved, nothing consumed.
+            {
+                // Neck moved, but no authored candidate was consumed (too early / none active).
+                var nextT = scheduler != null ? scheduler.NextEventTime : -1d;
+                Debug.Log($"(no consume) bang {bang.Direction} @songT {bang.SongTime:0.000} | next ev {nextT:0.000} | activeCue {(scheduler != null && scheduler.HasActiveEvent)}");
+                return;
+            }
 
             scheduler.TryGetEvent(match.MatchedId, out var ev);
 
