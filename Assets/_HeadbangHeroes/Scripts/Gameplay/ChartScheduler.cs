@@ -1,26 +1,23 @@
 using System;
 using System.Collections.Generic;
 using HeadbangHeroes.Audio;
-using HeadbangHeroes.Charts;
+using HeadbangHeroes.Charts.Runtime;
 using HeadbangHeroes.Gameplay.Timing;
 using UnityEngine;
 
 namespace HeadbangHeroes.Gameplay
 {
     /// <summary>
-    /// Unity adapter that owns authored chronology at runtime and resolves bang inputs against a
-    /// BOUNDED unresolved candidate set via the pure <see cref="CandidateResolver"/> (which holds
-    /// the deterministic resolve-once / expire-once bookkeeping and event sorting).
+    /// Unity adapter that owns authored chronology at runtime by consuming an immutable
+    /// <see cref="RuntimeChart"/> and resolving bang inputs against a BOUNDED unresolved candidate
+    /// set via the pure <see cref="CandidateResolver"/>.
     ///
-    /// This replaces the M0 single-active-event assumption. CURRENT/NEXT cue state is derived here
-    /// for presentation but never defines judgment time. Temporary: reads M0
-    /// <see cref="ChartDefinition"/>; Plan 03 will supply an immutable RuntimeChart behind the
-    /// same candidate-query shape.
+    /// Per-run resolution state lives in the resolver (flags), NEVER by mutating the RuntimeChart.
+    /// CURRENT/NEXT cue state is derived here for presentation but never defines judgment time.
     /// </summary>
     public sealed class ChartScheduler : MonoBehaviour
     {
         [SerializeField] AudioClock clock;
-        [SerializeField] ChartDefinition chart;
 
         [Header("Timing windows (data-driven, seconds)")]
         [SerializeField, Min(0.001f)] double perfectWindow = 0.035;
@@ -30,24 +27,25 @@ namespace HeadbangHeroes.Gameplay
         [Header("Presentation cue horizon (seconds)")]
         [SerializeField, Min(0.05f)] double cueLead = 1.0;
 
+        RuntimeChart chart;
         CandidateResolver resolver;
-        int cueIndex = -1;  // resolver index whose cue is currently shown (CURRENT), or -1
+        int cueIndex = -1;  // resolver slot whose cue is currently shown (CURRENT), or -1
         readonly List<MotionCandidate> candidateBuffer = new(16);
 
-        public event Action<ChartEvent, double> CueActivated;   // presentation only
-        public event Action<ChartEvent> EventMissed;            // an unresolved event expired
+        public event Action<RuntimeMotionEvent, double> CueActivated;   // presentation only
+        public event Action<RuntimeMotionEvent> EventMissed;            // an unresolved event expired
 
         public TimingConfig Timing => new TimingConfig(perfectWindow, greatWindow, goodWindow, cueLead, lateExpiry);
 
-        // ---- CURRENT / NEXT observer state (presentation), never authoritative for judgment ----
         public bool HasActiveEvent => cueIndex >= 0;
-        public ChartEvent ActiveEvent => chart.events[resolver.OriginalIndex(cueIndex)];
+        public RuntimeMotionEvent ActiveEvent => resolver.At(cueIndex);
         public double ApproachTime => cueLead;
         public double NextEventTime => resolver?.NextUnresolvedTime() ?? -1d;
 
-        public void Configure(ChartDefinition value)
+        /// <summary>Sets the immutable runtime chart for the run and resets per-run resolution state.</summary>
+        public void Configure(RuntimeChart runtimeChart)
         {
-            chart = value;
+            chart = runtimeChart;
             ResetScheduler();
         }
 
@@ -55,7 +53,7 @@ namespace HeadbangHeroes.Gameplay
 
         public void ResetScheduler()
         {
-            resolver = new CandidateResolver(chart != null ? chart.events : null, Timing);
+            resolver = new CandidateResolver(chart != null ? chart.MotionEvents : null, Timing);
             cueIndex = -1;
         }
 
@@ -66,10 +64,10 @@ namespace HeadbangHeroes.Gameplay
             var now = clock.SongTime;
 
             // Expire unresolved events past their late edge — exactly once each.
-            resolver.Expire(now, expired =>
+            resolver.Expire(now, slot =>
             {
-                if (cueIndex >= 0 && cueIndex == expired.Id) cueIndex = -1;   // Id == resolver slot
-                EventMissed?.Invoke(chart.events[resolver.OriginalIndex(expired.Id)]);
+                if (cueIndex == slot) cueIndex = -1;
+                EventMissed?.Invoke(resolver.At(slot));
             });
 
             // CURRENT cue: the earliest unresolved event within the presentation lead horizon.
@@ -79,15 +77,14 @@ namespace HeadbangHeroes.Gameplay
                 if (idx >= 0)
                 {
                     cueIndex = idx;
-                    CueActivated?.Invoke(chart.events[resolver.OriginalIndex(idx)], cueLead);
+                    CueActivated?.Invoke(resolver.At(idx), cueLead);
                 }
             }
         }
 
         /// <summary>
         /// Resolves a semantic bang (already in song-time) against the unresolved candidate set.
-        /// Returns false only when nothing was consumed (too early / no chart) — the neck has
-        /// already moved upstream in that case.
+        /// Returns false only when nothing was consumed (too early / no chart).
         /// </summary>
         public bool Resolve(in BangInput input, out MatchResult result)
         {

@@ -185,9 +185,13 @@ namespace HeadbangHeroes.Editor
         /// </summary>
         static AudioClip GetOrCreateClickTrack(ChartJsonData chart)
         {
+            // Compile to the immutable runtime chart so the click-track uses the same validated,
+            // normalized events (and precomputed times/directions) that gameplay will consume.
+            var runtime = HeadbangHeroes.Charts.Runtime.ChartCompiler.Compile(chart);
+
             var lastEvent = 0.0;
-            foreach (var e in chart.events)
-                if (e.time > lastEvent) lastEvent = e.time;
+            foreach (var e in runtime.MotionEvents)
+                if (e.Time > lastEvent) lastEvent = e.Time;
 
             var totalSeconds = (float)(lastEvent + 2.0);
             var totalSamples = Mathf.CeilToInt(totalSeconds * ClickSampleRate);
@@ -196,10 +200,10 @@ namespace HeadbangHeroes.Editor
             // Short decaying sine "tick" per event.
             const float clickSeconds = 0.05f;
             var clickSamples = Mathf.CeilToInt(clickSeconds * ClickSampleRate);
-            foreach (var e in chart.events)
+            foreach (var e in runtime.MotionEvents)
             {
-                var start = Mathf.RoundToInt((float)e.time * ClickSampleRate);
-                var freq = e.direction == BangDirection.Left ? 660f : 880f; // L/R audibly different
+                var start = Mathf.RoundToInt((float)e.Time * ClickSampleRate);
+                var freq = e.Direction.Axis() == BangAxis.Horizontal ? 660f : 880f; // axis-differentiated tick
                 for (var i = 0; i < clickSamples && start + i < totalSamples; i++)
                 {
                     var t = (float)i / ClickSampleRate;

@@ -4,9 +4,9 @@ namespace HeadbangHeroes.Gameplay.Timing
 {
     /// <summary>
     /// An unresolved authored event exposed to the matcher. This is a lightweight, engine-free
-    /// view over whatever chart storage exists (M0 <see cref="ChartDefinition"/> today, an
-    /// immutable RuntimeChart after Plan 03). <see cref="Id"/> is a stable identity used both for
-    /// deterministic tie-breaking and for marking the event resolved exactly once.
+    /// view over the immutable RuntimeChart's ordered motion events. <see cref="Id"/> is the
+    /// resolver slot: a stable identity used both for deterministic tie-breaking and for marking
+    /// the event resolved exactly once.
     /// </summary>
     public readonly struct MotionCandidate
     {

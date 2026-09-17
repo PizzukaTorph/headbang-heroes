@@ -1,5 +1,6 @@
 using HeadbangHeroes.Audio;
 using HeadbangHeroes.Charts;
+using HeadbangHeroes.Charts.Runtime;
 using HeadbangHeroes.Gameplay;
 using HeadbangHeroes.Gameplay.Timing;
 using HeadbangHeroes.Input;
@@ -27,7 +28,7 @@ namespace HeadbangHeroes.Core
         [SerializeField] double calibrationStepMs = 5.0;
 
         readonly ComboScore score = new();
-        ChartDefinition runtimeChart;
+        RuntimeChart runtimeChart;
 
         void Start()
         {
@@ -62,22 +63,31 @@ namespace HeadbangHeroes.Core
                 return;
             }
 
-            var chart = song.chart;
-            if (chartJsonOverride != null)
+            if (chartJsonOverride == null)
             {
-                var data = ChartJsonLoader.Parse(chartJsonOverride);
-                runtimeChart = ChartJsonLoader.CreateRuntimeChart(data);
-                chart = runtimeChart;
-
-                // Honor the chart's authored approach time if present.
-                scheduler.ConfigureApproachTime(data.approachTime);
-            }
-
-            if (chart == null || chart.events == null || chart.events.Count == 0)
-            {
-                Debug.LogWarning("HH M0 cannot start: chart is missing or has no events.");
+                Debug.LogWarning("HH M0 cannot start: no chart JSON assigned.");
                 return;
             }
+
+            ChartJsonData data;
+            try
+            {
+                data = ChartJsonLoader.Parse(chartJsonOverride);
+                runtimeChart = ChartCompiler.Compile(data);
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"HH M0 cannot start: chart failed to compile. {e.Message}");
+                return;
+            }
+
+            if (runtimeChart.MotionCount == 0)
+            {
+                Debug.LogWarning("HH M0 cannot start: compiled chart has no motion events.");
+                return;
+            }
+
+            scheduler.ConfigureApproachTime(data.approachTime);
 
             score.Reset();
             hud?.ResetHud();
@@ -86,8 +96,7 @@ namespace HeadbangHeroes.Core
             input?.SetClock(clock);
             head?.ResetMotion();
             cue?.ResetCue();
-            scheduler.Configure(chart);
-            scheduler.ResetScheduler();
+            scheduler.Configure(runtimeChart);
             clock.Play(song.audio, startSongTime);
         }
 
@@ -128,14 +137,14 @@ namespace HeadbangHeroes.Core
             Debug.Log($"HH M0 calibration offset: {clock.Calibration * 1000.0:+0;-0;0} ms");
         }
 
-        void OnCue(ChartEvent ev, double approachTime) => cue?.Show(ev.time, approachTime, ev.direction);
+        void OnCue(RuntimeMotionEvent ev, double approachTime) => cue?.Show(ev.Time, approachTime, ev.Direction);
 
         void OnBang(BangInput bang)
         {
             // Physical input is always accepted. Tapping early, late, on the wrong zone, or
             // with no active chart event still changes the neck state; chart judgment is separate.
             var intensity = scheduler != null && scheduler.HasActiveEvent
-                ? scheduler.ActiveEvent.intensity
+                ? scheduler.ActiveEvent.Intensity
                 : 1f;
 
             // Canonical order: capture pre-inversion evidence + apply the neck impulse immediately,
@@ -160,12 +169,12 @@ namespace HeadbangHeroes.Core
             Debug.Log($"{result.judgment} {result.error * 1000.0:+0;-0;0} ms | motion {result.motionQuality:0.00} | perf {result.Performance:0.00} | combo {score.Combo} | score {score.Score}");
         }
 
-        void OnMiss(ChartEvent ev)
+        void OnMiss(RuntimeMotionEvent ev)
         {
             score.Apply(JudgmentResult.ExpiredMiss());
             cue?.Hide();
             hud?.ShowMiss(score.Combo, score.Score);
-            Debug.Log($"MISS (expired) at {ev.time:0.000}s | combo {score.Combo} | score {score.Score}");
+            Debug.Log($"MISS (expired) at {ev.Time:0.000}s | combo {score.Combo} | score {score.Score}");
         }
     }
 }
