@@ -101,3 +101,31 @@ Editor. Multi-touch / simultaneous L+R is not handled.
   Not verifiable without a real phone.
 - **Art/polish debt:** placeholder avatar (knob head, flat rects), no face/expression channel; hardcoded
   verticalVisualScale/smoothing in NeckPresenter -> config later.
+
+---
+
+## 6. Package 06 (POC product loop) deferred items
+
+**Status:** OPEN — non-blocking; loop + persistence contracts hold, 30 pure tests pass.
+
+- **Results visual hierarchy (presentation-avatar HIGH-1):** ShowResults renders a flat single-Text
+  block; RESULTS_SCREEN_V1 wants emotion-first / grade-dominant (huge grade, then score, then a
+  themed contextual line, then report, then rewards). Data pipeline is correct (grade + tags
+  derived); only the M0 placeholder presentation is flat. Add multi-Text/grade-scaled layout +
+  a rule-based ResultComment selector (minGrade/maxGrade/requiredTags/textKey) rendering a themed
+  line instead of raw tag CSV. Owner: Presentation/Avatar.
+- **Touch buttons for the loop (presentation LOW):** panels are keyboard-driven (Enter/Esc); on a
+  phone the loop needs RETRY/CONTINUE/PLAY/START Buttons wired to the existing public flow methods.
+- **Avatar reaction on Results (presentation MEDIUM):** no grade-family avatar pose; results panel
+  fully occludes the avatar. Presentation-only.
+- **Save atomicity (meta MEDIUM-1 / qa M4):** FileSaveStore deletes-then-moves; prefer File.Replace
+  / write-temp -> promote-after-success so a mid-write crash never sacrifices the last known-good.
+  (Valid-but-wrong-shape recovery is now fixed + tested.)
+- **Grade CompletedCombos normalization proxy (meta/qa MEDIUM):** reuses TargetLongestCombo; add a
+  dedicated TargetCompletedCombos before MVP (5% weight, bounded impact).
+- **Level is derived from xp (meta MEDIUM-5):** level = 1 + floor(xp/xpPerLevel), recomputed each
+  run; document as config-dependent or persist authoritative level + reconcile in migration.
+- **PlayMode soak (qa):** one-result-per-run in a live scene; 10-20 retry soak (records stable,
+  scorer resets, xp/hh only once per completion, no event-handler accumulation). Not EditMode-coverable.
+- **Playtest controls in shipping builds (gameplay-core F4):** gate enablePlaytestControls behind
+  UNITY_EDITOR/DEVELOPMENT_BUILD so the R hard-reset can't desync GameFlowController state.

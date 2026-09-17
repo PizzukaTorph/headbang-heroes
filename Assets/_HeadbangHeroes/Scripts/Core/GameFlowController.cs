@@ -148,6 +148,10 @@ namespace HeadbangHeroes.Core
 
         void OnRunCompleted(RunResult run)
         {
+            // Defend against a duplicate/re-entrant completion: only apply the meta pipeline once,
+            // when transitioning out of the Gameplay state.
+            if (state != FlowState.Gameplay) return;
+
             // Results consume the authoritative result; they never recalculate score.
             var grade = ResultsService.Grade(run, gradeConfig, norm);
             var tags = ResultsService.DeriveTags(run);

@@ -69,6 +69,20 @@ namespace HeadbangHeroes.Tests
         }
 
         [Test]
+        public void ValidJsonWrongShapePrimary_RecoversFromBackup()
+        {
+            var store = new MemoryStore();
+            var good = UserProfile.CreateDefault();
+            good.level = 9;
+            store.backup = JsonUtility.ToJson(good);
+            store.primary = "{\"foo\":1,\"bar\":\"x\"}"; // valid JSON, not a profile -> JsonUtility returns defaults
+
+            var svc = new SaveService(store);
+            var loaded = svc.Load();
+            Assert.AreEqual(9, loaded.level, "a valid-but-wrong-shape primary must not clobber the good backup");
+        }
+
+        [Test]
         public void MalformedPrimaryAndBackup_ReturnsFreshDefault()
         {
             var store = new MemoryStore { primary = "garbage", backup = "also garbage {" };

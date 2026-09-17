@@ -52,17 +52,30 @@ namespace HeadbangHeroes.Meta
             catch { return false; }
             if (parsed == null) return false;
 
+            // JsonUtility does not throw on valid-JSON-of-wrong-shape (e.g. {"foo":1}); it returns
+            // an all-default object. Reject implausible blobs so we fall through to the good backup
+            // instead of silently accepting a defaulted profile.
+            if (!LooksLikeProfile(parsed)) return false;
+
             if (!ProfileMigrator.TryMigrate(parsed, out var migrated)) return false;
             profile = migrated;
             return true;
         }
+
+        // A real profile has a schema version in range and a non-empty player id.
+        static bool LooksLikeProfile(UserProfile p)
+            => p.saveSchemaVersion >= 1
+            && p.saveSchemaVersion <= UserProfile.CurrentSchemaVersion
+            && !string.IsNullOrEmpty(p.playerId);
 
         /// <summary>Validates then persists the profile, keeping the prior version as recoverable backup.</summary>
         public void Save(UserProfile profile)
         {
             if (profile == null) return;
             ProfileMigrator.Validate(profile);
-            profile.saveSchemaVersion = UserProfile.CurrentSchemaVersion;
+            // Never silently downgrade a newer-schema profile on write (load already rejects newer).
+            if (profile.saveSchemaVersion < UserProfile.CurrentSchemaVersion)
+                profile.saveSchemaVersion = UserProfile.CurrentSchemaVersion;
             profile.updatedAt = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
             var json = JsonUtility.ToJson(profile);
