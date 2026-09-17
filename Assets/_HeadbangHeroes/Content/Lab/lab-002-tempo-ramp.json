@@ -1,0 +1,270 @@
+{
+  "chartId": "lab-002-tempo-ramp",
+  "version": 1,
+  "songId": "lab-002-tempo-ramp",
+  "technique": "ClassicBang",
+  "difficulty": "Prototype",
+  "approachTime": 0.9,
+  "events": [
+    {
+      "time": 2.0,
+      "direction": -1,
+      "intensity": 1.0
+    },
+    {
+      "time": 3.0,
+      "direction": 1,
+      "intensity": 0.8
+    },
+    {
+      "time": 4.0,
+      "direction": -1,
+      "intensity": 0.8
+    },
+    {
+      "time": 5.0,
+      "direction": 1,
+      "intensity": 0.8
+    },
+    {
+      "time": 6.0,
+      "direction": -1,
+      "intensity": 1.0
+    },
+    {
+      "time": 7.0,
+      "direction": 1,
+      "intensity": 0.8
+    },
+    {
+      "time": 8.0,
+      "direction": -1,
+      "intensity": 0.8
+    },
+    {
+      "time": 9.0,
+      "direction": 1,
+      "intensity": 0.8
+    },
+    {
+      "time": 12.0,
+      "direction": -1,
+      "intensity": 1.0
+    },
+    {
+      "time": 12.857,
+      "direction": 1,
+      "intensity": 0.8
+    },
+    {
+      "time": 13.714,
+      "direction": -1,
+      "intensity": 0.8
+    },
+    {
+      "time": 14.571,
+      "direction": 1,
+      "intensity": 0.8
+    },
+    {
+      "time": 15.429,
+      "direction": -1,
+      "intensity": 1.0
+    },
+    {
+      "time": 16.286,
+      "direction": 1,
+      "intensity": 0.8
+    },
+    {
+      "time": 17.143,
+      "direction": -1,
+      "intensity": 0.8
+    },
+    {
+      "time": 18.0,
+      "direction": 1,
+      "intensity": 0.8
+    },
+    {
+      "time": 20.857,
+      "direction": -1,
+      "intensity": 1.0
+    },
+    {
+      "time": 21.607,
+      "direction": 1,
+      "intensity": 0.8
+    },
+    {
+      "time": 22.357,
+      "direction": -1,
+      "intensity": 0.8
+    },
+    {
+      "time": 23.107,
+      "direction": 1,
+      "intensity": 0.8
+    },
+    {
+      "time": 23.857,
+      "direction": -1,
+      "intensity": 1.0
+    },
+    {
+      "time": 24.607,
+      "direction": 1,
+      "intensity": 0.8
+    },
+    {
+      "time": 25.357,
+      "direction": -1,
+      "intensity": 0.8
+    },
+    {
+      "time": 26.107,
+      "direction": 1,
+      "intensity": 0.8
+    },
+    {
+      "time": 28.857,
+      "direction": -1,
+      "intensity": 1.0
+    },
+    {
+      "time": 29.457,
+      "direction": 1,
+      "intensity": 0.8
+    },
+    {
+      "time": 30.057,
+      "direction": -1,
+      "intensity": 0.8
+    },
+    {
+      "time": 30.657,
+      "direction": 1,
+      "intensity": 0.8
+    },
+    {
+      "time": 31.257,
+      "direction": -1,
+      "intensity": 1.0
+    },
+    {
+      "time": 31.857,
+      "direction": 1,
+      "intensity": 0.8
+    },
+    {
+      "time": 32.457,
+      "direction": -1,
+      "intensity": 0.8
+    },
+    {
+      "time": 33.057,
+      "direction": 1,
+      "intensity": 0.8
+    },
+    {
+      "time": 33.657,
+      "direction": -1,
+      "intensity": 1.0
+    },
+    {
+      "time": 34.257,
+      "direction": 1,
+      "intensity": 0.8
+    },
+    {
+      "time": 34.857,
+      "direction": -1,
+      "intensity": 0.8
+    },
+    {
+      "time": 35.457,
+      "direction": 1,
+      "intensity": 0.8
+    },
+    {
+      "time": 38.057,
+      "direction": -1,
+      "intensity": 1.0
+    },
+    {
+      "time": 38.557,
+      "direction": 1,
+      "intensity": 0.8
+    },
+    {
+      "time": 39.057,
+      "direction": -1,
+      "intensity": 0.8
+    },
+    {
+      "time": 39.557,
+      "direction": 1,
+      "intensity": 0.8
+    },
+    {
+      "time": 40.057,
+      "direction": -1,
+      "intensity": 1.0
+    },
+    {
+      "time": 40.557,
+      "direction": 1,
+      "intensity": 0.8
+    },
+    {
+      "time": 41.057,
+      "direction": -1,
+      "intensity": 0.8
+    },
+    {
+      "time": 41.557,
+      "direction": 1,
+      "intensity": 0.8
+    },
+    {
+      "time": 42.057,
+      "direction": -1,
+      "intensity": 1.0
+    },
+    {
+      "time": 42.557,
+      "direction": 1,
+      "intensity": 0.8
+    },
+    {
+      "time": 43.057,
+      "direction": -1,
+      "intensity": 0.8
+    },
+    {
+      "time": 43.557,
+      "direction": 1,
+      "intensity": 0.8
+    },
+    {
+      "time": 44.057,
+      "direction": -1,
+      "intensity": 1.0
+    },
+    {
+      "time": 44.557,
+      "direction": 1,
+      "intensity": 0.8
+    },
+    {
+      "time": 45.057,
+      "direction": -1,
+      "intensity": 0.8
+    },
+    {
+      "time": 45.557,
+      "direction": 1,
+      "intensity": 0.8
+    }
+  ]
+}

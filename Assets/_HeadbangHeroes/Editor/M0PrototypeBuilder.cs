@@ -26,6 +26,8 @@ namespace HeadbangHeroes.Editor
         const string Root = "Assets/_HeadbangHeroes";
         const string ChartJsonPath = Root + "/Content/Lab/lab-001-beyond-the-pain-classic-m0.json";
         const string LocalAudioPath = Root + "/Content/Lab/LocalAudio/BeyondThePain.mp3";
+        const string TempoRampChartPath = Root + "/Content/Lab/lab-002-tempo-ramp.json";
+        const string TempoRampAudioPath = Root + "/Content/Lab/TempoRamp.wav";
         const string GeneratedFolder = Root + "/Content/Lab/Generated";
         const string SongAssetPath = GeneratedFolder + "/Song_Lab001.asset";
         const string SceneFolder = Root + "/Scenes";
@@ -46,15 +48,20 @@ namespace HeadbangHeroes.Editor
         static readonly Color BackgroundColor = new(0.055f, 0.055f, 0.07f, 1f);
 
         [MenuItem("Tools/Headbang Heroes/Build M0 Prototype")]
-        public static void Build()
+        public static void Build() => BuildInternal(ChartJsonPath, tempoRamp: false);
+
+        [MenuItem("Tools/Headbang Heroes/Build M0 Prototype (Tempo Ramp)")]
+        public static void BuildTempoRamp() => BuildInternal(TempoRampChartPath, tempoRamp: true);
+
+        static void BuildInternal(string chartPath, bool tempoRamp)
         {
             EnsureFolder(Root + "/Content/Lab", "Generated");
             EnsureFolder(Root, "Scenes");
 
-            var chartJson = AssetDatabase.LoadAssetAtPath<TextAsset>(ChartJsonPath);
+            var chartJson = AssetDatabase.LoadAssetAtPath<TextAsset>(chartPath);
             if (chartJson == null)
             {
-                Debug.LogError($"HH M0 build failed: missing chart JSON at {ChartJsonPath}. Cannot build the prototype.");
+                Debug.LogError($"HH M0 build failed: missing chart JSON at {chartPath}. Cannot build the prototype.");
                 return;
             }
 
@@ -65,23 +72,35 @@ namespace HeadbangHeroes.Editor
             }
             catch (System.Exception e)
             {
-                Debug.LogError($"HH M0 build failed: could not parse chart JSON at {ChartJsonPath}. {e.Message}");
+                Debug.LogError($"HH M0 build failed: could not parse chart JSON at {chartPath}. {e.Message}");
                 return;
             }
 
-            var realAudio = FindRealAudio();
+            AudioClip audio;
+            bool usingClickTrack;
+            double startSongTime;
 
-            // Testability without the licensed MP3: if it is missing, generate a synthetic
-            // click-track that plays a short tick at each chart event so the whole loop
-            // (clock, closing circle, input, head, judgment, score) is playable on desktop.
-            var usingClickTrack = realAudio == null;
-            var audio = realAudio != null ? realAudio : GetOrCreateClickTrack(chartData);
+            if (tempoRamp)
+            {
+                // Synchronized tuning track: WAV clicks match the chart exactly; start at 0.
+                if (System.IO.File.Exists(AbsoluteFromProject(TempoRampAudioPath)))
+                    AssetDatabase.ImportAsset(TempoRampAudioPath, ImportAssetOptions.ForceSynchronousImport);
+                audio = AssetDatabase.LoadAssetAtPath<AudioClip>(TempoRampAudioPath);
+                usingClickTrack = false;
+                if (audio == null) { audio = GetOrCreateClickTrack(chartData); usingClickTrack = true; }
+                startSongTime = 0.0;
+            }
+            else
+            {
+                var realAudio = FindRealAudio();
+                // Testability without the licensed MP3: if missing, generate a synthetic click-track.
+                usingClickTrack = realAudio == null;
+                audio = realAudio != null ? realAudio : GetOrCreateClickTrack(chartData);
+                // The MIDI-derived chart's first hit is ~12.8s; start ~1s before.
+                startSongTime = 11.8;
+            }
 
             var song = GetOrCreateSong(audio);
-
-            // The chart is compiled from the real drum MIDI; the first hit is at ~12.8s.
-            // Start ~1s before so the first cue approaches instead of being skipped.
-            var startSongTime = 11.8;
 
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             scene.name = "Prototype_Headbang";
