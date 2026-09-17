@@ -22,6 +22,9 @@ namespace HeadbangHeroes.Gameplay
             this.timingQuality = JudgmentSystem.TimingQuality(judgment);
             this.motionQuality = motionQuality;
         }
+
+        /// <summary>An event the player never acted on (expired late). No timing/motion evidence.</summary>
+        public static JudgmentResult ExpiredMiss() => new JudgmentResult(Judgment.Miss, 0d, 0f);
     }
 
     /// <summary>

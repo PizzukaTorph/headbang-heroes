@@ -99,5 +99,24 @@ namespace HeadbangHeroes.Tests
             Assert.AreEqual(0.0, m.SongTimeAt(300.0), 1e-9);
             Assert.AreEqual(2.0, m.SongTimeAt(302.0), 1e-9);
         }
+
+        [Test]
+        public void CalibrationChangedWhilePaused_DoesNotCorruptResumeAlignment()
+        {
+            var m = SongTimeMap.Idle;
+            m.Schedule(100.0, 0.0);
+            m.Calibration = 0.010;
+            m.Pause(102.0);                 // frozen song-time = 2.010 (with cal 0.010)
+            Assert.AreEqual(2.010, m.SongTimeAt(150.0), 1e-9);
+
+            // Player opens settings during the pause and changes calibration.
+            m.Calibration = 0.050;
+            m.Resume(200.0);
+
+            // Resume continues from the frozen position; the NEW calibration applies going forward
+            // without a spurious jump from the (newCal - oldCal) delta being double-applied.
+            Assert.AreEqual(2.050, m.SongTimeAt(200.0), 1e-9);   // frozen base + new calibration
+            Assert.AreEqual(3.050, m.SongTimeAt(201.0), 1e-9);
+        }
     }
 }

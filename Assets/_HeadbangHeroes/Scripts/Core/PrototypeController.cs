@@ -162,7 +162,7 @@ namespace HeadbangHeroes.Core
 
         void OnMiss(ChartEvent ev)
         {
-            score.Apply(new JudgmentResult(Judgment.Miss, scheduler.Timing.GoodWindow + 0.001, 0f));
+            score.Apply(JudgmentResult.ExpiredMiss());
             cue?.Hide();
             hud?.ShowMiss(score.Combo, score.Score);
             Debug.Log($"MISS (expired) at {ev.time:0.000}s | combo {score.Combo} | score {score.Score}");

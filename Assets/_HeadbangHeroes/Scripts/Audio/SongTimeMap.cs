@@ -18,6 +18,7 @@ namespace HeadbangHeroes.Audio
         public bool Scheduled;
         public bool Paused;
         public double PausedSongTime;
+        double calibrationAtPause;   // calibration in effect when Pause froze the song-time
 
         public static SongTimeMap Idle => default;
 
@@ -43,16 +44,19 @@ namespace HeadbangHeroes.Audio
         {
             if (!Scheduled || Paused) return;
             PausedSongTime = SongTimeAt(dsp);
+            calibrationAtPause = Calibration;   // freeze the calibration used to compute PausedSongTime
             Paused = true;
         }
 
         public void Resume(double dsp)
         {
             if (!Scheduled || !Paused) return;
-            // Re-anchor so the frozen song-time continues seamlessly. PausedSongTime already
-            // includes calibration, so remove it from the offset to avoid double-counting.
+            // Re-anchor so the frozen song-time continues seamlessly. PausedSongTime already includes
+            // the calibration that was in effect AT PAUSE; subtract exactly that so a calibration
+            // change made while paused does not corrupt alignment (it applies from resume onward via
+            // the live Calibration term in SongTimeAt).
             AnchorDsp = dsp;
-            SongStartOffset = PausedSongTime - Calibration;
+            SongStartOffset = PausedSongTime - calibrationAtPause;
             Paused = false;
         }
 
