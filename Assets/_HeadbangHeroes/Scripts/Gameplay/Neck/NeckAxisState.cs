@@ -34,12 +34,14 @@ namespace HeadbangHeroes.Gameplay.Neck
 
         /// <summary>
         /// Marks a new gesture/inversion boundary: local evidence restarts from here so the
-        /// next event is judged only on motion produced after this point.
+        /// next event is judged only on motion produced after this point. Peak resets to zero
+        /// (the arrival peak has already been captured in the pre-inversion snapshot), so a
+        /// spam launch impulse cannot inflate a later event's incoming-motion evidence.
         /// </summary>
         public void BeginInversionBoundary()
         {
             TravelSinceInversion = 0f;
-            PeakSpeedSinceInversion = Mathf.Abs(Velocity);
+            PeakSpeedSinceInversion = 0f;
         }
 
         /// <summary>Applies a launch impulse along <paramref name="sign"/> (-1 / +1), scaled by intensity.</summary>

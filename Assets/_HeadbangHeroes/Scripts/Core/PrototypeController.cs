@@ -138,7 +138,9 @@ namespace HeadbangHeroes.Core
 
             // Canonical order: capture pre-inversion evidence + apply the neck impulse immediately,
             // then judge timing and evaluate motion quality from the pre-inversion snapshot.
-            var motionQuality = 1f;
+            // With no neck wired we cannot evaluate arrival quality, so we do not fabricate a
+            // full-quality sample.
+            var motionQuality = 0f;
             if (head != null)
             {
                 var snapshot = head.Bang(direction, intensity);

@@ -26,30 +26,60 @@ namespace HeadbangHeroes.Tests
 
         // ---------- Determinism / render-rate invariance ----------
 
+        static long ExpectedTicks(double totalSeconds)
+            => (long)System.Math.Floor(totalSeconds / NeckMotionConfig.Default.StepSeconds + 1e-9);
+
         [Test]
-        public void RenderRateInvariance_SameStateAcrossFrameRates()
+        public void RenderRateInvariance_SameStateAndTickCountAcrossFrameRates()
         {
-            const double total = 2.0; // seconds of authoritative time
+            // Several non-round totals so a one-tick float drift would be exposed.
+            double[] totals = { 0.3, 0.4, 0.5, 1.0, 2.0, 5.0 };
             double[] frameRates = { 1d / 30d, 1d / 60d, 1d / 90d, 1d / 120d };
 
-            var reference = NewNeck();
-            reference.ApplyBang(BangDirection.Left, 1f);
-            AdvanceInChunks(reference, total, 1d / 120d);
-
-            foreach (var frame in frameRates)
+            foreach (var total in totals)
             {
-                var neck = NewNeck();
-                neck.ApplyBang(BangDirection.Left, 1f);
-                AdvanceInChunks(neck, total, frame);
+                var expectedTicks = ExpectedTicks(total);
 
-                // Same total authoritative time => same number of fixed ticks => equal state.
-                Assert.AreEqual(reference.Tick, neck.Tick,
-                    $"tick count diverged at frame {frame}");
-                Assert.AreEqual(reference.HorizontalDisplacement, neck.HorizontalDisplacement, 1e-3f,
-                    $"displacement diverged at frame {frame}");
-                Assert.AreEqual(reference.HorizontalVelocity, neck.HorizontalVelocity, 1e-2f,
-                    $"velocity diverged at frame {frame}");
+                var reference = NewNeck();
+                reference.ApplyBang(BangDirection.Left, 1f);
+                AdvanceInChunks(reference, total, 1d / 120d);
+                Assert.AreEqual(expectedTicks, reference.Tick,
+                    $"reference tick count wrong at total {total}");
+
+                foreach (var frame in frameRates)
+                {
+                    var neck = NewNeck();
+                    neck.ApplyBang(BangDirection.Left, 1f);
+                    AdvanceInChunks(neck, total, frame);
+
+                    // Tick count must equal the analytic expectation for EVERY frame rate.
+                    Assert.AreEqual(expectedTicks, neck.Tick,
+                        $"tick count diverged at frame {frame}, total {total}");
+                    Assert.AreEqual(reference.HorizontalDisplacement, neck.HorizontalDisplacement, 1e-3f,
+                        $"displacement diverged at frame {frame}, total {total}");
+                }
             }
+        }
+
+        [Test]
+        public void RaggedFrameDeltas_DoNotChangeTickCount()
+        {
+            const double total = 2.0;
+            var expected = ExpectedTicks(total);
+
+            // Deliver the same total time in irregular, jittered chunks (frame hitches, vsync jitter).
+            var jitter = new[] { 0.017, 0.004, 0.033, 0.008, 0.021, 0.0006, 0.05, 0.012 };
+            var neck = NewNeck();
+            var remaining = total;
+            var i = 0;
+            while (remaining > 1e-9)
+            {
+                var d = System.Math.Min(jitter[i % jitter.Length], remaining);
+                neck.Advance(d);
+                remaining -= d;
+                i++;
+            }
+            Assert.AreEqual(expected, neck.Tick);
         }
 
         [Test]
@@ -73,6 +103,23 @@ namespace HeadbangHeroes.Tests
             var t2 = neck.Advance(step * 0.6);
             Assert.AreEqual(0, t1);
             Assert.AreEqual(1, t2);
+        }
+
+        [Test]
+        public void HugeDelta_IsClampedAndDoesNotSpiral()
+        {
+            var neck = NewNeck();
+            var step = NeckMotionConfig.Default.StepSeconds;
+
+            // A pathological hitch (10 seconds in one frame) must be clamped, not carried as debt.
+            var hitchTicks = neck.Advance(10.0);
+            var expectedCap = (long)System.Math.Floor(NeckMotionState.MaxAdvanceSeconds / step + 1e-9);
+            Assert.AreEqual(expectedCap, hitchTicks, "single huge delta must be clamped");
+
+            // The very next normal frame must run ~1 tick, proving no accumulated debt remains.
+            var nextTicks = neck.Advance(step);
+            Assert.LessOrEqual(nextTicks, 2);
+            Assert.GreaterOrEqual(nextTicks, 1);
         }
 
         // ---------- Classic inversion semantics ----------

@@ -130,9 +130,10 @@ namespace HeadbangHeroes.Gameplay
 
         void Update()
         {
-            // Advance authoritative simulation with a fixed step. Using render delta here only
-            // sizes the accumulator; the integration step is fixed, so the number/size of physics
-            // ticks depends on elapsed time, not on how many render frames delivered it.
+            // Advance authoritative simulation with a fixed step. Render delta only feeds the
+            // authoritative elapsed clock; ticks are derived from total elapsed time, so the number
+            // of physics ticks depends on elapsed time, not on how many render frames delivered it.
+            // (Package 02 will replace Time.deltaTime with AudioClock-derived song-time delta.)
             State.Advance(Time.deltaTime);
         }
 
