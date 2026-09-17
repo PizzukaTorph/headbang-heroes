@@ -143,8 +143,27 @@ namespace HeadbangHeroes.Editor
             Assign(controller, "hairPresenter", hairPresenter);
             Assign(controller, "venuePresenter", venuePresenter);
             Assign(controller, "haptics", haptics);
-            Assign(controller, "startOnPlay", true);
+            Assign(controller, "startOnPlay", false);   // the GameFlowController starts the run
             Assign(controller, "startSongTime", startSongTime);
+
+            // --- POC product loop: Home / Song Select / Pre-song / Results panels + flow ---
+            var flowGo = new GameObject("HH_M0_Flow");
+            var flow = flowGo.AddComponent<GameFlowController>();
+
+            var homeText = CreatePanel(canvas.transform, "HomePanel", out var homePanel);
+            var songText = CreatePanel(canvas.transform, "SongSelectPanel", out var songPanel);
+            var preText = CreatePanel(canvas.transform, "PreSongPanel", out var prePanel);
+            var resultsText = CreatePanel(canvas.transform, "ResultsPanel", out var resultsPanel);
+
+            Assign(flow, "gameplay", controller);
+            Assign(flow, "homePanel", homePanel);
+            Assign(flow, "songSelectPanel", songPanel);
+            Assign(flow, "preSongPanel", prePanel);
+            Assign(flow, "resultsPanel", resultsPanel);
+            Assign(flow, "homeText", homeText);
+            Assign(flow, "songSelectText", songText);
+            Assign(flow, "preSongText", preText);
+            Assign(flow, "resultsText", resultsText);
 
             // --- Input event system ---
             var eventSystem = new GameObject("EventSystem");
@@ -430,6 +449,28 @@ namespace HeadbangHeroes.Editor
             Assign(hud, "scheduler", scheduler);
             Assign(hud, "head", head);
             return hud;
+        }
+
+        static Text CreatePanel(Transform parent, string name, out CanvasGroup group)
+        {
+            var go = new GameObject(name, typeof(RectTransform), typeof(CanvasGroup));
+            var rect = go.GetComponent<RectTransform>();
+            rect.SetParent(parent, false);
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = rect.offsetMax = Vector2.zero;
+
+            var dim = go.AddComponent<Image>();
+            dim.color = new Color(0.03f, 0.03f, 0.05f, 0.96f);
+            dim.raycastTarget = false;
+
+            var text = CreateText("Text", rect, new Vector2(0, 0), new Vector2(1000, 1400), 42, TextAnchor.MiddleCenter);
+
+            group = go.GetComponent<CanvasGroup>();
+            group.alpha = 0f;
+            group.interactable = false;
+            group.blocksRaycasts = false;
+            return text;
         }
 
         static Text CreateCornerText(string name, Transform parent)

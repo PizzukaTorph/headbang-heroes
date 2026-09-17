@@ -48,6 +48,21 @@ namespace HeadbangHeroes.Core
         readonly MotionQualityConfig motionConfig = MotionQualityConfig.Default;
         RuntimeChart runtimeChart;
         bool wasReady;
+        bool running;                 // true from run start until the RunResult is finalized
+        double completionGraceUntil;  // small tail after last event before finalizing
+
+        /// <summary>Fired exactly once when a run finishes, carrying the authoritative RunResult.</summary>
+        public event System.Action<RunResult> RunCompleted;
+
+        /// <summary>Applies persisted profile settings/calibration to the run (called by the flow before start).</summary>
+        public void ApplyProfileSettings(double calibrationSeconds, bool rFlash, bool rShake, bool hEnabled, float hIntensity)
+        {
+            reducedFlash = rFlash;
+            reducedShake = rShake;
+            hapticsEnabled = hEnabled;
+            hapticIntensity = hIntensity;
+            if (clock != null) clock.Calibration = calibrationSeconds;
+        }
 
         void Start()
         {
@@ -131,6 +146,8 @@ namespace HeadbangHeroes.Core
             cue?.ResetCue();
             scheduler.Configure(runtimeChart);
             clock.Play(song.audio, startSongTime);
+            running = true;
+            completionGraceUntil = 0d;
         }
 
         void Update()
@@ -141,8 +158,29 @@ namespace HeadbangHeroes.Core
 
             RefreshHypeHud();
             PushPresentationSignals();
+            CheckRunCompletion();
 
             if (enablePlaytestControls) HandlePlaytestControls();
+        }
+
+        void CheckRunCompletion()
+        {
+            if (!running || scheduler == null || clock == null || !clock.IsScheduled) return;
+            if (!scheduler.AllResolved) return;
+
+            // Give a short tail so the last event's feedback is seen before Results.
+            if (completionGraceUntil <= 0d)
+            {
+                completionGraceUntil = clock.SongTime + 0.5;
+                return;
+            }
+            if (clock.SongTime < completionGraceUntil) return;
+
+            running = false;
+            var result = scorer.BuildResult(
+                runtimeChart.SongId, runtimeChart.ChartId, runtimeChart.ChartVersion, runtimeChart.RulesVersion);
+            clock.Stop();
+            RunCompleted?.Invoke(result);   // fired exactly once per run
         }
 
         void PushPresentationSignals()

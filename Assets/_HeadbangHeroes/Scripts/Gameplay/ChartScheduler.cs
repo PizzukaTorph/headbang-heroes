@@ -43,6 +43,9 @@ namespace HeadbangHeroes.Gameplay
         public double ApproachTime => cueLead;
         public double NextEventTime => resolver?.NextUnresolvedTime() ?? -1d;
 
+        /// <summary>True once every authored event has been resolved (hit or expired) — end of chart.</summary>
+        public bool AllResolved => resolver != null && resolver.Count > 0 && resolver.NextUnresolvedTime() < 0d;
+
         /// <summary>Returns the authored runtime event for a resolved match id (slot), for outcome assembly.</summary>
         public bool TryGetEvent(int matchedId, out RuntimeMotionEvent ev)
         {
