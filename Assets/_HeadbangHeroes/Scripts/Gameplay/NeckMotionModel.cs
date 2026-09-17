@@ -5,24 +5,18 @@ using UnityEngine;
 namespace HeadbangHeroes.Gameplay
 {
     /// <summary>
-    /// Unity adapter for the canonical deterministic neck simulation.
+    /// Unity adapter for the canonical deterministic neck simulation. It owns a pure
+    /// <see cref="NeckMotionState"/> domain object, advances it with a fixed authoritative step
+    /// (independent of render FPS) and forwards semantic Classic bangs to the domain.
     ///
-    /// This MonoBehaviour owns a pure <see cref="NeckMotionState"/> domain object and:
-    ///  - advances it with a fixed authoritative step (independent of render FPS),
-    ///  - forwards semantic Classic bangs to the domain,
-    ///  - drives the visual head transform DOWNSTREAM only (presentation reads domain state;
-    ///    it never writes back into it).
-    ///
-    /// Gameplay-critical state lives entirely in the domain object. Motion Quality is evaluated
-    /// separately by the pure MotionQualityEvaluator, which consumes the pre-inversion snapshot
-    /// returned by <see cref="Bang"/>.
+    /// This component holds NO presentation: the visible head transform is driven downstream by a
+    /// separate <c>NeckPresenter</c> that only READS the accessors below. Motion Quality is
+    /// evaluated separately by the pure MotionQualityEvaluator from the snapshot returned by
+    /// <see cref="Bang"/>.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class NeckMotionModel : MonoBehaviour
     {
-        [SerializeField] Transform head;
-        [SerializeField] float verticalVisualScale = 0.45f;
-
         [Header("Authoritative simulation")]
         [Tooltip("Fixed simulation rate in Hz. Gameplay physics is stepped at this rate regardless of render FPS.")]
         [SerializeField, Min(30f)] float simulationHz = 120f;
@@ -35,15 +29,7 @@ namespace HeadbangHeroes.Gameplay
         [SerializeField] float maxVelocity = 360f;
         [SerializeField] float limitBounce = -0.15f;
 
-        [Header("Motion-quality references (provisional M0 glue)")]
-        [SerializeField] float referenceVelocity = 220f;
-        [SerializeField] float referenceTravel = 24f;
-
         NeckMotionState state;
-        Vector2 neutralHeadPosition;
-
-        // Presentation-only interpolation between the last two authoritative samples.
-        float renderHorizontal, renderVertical;
 
         NeckMotionState State
         {
@@ -62,10 +48,10 @@ namespace HeadbangHeroes.Gameplay
             maxAngle: maxAngle,
             maxVelocity: maxVelocity,
             limitBounce: limitBounce,
-            referenceVelocity: referenceVelocity,
-            referenceTravel: referenceTravel);
+            referenceVelocity: 220f,   // retained for config completeness; MQ uses its own config
+            referenceTravel: 24f);
 
-        // --- Debug/telemetry accessors (read-only view of authoritative state) ---
+        // --- Read-only view of authoritative state (consumed downstream by NeckPresenter/HUD) ---
         public float Angle => State.HorizontalDisplacement;
         public float Velocity => State.HorizontalVelocity;
         public float HorizontalAngle => State.HorizontalDisplacement;
@@ -74,11 +60,7 @@ namespace HeadbangHeroes.Gameplay
         public float VerticalVelocity => State.VerticalVelocity;
         public bool Prepared => State.Prepared;
 
-        void Awake()
-        {
-            if (head != null) neutralHeadPosition = head.localPosition;
-            state = new NeckMotionState(BuildConfig());
-        }
+        void Awake() => state = new NeckMotionState(BuildConfig());
 
         void OnValidate()
         {
@@ -90,12 +72,6 @@ namespace HeadbangHeroes.Gameplay
         {
             State.SetConfig(BuildConfig());
             State.Reset();
-            renderHorizontal = renderVertical = 0f;
-            if (head != null)
-            {
-                head.localRotation = Quaternion.identity;
-                head.localPosition = neutralHeadPosition;
-            }
         }
 
         /// <summary>
@@ -114,21 +90,8 @@ namespace HeadbangHeroes.Gameplay
             // Advance authoritative simulation with a fixed step. Render delta only feeds the
             // authoritative elapsed clock; ticks are derived from total elapsed time, so the number
             // of physics ticks depends on elapsed time, not on how many render frames delivered it.
-            // (Package 02 will replace Time.deltaTime with AudioClock-derived song-time delta.)
+            // (A later package will replace Time.deltaTime with AudioClock-derived song-time delta.)
             State.Advance(Time.deltaTime);
-        }
-
-        void LateUpdate()
-        {
-            if (head == null) return;
-
-            // Presentation-only smoothing toward authoritative state. Never writes back to domain.
-            var t = 1f - Mathf.Exp(-25f * Time.deltaTime);
-            renderHorizontal = Mathf.Lerp(renderHorizontal, State.HorizontalDisplacement, t);
-            renderVertical = Mathf.Lerp(renderVertical, State.VerticalDisplacement, t);
-
-            head.localRotation = Quaternion.Euler(renderVertical, 0f, renderHorizontal);
-            head.localPosition = neutralHeadPosition + Vector2.up * (renderVertical * verticalVisualScale);
         }
     }
 }
