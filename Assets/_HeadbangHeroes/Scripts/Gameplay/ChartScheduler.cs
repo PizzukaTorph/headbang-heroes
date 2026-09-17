@@ -20,10 +20,10 @@ namespace HeadbangHeroes.Gameplay
         [SerializeField] AudioClock clock;
 
         [Header("Timing windows (data-driven, seconds)")]
-        [SerializeField, Min(0.001f)] double perfectWindow = 0.035;
-        [SerializeField, Min(0.001f)] double greatWindow = 0.070;
-        [SerializeField, Min(0.001f)] double goodWindow = 0.120;
-        [SerializeField, Min(0.001f)] double lateExpiry = 0.120;
+        [SerializeField, Min(0.001f)] double perfectWindow = 0.045;
+        [SerializeField, Min(0.001f)] double greatWindow = 0.090;
+        [SerializeField, Min(0.001f)] double goodWindow = 0.160;
+        [SerializeField, Min(0.001f)] double lateExpiry = 0.160;
         [Header("Presentation cue horizon (seconds)")]
         [SerializeField, Min(0.05f)] double cueLead = 1.0;
 

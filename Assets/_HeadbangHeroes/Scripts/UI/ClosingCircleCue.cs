@@ -26,17 +26,23 @@ namespace HeadbangHeroes.UI
 
         double targetSongTime;
         double approachSeconds = 1.0;
+        double hitWindowSeconds = 0.12;   // ring rests + brightens while |remaining| <= this
         bool running;
 
+        [SerializeField] Color approachColor = new Color(0.9f, 0.2f, 0.2f, 1f);
+        [SerializeField] Color hitColor = new Color(0.3f, 1f, 0.4f, 1f);
+
         public float Progress { get; private set; }
+        public bool InHitWindow { get; private set; }
 
         void OnEnable() => ResetCue();
 
-        public void Show(double eventSongTime, double approachDuration, BangDirection direction)
+        public void Show(double eventSongTime, double approachDuration, BangDirection direction, double hitWindow)
         {
             targetSongTime = eventSongTime;
             PositionFor(direction);
             approachSeconds = System.Math.Max(0.01, approachDuration);
+            hitWindowSeconds = System.Math.Max(0.01, hitWindow);
             running = true;
             SetVisible(true);
             Apply(EvaluateProgress());
@@ -67,13 +73,21 @@ namespace HeadbangHeroes.UI
         {
             running = false;
             Progress = 0f;
+            InHitWindow = false;
             SetVisible(false);
-            if (approachRing != null) approachRing.localScale = Vector3.one * startScale;
+            if (approachRing != null)
+            {
+                approachRing.localScale = Vector3.one * startScale;
+                var graphic = approachRing.GetComponent<UnityEngine.UI.Graphic>();
+                if (graphic != null) graphic.color = approachColor;
+            }
         }
 
         void Update()
         {
             if (!running || clock == null) return;
+            var remaining = targetSongTime - clock.SongTime;
+            InHitWindow = System.Math.Abs(remaining) <= hitWindowSeconds;
             Apply(EvaluateProgress());
         }
 
@@ -88,8 +102,15 @@ namespace HeadbangHeroes.UI
         {
             Progress = t;
             if (approachRing == null) return;
-            var scale = Mathf.Lerp(startScale, 1f, t);
+
+            // While inside the hit window the ring rests exactly on the target (scale 1) and turns
+            // to the hit colour, giving a clear "tap now" beat instead of a ring that vanishes at
+            // the instant of the minimum. This is presentation feedback; it does not change judging.
+            var scale = InHitWindow ? 1f : Mathf.Lerp(startScale, 1f, t);
             approachRing.localScale = Vector3.one * scale;
+
+            var graphic = approachRing.GetComponent<UnityEngine.UI.Graphic>();
+            if (graphic != null) graphic.color = InHitWindow ? hitColor : approachColor;
         }
 
         void SetVisible(bool visible)

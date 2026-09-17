@@ -244,7 +244,8 @@ namespace HeadbangHeroes.Core
             hud?.SetHype(h.Hype, h.MaxHype, h.IsReady, h.TheBangActive, h.FinishersExecuted);
         }
 
-        void OnCue(RuntimeMotionEvent ev, double approachTime) => cue?.Show(ev.Time, approachTime, ev.Direction);
+        void OnCue(RuntimeMotionEvent ev, double approachTime)
+            => cue?.Show(ev.Time, approachTime, ev.Direction, scheduler != null ? scheduler.Timing.GoodWindow : 0.12);
 
         void OnBang(BangInput bang)
         {
