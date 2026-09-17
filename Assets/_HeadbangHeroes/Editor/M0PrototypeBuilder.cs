@@ -30,6 +30,18 @@ namespace HeadbangHeroes.Editor
         const string SceneFolder = Root + "/Scenes";
         const string ScenePath = SceneFolder + "/Prototype_Headbang.unity";
 
+        // Where we look for the (gitignored) real audio. First match wins. Both the canonical
+        // LocalAudio/ subfolder and the Content/Lab/ root are accepted, in a few common formats.
+        static readonly string[] AudioCandidatePaths =
+        {
+            Root + "/Content/Lab/LocalAudio/BeyondThePain.mp3",
+            Root + "/Content/Lab/LocalAudio/BeyondThePain.wav",
+            Root + "/Content/Lab/LocalAudio/BeyondThePain.ogg",
+            Root + "/Content/Lab/BeyondThePain.mp3",
+            Root + "/Content/Lab/BeyondThePain.wav",
+            Root + "/Content/Lab/BeyondThePain.ogg",
+        };
+
         static readonly Color BackgroundColor = new(0.055f, 0.055f, 0.07f, 1f);
 
         [MenuItem("Tools/Headbang Heroes/Build M0 Prototype")]
@@ -56,15 +68,7 @@ namespace HeadbangHeroes.Editor
                 return;
             }
 
-            var realAudio = AssetDatabase.LoadAssetAtPath<AudioClip>(LocalAudioPath);
-
-            // If the MP3 exists on disk but hasn't been imported yet (e.g. just copied in),
-            // force a synchronous import so we don't fall back to the click-track unnecessarily.
-            if (realAudio == null && System.IO.File.Exists(AbsoluteFromProject(LocalAudioPath)))
-            {
-                AssetDatabase.ImportAsset(LocalAudioPath, ImportAssetOptions.ForceSynchronousImport);
-                realAudio = AssetDatabase.LoadAssetAtPath<AudioClip>(LocalAudioPath);
-            }
+            var realAudio = FindRealAudio();
 
             // Testability without the licensed MP3: if it is missing, generate a synthetic
             // click-track that plays a short tick at each chart event so the whole loop
@@ -256,6 +260,30 @@ namespace HeadbangHeroes.Editor
         static string AbsoluteFromProject(string projectRelativePath)
             => System.IO.Path.Combine(
                 System.IO.Directory.GetParent(Application.dataPath).FullName, projectRelativePath);
+
+        /// <summary>
+        /// Finds the real (gitignored) song audio across the accepted candidate paths/formats.
+        /// If a file exists on disk but is not yet imported (just copied in), it force-imports it.
+        /// Returns null when no real audio is present (caller falls back to the click-track).
+        /// </summary>
+        static AudioClip FindRealAudio()
+        {
+            foreach (var path in AudioCandidatePaths)
+            {
+                var clip = AssetDatabase.LoadAssetAtPath<AudioClip>(path);
+                if (clip == null && System.IO.File.Exists(AbsoluteFromProject(path)))
+                {
+                    AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceSynchronousImport);
+                    clip = AssetDatabase.LoadAssetAtPath<AudioClip>(path);
+                }
+                if (clip != null)
+                {
+                    Debug.Log($"HH M0: using real audio at {path}");
+                    return clip;
+                }
+            }
+            return null;
+        }
 
         static Canvas CreateCanvas()
         {
