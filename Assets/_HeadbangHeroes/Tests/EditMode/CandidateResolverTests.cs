@@ -65,7 +65,7 @@ namespace HeadbangHeroes.Tests
             r.Resolve(In(BangDirection.Left, 10.0), buf, out _);   // resolves nearest (10.0)
             r.Resolve(In(BangDirection.Left, 10.02), buf, out var res2);
             foreach (var c in buf)
-                Assert.AreNotEqual(10.0, c.SongTime, 1e-9, "resolved event must not reappear as a candidate");
+                Assert.That(c.SongTime, Is.Not.EqualTo(10.0).Within(1e-9), "resolved event must not reappear as a candidate");
             Assert.IsTrue(res2.Consumed);
         }
 
