@@ -157,6 +157,9 @@ namespace HeadbangHeroes.Editor
             cam.allowMSAA = false;
             go.transform.position = new Vector3(0f, 0f, -10f);
 
+            // The scene needs exactly one AudioListener or no audio is heard at all.
+            go.AddComponent<AudioListener>();
+
             // URP requires additional per-camera data. Assembly-CSharp references the URP
             // runtime, so this compiles even without an asmdef.
             var urpData = go.AddComponent<UniversalAdditionalCameraData>();
