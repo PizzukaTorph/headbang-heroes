@@ -38,9 +38,16 @@ namespace HeadbangHeroes.Core
         [SerializeField] bool enablePlaytestControls = true;
         [SerializeField] double calibrationStepMs = 5.0;
 
+        [Header("Accessibility (presentation only; never changes scoring)")]
+        [SerializeField] bool reducedFlash = false;
+        [SerializeField] bool reducedShake = false;
+        [SerializeField] bool hapticsEnabled = true;
+        [SerializeField, Range(0f, 1f)] float hapticIntensity = 1f;
+
         readonly RunScorer scorer = new(ScoringConfig.Default, HypeConfig.Default);
         readonly MotionQualityConfig motionConfig = MotionQualityConfig.Default;
         RuntimeChart runtimeChart;
+        bool wasReady;
 
         void Start()
         {
@@ -102,6 +109,14 @@ namespace HeadbangHeroes.Core
             scheduler.ConfigureApproachTime(data.approachTime);
 
             scorer.Reset();
+            wasReady = false;
+            var access = new AccessibilitySettings
+            {
+                ReducedFlash = reducedFlash,
+                ReducedShake = reducedShake,
+                HapticsEnabled = hapticsEnabled,
+                HapticIntensity = hapticIntensity
+            };
             hud?.ResetHud();
             hud?.BindSources(clock, scheduler, head);
             hud?.SetCalibrationOffset(clock.Calibration);
@@ -111,6 +126,8 @@ namespace HeadbangHeroes.Core
             bodyPresenter?.ResetPresentation();
             hairPresenter?.ResetPresentation();
             venuePresenter?.ResetPresentation();
+            venuePresenter?.ApplySettings(access);
+            haptics?.ApplySettings(access);
             cue?.ResetCue();
             scheduler.Configure(runtimeChart);
             clock.Play(song.audio, startSongTime);
@@ -234,7 +251,10 @@ namespace HeadbangHeroes.Core
                 haptics?.Play(HapticEvent.Finisher);
                 venuePresenter?.PulseFinisher();
             }
-            if (scorer.Hype.IsReady) haptics?.Play(HapticEvent.HypeReady);
+            // HYPE READY haptic fires once on the not-ready -> ready transition, not every bang.
+            var ready = scorer.Hype.IsReady;
+            if (ready && !wasReady) haptics?.Play(HapticEvent.HypeReady);
+            wasReady = ready;
 
             cue?.Hide();
             hud?.Show(new JudgmentResult(outcome.Judgment, outcome.SignedTimingError, outcome.MotionQuality),

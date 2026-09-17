@@ -82,3 +82,30 @@ Tracked so they are not lost:
 Editor. Multi-touch / simultaneous L+R is not handled.
 
 **Owning package:** Device validation / input hardening.
+
+---
+
+## 5. Package 05 (presentation) deferred items
+
+**Status:** OPEN — non-blocking; presentation contract (read-only/downstream) holds.
+
+- **NEXT cue missing (presentation-avatar H1):** only CURRENT (ClosingCircleCue) exists in the play
+  field; NEXT preview (25–35% emphasis, momentum preparation) is spec'd in GAMEPLAY_SCREEN_V1 but
+  deferred for the M0 placeholder pass. Add a second time-authority-free preview cue for the next
+  event's direction. Owner: Presentation/Avatar.
+- **Venue hue vs cue contrast (M1):** venue `intenseColor` shares the red channel with the CURRENT
+  approach ring; at peak intensity (THE BANG floor + Finisher pulse) the background reddens toward
+  the cue hue. Shift venue intense hue to purple/blue or enforce a luminance/hue separation budget.
+- **Vertical (DOWN) cue occlusion (M2):** cue vertical offset ±185 + start scale 2.4 can transiently
+  overlap the head/jaw on DOWN. Validate on a portrait device; clear the jaw, cap opening scale.
+- **Top bar layout (M4):** currently a single concatenated Text line; canonical layout is segmented
+  [PAUSE][SCORE][PROGRESS][MULTIPLIER][HYPE] with READY rising to ~45–55% peripheral emphasis. HUD polish.
+- **Scorer read-only view (qa M1):** RunScorer exposes concrete mutable Scoring/Hype getters. Expose
+  read-only interfaces (IScoringReadout/IHypeReadout) to presentation before more presenters are added.
+- **Presentation dt hardening:** pure reaction models don't guard NaN/Inf dt (presentation-only, can't
+  affect score); add IsFinite/clamp during device validation.
+- **Device/readability manual checks (PRES-11):** CURRENT+head read as one system; NEXT usefulness;
+  cardinal cue legibility; thumb comfort; long-hair silhouette clearance; reduced-flash/haptics behavior.
+  Not verifiable without a real phone.
+- **Art/polish debt:** placeholder avatar (knob head, flat rects), no face/expression channel; hardcoded
+  verticalVisualScale/smoothing in NeckPresenter -> config later.
