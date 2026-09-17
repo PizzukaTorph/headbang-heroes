@@ -4,7 +4,7 @@
   "songId": "lab-001-beyond-the-pain",
   "technique": "ClassicBang",
   "difficulty": "Prototype",
-  "approachTime": 1.0,
+  "approachTime": 0.6,
   "events": [
     {"time":23.34,"direction":-1,"intensity":1.0},
     {"time":24.14,"direction":1,"intensity":0.78},

@@ -36,7 +36,7 @@ namespace HeadbangHeroes.Core
 
         [Header("Playtest controls (Editor / Development builds)")]
         [SerializeField] bool enablePlaytestControls = true;
-        [SerializeField] double calibrationStepMs = 5.0;
+        [SerializeField] double calibrationStepMs = 20.0;
 
         [Header("Accessibility (presentation only; never changes scoring)")]
         [SerializeField] bool reducedFlash = false;
