@@ -20,15 +20,15 @@ namespace HeadbangHeroes.Gameplay
         [SerializeField] AudioClock clock;
 
         [Header("Timing windows (data-driven, seconds)")]
-        // Generous prototype windows: the point of M0 is "is the headbang fun", not millimetric
-        // precision. Being roughly on the beat should read as Good/Great; WELL is the sloppy edge
-        // that still credits 1 point; a consumed cue is only a MISS when the player is COMPLETELY
-        // early or late (beyond the WELL edge), plays the wrong direction, or there is no cue.
-        [SerializeField, Min(0.001f)] double perfectWindow = 0.090;
-        [SerializeField, Min(0.001f)] double greatWindow = 0.180;
-        [SerializeField, Min(0.001f)] double goodWindow = 0.300;
-        [SerializeField, Min(0.001f)] double wellWindow = 0.450;   // sloppy-but-there hit; beyond this a consumed cue is a MISS
-        [SerializeField, Min(0.001f)] double lateExpiry = 0.450;   // matches wellWindow so late Wells still consume the cue
+        // Prototype windows kept generous but BELOW half the chart's min event gap (~500 ms) so
+        // adjacent events' windows do not overlap and steal each other's taps. Residual latency is
+        // handled by AudioClock output-latency compensation + manual [ ] calibration, NOT by making
+        // windows wider than the gap (which caused cascading MISS on dense charts).
+        [SerializeField, Min(0.001f)] double perfectWindow = 0.070;
+        [SerializeField, Min(0.001f)] double greatWindow = 0.130;
+        [SerializeField, Min(0.001f)] double goodWindow = 0.190;
+        [SerializeField, Min(0.001f)] double wellWindow = 0.240;   // sloppy-but-there hit; beyond this a consumed cue is a MISS
+        [SerializeField, Min(0.001f)] double lateExpiry = 0.240;   // matches wellWindow so late Wells still consume the cue
         [Header("Presentation cue horizon (seconds)")]
         [SerializeField, Min(0.05f)] double cueLead = 1.0;
 

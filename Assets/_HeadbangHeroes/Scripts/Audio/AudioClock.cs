@@ -17,6 +17,11 @@ namespace HeadbangHeroes.Audio
     {
         [SerializeField] AudioSource source;
         [SerializeField, Min(0.05f)] double leadTime = 0.15;
+        [Header("Latency compensation")]
+        [Tooltip("Seed song-time with the device's measured audio-output latency so taps that are " +
+                 "physically on the beat are not read as early (the sound reaches the player later " +
+                 "than its DSP schedule). Manual [ ] calibration is applied on top of this.")]
+        [SerializeField] bool autoCompensateOutputLatency = true;
 
         SongTimeMap map = SongTimeMap.Idle;
 
@@ -28,6 +33,22 @@ namespace HeadbangHeroes.Audio
         {
             get => map.Calibration;
             set => map.Calibration = value;
+        }
+
+        /// <summary>Measured audio-output latency currently compensated (seconds).</summary>
+        public double OutputLatency => map.OutputLatency;
+
+        /// <summary>
+        /// Estimates the device audio-output latency from Unity's DSP buffer configuration
+        /// (bufferLength * numBuffers / sampleRate). This is the dominant, measurable component of
+        /// why a physically on-beat tap reads as early. Applied to the map as a constant run term.
+        /// </summary>
+        public void RefreshOutputLatency()
+        {
+            if (!autoCompensateOutputLatency) { map.OutputLatency = 0d; return; }
+            AudioSettings.GetDSPBufferSize(out var bufferLength, out var numBuffers);
+            var sr = AudioSettings.outputSampleRate;
+            map.OutputLatency = sr > 0 ? (double)bufferLength * numBuffers / sr : 0d;
         }
 
         /// <summary>Authoritative song-time (seconds), calibration included.</summary>
@@ -46,6 +67,7 @@ namespace HeadbangHeroes.Audio
         {
             if (source == null || clip == null) return;
 
+            RefreshOutputLatency();   // measure once per run; compensates the DSP->speaker delay
             source.Stop();
             source.clip = clip;
             var offset = System.Math.Max(0d, System.Math.Min(startSongTime, clip.length - 0.01d));

@@ -39,6 +39,7 @@ namespace HeadbangHeroes.UI
         int combo;
         long score;
         double calibrationOffsetMs;
+        double latencyMs;
         int hype;
         int maxHype = 100;
         bool hypeReady;
@@ -90,6 +91,7 @@ namespace HeadbangHeroes.UI
         }
 
         public void SetCalibrationOffset(double offsetSeconds) => calibrationOffsetMs = offsetSeconds * 1000.0;
+        public void SetLatencyOffset(double latencySeconds) => latencyMs = latencySeconds * 1000.0;
 
         public void ResetHud()
         {
@@ -176,7 +178,8 @@ namespace HeadbangHeroes.UI
             sb.Append("v ang  : ").Append(vAngle.ToString("0.0")).Append("\u00B0\n");
             sb.Append("h vel  : ").Append(angVel.ToString("0")).Append("\u00B0/s\n");
             sb.Append("prep   : ").Append(prepared ? "yes" : "setup").Append('\n');
-            sb.Append("offset : ").Append(calibrationOffsetMs.ToString("+0;-0;0")).Append(" ms");
+            sb.Append("offset : ").Append(calibrationOffsetMs.ToString("+0;-0;0")).Append(" ms\n");
+            sb.Append("latency: ").Append(latencyMs.ToString("0")).Append(" ms");
 
             debugText.text = sb.ToString();
         }

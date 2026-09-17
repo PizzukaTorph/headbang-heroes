@@ -62,12 +62,12 @@ namespace HeadbangHeroes.Gameplay.Timing
         /// MISS when the player is completely early/late (beyond WELL), wrong-direction, or no cue.
         /// </summary>
         public static TimingConfig Default => new TimingConfig(
-            perfectWindow: 0.090,
-            greatWindow: 0.180,
-            goodWindow: 0.300,
-            wellWindow: 0.450,
+            perfectWindow: 0.070,
+            greatWindow: 0.130,
+            goodWindow: 0.190,
+            wellWindow: 0.240,
             candidateLead: 1.0,
-            lateExpiry: 0.450);
+            lateExpiry: 0.240);
 
         /// <summary>Classifies an absolute timing error into a judgment tier (hit-only; no MISS gating here).</summary>
         public Judgment Classify(double signedError)

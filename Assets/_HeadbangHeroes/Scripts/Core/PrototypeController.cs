@@ -135,6 +135,7 @@ namespace HeadbangHeroes.Core
             hud?.ResetHud();
             hud?.BindSources(clock, scheduler, head);
             hud?.SetCalibrationOffset(clock.Calibration);
+            hud?.SetLatencyOffset(clock.OutputLatency);
             input?.SetClock(clock);
             head?.ResetMotion();
             neckPresenter?.ResetPresentation();

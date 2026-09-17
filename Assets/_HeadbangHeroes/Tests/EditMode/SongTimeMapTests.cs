@@ -6,6 +6,39 @@ namespace HeadbangHeroes.Tests
     public sealed class SongTimeMapTests
     {
         [Test]
+        public void OutputLatency_AppliedExactlyOnce()
+        {
+            var m = SongTimeMap.Idle;
+            m.Schedule(100.0, 0.0);
+            m.OutputLatency = 0.090;
+            Assert.AreEqual(1.090, m.SongTimeAt(101.0), 1e-9);
+        }
+
+        [Test]
+        public void OutputLatencyPlusCalibration_BothAppliedOnce()
+        {
+            var m = SongTimeMap.Idle;
+            m.Schedule(100.0, 0.0);
+            m.OutputLatency = 0.090;
+            m.Calibration = 0.030;
+            Assert.AreEqual(1.120, m.SongTimeAt(101.0), 1e-9);
+        }
+
+        [Test]
+        public void ResumeWithLatency_DoesNotDoubleCountOrJump()
+        {
+            var m = SongTimeMap.Idle;
+            m.Schedule(100.0, 0.0);
+            m.OutputLatency = 0.090;
+            m.Calibration = 0.030;
+            m.Pause(102.0);                 // frozen = 2.120 (2 + 0.09 + 0.03)
+            Assert.AreEqual(2.120, m.SongTimeAt(150.0), 1e-9);
+            m.Resume(200.0);
+            Assert.AreEqual(2.120, m.SongTimeAt(200.0), 1e-9);   // no jump; latency+cal not double-counted
+            Assert.AreEqual(3.120, m.SongTimeAt(201.0), 1e-9);
+        }
+
+        [Test]
         public void Idle_ReturnsZero()
         {
             var m = SongTimeMap.Idle;
