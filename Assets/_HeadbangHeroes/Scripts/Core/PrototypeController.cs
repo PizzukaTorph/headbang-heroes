@@ -306,6 +306,8 @@ namespace HeadbangHeroes.Core
             // larger ring, late a smaller one. Lets the player build a mental map to self-calibrate.
             cue?.ShowHitMarker(outcome.SignedTimingError);
             cue?.Hide();
+            hud?.Show(new JudgmentResult(outcome.Judgment, outcome.SignedTimingError, outcome.MotionQuality),
+                      outcome.ComboAfter, scorer.Scoring.Score);
             RefreshHypeHud();
 
             // Diagnostic: pressed vs expected direction and why a MISS happened (timing vs wrong-dir).
