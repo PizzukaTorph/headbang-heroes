@@ -278,7 +278,7 @@ namespace HeadbangHeroes.Editor
             bg.offsetMax = Vector2.zero;
         }
 
-        static GameObject CreateAvatar(Transform parent, out HeadMotionModel motion)
+        static GameObject CreateAvatar(Transform parent, out NeckMotionModel motion)
         {
             var avatar = new GameObject("Prototype_Avatar", typeof(RectTransform));
             var root = avatar.GetComponent<RectTransform>();
@@ -297,7 +297,7 @@ namespace HeadbangHeroes.Editor
             headImage.color = new Color(0.62f, 0.52f, 0.43f, 1f);
             headImage.raycastTarget = false;
 
-            motion = avatar.AddComponent<HeadMotionModel>();
+            motion = avatar.AddComponent<NeckMotionModel>();
             Assign(motion, "head", head);
             return avatar;
         }
@@ -333,7 +333,7 @@ namespace HeadbangHeroes.Editor
             return cue;
         }
 
-        static PrototypeHud CreateHud(Transform parent, AudioClock clock, ChartScheduler scheduler, HeadMotionModel head)
+        static PrototypeHud CreateHud(Transform parent, AudioClock clock, ChartScheduler scheduler, NeckMotionModel head)
         {
             var root = new GameObject("PrototypeHUD", typeof(RectTransform));
             var rect = root.GetComponent<RectTransform>();

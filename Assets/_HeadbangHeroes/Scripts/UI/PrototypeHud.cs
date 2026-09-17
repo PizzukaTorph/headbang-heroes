@@ -23,7 +23,7 @@ namespace HeadbangHeroes.UI
         [Header("Live telemetry sources (optional)")]
         [SerializeField] AudioClock clock;
         [SerializeField] ChartScheduler scheduler;
-        [SerializeField] HeadMotionModel head;
+        [SerializeField] NeckMotionModel head;
 
         [SerializeField] bool debugVisible = true;
         [SerializeField] bool allowToggleKey = true;
@@ -39,7 +39,7 @@ namespace HeadbangHeroes.UI
         long score;
         double calibrationOffsetMs;
 
-        public void BindSources(AudioClock audioClock, ChartScheduler chartScheduler, HeadMotionModel headMotion)
+        public void BindSources(AudioClock audioClock, ChartScheduler chartScheduler, NeckMotionModel headMotion)
         {
             clock = audioClock;
             scheduler = chartScheduler;
@@ -108,9 +108,10 @@ namespace HeadbangHeroes.UI
 
             var songTime = clock != null ? clock.SongTime : 0d;
             var nextEvent = scheduler != null ? scheduler.NextEventTime : -1d;
-            var angle = head != null ? head.Angle : 0f;
-            var angVel = head != null ? head.Velocity : 0f;
-            var peak = head != null ? head.PeakAmplitude : 0f;
+            var angle = head != null ? head.HorizontalAngle : 0f;
+            var angVel = head != null ? head.HorizontalVelocity : 0f;
+            var vAngle = head != null ? head.VerticalAngle : 0f;
+            var prepared = head != null && head.Prepared;
             var paused = clock != null && clock.IsPaused;
 
             sb.Clear();
@@ -125,9 +126,10 @@ namespace HeadbangHeroes.UI
             sb.Append("perf   : ").Append(lastPerformance.ToString("0.00")).Append('\n');
             sb.Append("combo  : ").Append(combo).Append('\n');
             sb.Append("score  : ").Append(score.ToString("N0")).Append('\n');
-            sb.Append("angle  : ").Append(angle.ToString("0.0")).Append("\u00B0\n");
-            sb.Append("ang vel: ").Append(angVel.ToString("0")).Append("\u00B0/s\n");
-            sb.Append("peak   : ").Append(peak.ToString("0.0")).Append("\u00B0\n");
+            sb.Append("h ang  : ").Append(angle.ToString("0.0")).Append("\u00B0\n");
+            sb.Append("v ang  : ").Append(vAngle.ToString("0.0")).Append("\u00B0\n");
+            sb.Append("h vel  : ").Append(angVel.ToString("0")).Append("\u00B0/s\n");
+            sb.Append("prep   : ").Append(prepared ? "yes" : "setup").Append('\n');
             sb.Append("offset : ").Append(calibrationOffsetMs.ToString("+0;-0;0")).Append(" ms");
 
             debugText.text = sb.ToString();

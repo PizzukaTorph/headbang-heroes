@@ -15,7 +15,7 @@ namespace HeadbangHeroes.Core
         [SerializeField] AudioClock clock;
         [SerializeField] ChartScheduler scheduler;
         [SerializeField] HeadbangInput input;
-        [SerializeField] HeadMotionModel head;
+        [SerializeField] NeckMotionModel head;
         [SerializeField] ClosingCircleCue cue;
         [SerializeField] PrototypeHud hud;
         [SerializeField] bool startOnPlay = true;
@@ -136,9 +136,14 @@ namespace HeadbangHeroes.Core
                 ? scheduler.ActiveEvent.intensity
                 : 1f;
 
-            // Sample arrival quality before this tap changes the motion.
-            var motionQuality = head != null ? head.SampleMotionQuality(direction) : 1f;
-            head?.Bang(direction, intensity);
+            // Canonical order: capture pre-inversion evidence + apply the neck impulse immediately,
+            // then judge timing and evaluate motion quality from the pre-inversion snapshot.
+            var motionQuality = 1f;
+            if (head != null)
+            {
+                var snapshot = head.Bang(direction, intensity);
+                motionQuality = head.ProvisionalMotionQuality(snapshot);
+            }
 
             if (scheduler == null || !scheduler.HasActiveEvent)
                 return;
