@@ -1,3 +1,4 @@
+using HeadbangHeroes.Charts;
 using UnityEngine;
 
 namespace HeadbangHeroes.Gameplay.Neck
