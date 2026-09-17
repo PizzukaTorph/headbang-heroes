@@ -27,8 +27,8 @@ namespace HeadbangHeroes.Tests
         public void TooEarlyForAll_ConsumesNothing()
         {
             var candidates = new List<MotionCandidate> { C(0, 10.0, BangDirection.Left) };
-            // Input well before the GOOD early edge of the only candidate.
-            var r = EventMatcher.Match(In(BangDirection.Left, 10.0 - (Cfg.GoodWindow + 0.05)), candidates, Cfg);
+            // Input well before the WELL early edge of the only candidate.
+            var r = EventMatcher.Match(In(BangDirection.Left, 10.0 - (Cfg.WellWindow + 0.05)), candidates, Cfg);
             Assert.AreEqual(MatchKind.TooEarly, r.Kind);
             Assert.IsFalse(r.Consumed);
             Assert.AreEqual(-1, r.MatchedId);

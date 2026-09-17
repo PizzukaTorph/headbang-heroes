@@ -16,8 +16,15 @@ namespace HeadbangHeroes.Gameplay.Timing
         /// <summary>|error| &lt;= this ⇒ GREAT (when &gt; PerfectWindow).</summary>
         public readonly double GreatWindow;
 
-        /// <summary>|error| &lt;= this ⇒ GOOD (when &gt; GreatWindow). Beyond this a hit is a MISS.</summary>
+        /// <summary>|error| &lt;= this ⇒ GOOD (when &gt; GreatWindow).</summary>
         public readonly double GoodWindow;
+
+        /// <summary>
+        /// |error| &lt;= this ⇒ WELL (when &gt; GoodWindow): a sloppy-but-present hit that still
+        /// scores. Beyond this a consumed candidate is a genuine MISS. This is the outer edge of
+        /// the judgeable/consume window — a cue WAS there, the player just timed it poorly.
+        /// </summary>
+        public readonly double WellWindow;
 
         /// <summary>
         /// How far AHEAD of an event (seconds) it becomes an eligible matching candidate.
@@ -37,23 +44,26 @@ namespace HeadbangHeroes.Gameplay.Timing
             double perfectWindow,
             double greatWindow,
             double goodWindow,
+            double wellWindow,
             double candidateLead,
             double lateExpiry)
         {
             PerfectWindow = perfectWindow;
             GreatWindow = greatWindow;
             GoodWindow = goodWindow;
+            WellWindow = wellWindow;
             CandidateLead = candidateLead;
             LateExpiry = lateExpiry;
         }
 
         /// <summary>Canonical M0-derived defaults (35/70/120 ms windows, 1.0 s candidate lead).</summary>
         public static TimingConfig Default => new TimingConfig(
-            perfectWindow: 0.035,
-            greatWindow: 0.070,
-            goodWindow: 0.120,
+            perfectWindow: 0.045,
+            greatWindow: 0.090,
+            goodWindow: 0.160,
+            wellWindow: 0.260,
             candidateLead: 1.0,
-            lateExpiry: 0.120);
+            lateExpiry: 0.260);
 
         /// <summary>Classifies an absolute timing error into a judgment tier (hit-only; no MISS gating here).</summary>
         public Judgment Classify(double signedError)
@@ -62,6 +72,7 @@ namespace HeadbangHeroes.Gameplay.Timing
             if (e <= PerfectWindow) return Judgment.Perfect;
             if (e <= GreatWindow) return Judgment.Great;
             if (e <= GoodWindow) return Judgment.Good;
+            if (e <= WellWindow) return Judgment.Well;
             return Judgment.Miss;
         }
     }

@@ -11,8 +11,8 @@ namespace HeadbangHeroes.Tests
         static readonly ProgressionConfig PCfg = ProgressionConfig.Default;
 
         static RunResult Run(long score, int longest, int hype, int fin, int p, int g, int gd, int m,
-            string song = "song1", string chart = "chart1", int cv = 2, int rv = 1) =>
-            new RunResult(song, chart, cv, rv, score, p, g, gd, m, longest, completedCombos: 0,
+            string song = "song1", string chart = "chart1", int cv = 2, int rv = 1, int well = 0) =>
+            new RunResult(song, chart, cv, rv, score, p, g, gd, well, m, longest, completedCombos: 0,
                 totalHypeEarned: hype, theBangActivations: fin > 0 ? 1 : 0, finishersExecuted: fin);
 
         // ---- Grade ----

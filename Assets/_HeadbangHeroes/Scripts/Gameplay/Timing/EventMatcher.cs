@@ -38,8 +38,10 @@ namespace HeadbangHeroes.Gameplay.Timing
             {
                 var error = input.SongTime - c.SongTime;
 
-                // Judgeable window: not earlier than the GOOD early edge, not past the late expiry.
-                if (error < -config.GoodWindow || error > config.LateExpiry)
+                // Judgeable window: not earlier than the WELL early edge, not past the late expiry.
+                // A cue WAS present within this window — even a poorly-timed tap consumes it (WELL)
+                // rather than passing through as a no-cue MISS.
+                if (error < -config.WellWindow || error > config.LateExpiry)
                     continue;
 
                 var abs = error < 0 ? -error : error;
@@ -67,9 +69,9 @@ namespace HeadbangHeroes.Gameplay.Timing
             {
                 var error = input.SongTime - bestCompatible.SongTime;
                 var judgment = config.Classify(error);
-                // Inside the judgeable window Classify can still return Miss only beyond GoodWindow,
-                // which cannot happen here (error <= GoodWindow late, >= -GoodWindow early), so this
-                // is a genuine hit tier.
+                // Inside the judgeable window Classify returns a real tier (PERFECT..WELL); it can
+                // only return MISS beyond WellWindow, which cannot happen here (|error| <= WellWindow),
+                // so this is always a credited hit tier.
                 return new MatchResult(MatchKind.Hit, bestCompatible.Id, error, judgment);
             }
 

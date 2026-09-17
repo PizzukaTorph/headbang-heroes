@@ -30,7 +30,7 @@ namespace HeadbangHeroes.Meta
         public static IReadOnlyList<ResultTag> DeriveTags(in RunResult run)
         {
             var tags = new List<ResultTag>(4);
-            var total = run.PerfectCount + run.GreatCount + run.GoodCount + run.MissCount;
+            var total = run.PerfectCount + run.GreatCount + run.GoodCount + run.WellCount + run.MissCount;
 
             if (run.MissCount == 0 && total > 0) tags.Add(ResultTag.ZeroMiss);
             if (run.LongestCombo >= 30) tags.Add(ResultTag.HugeCombo);

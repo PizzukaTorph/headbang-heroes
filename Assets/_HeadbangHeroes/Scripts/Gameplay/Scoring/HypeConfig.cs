@@ -87,7 +87,7 @@ namespace HeadbangHeroes.Gameplay.Scoring
             }
         }
 
-        /// <summary>True when the timing tier is good enough to be a Finisher (Perfect &gt; Great &gt; Good &gt; Miss).</summary>
+        /// <summary>True when the timing tier is good enough to be a Finisher (Perfect &gt; Great &gt; Good &gt; Well &gt; Miss).</summary>
         public bool JudgmentQualifiesForFinisher(Judgment judgment)
             => TierRank(judgment) >= TierRank(FinisherMinJudgment);
 
@@ -95,9 +95,10 @@ namespace HeadbangHeroes.Gameplay.Scoring
         {
             switch (j)
             {
-                case Judgment.Perfect: return 3;
-                case Judgment.Great: return 2;
-                case Judgment.Good: return 1;
+                case Judgment.Perfect: return 4;
+                case Judgment.Great: return 3;
+                case Judgment.Good: return 2;
+                case Judgment.Well: return 1;
                 default: return 0; // Miss
             }
         }

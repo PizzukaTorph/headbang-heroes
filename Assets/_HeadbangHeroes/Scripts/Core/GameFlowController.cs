@@ -180,6 +180,7 @@ namespace HeadbangHeroes.Core
             sb.Append("PERFECT ").Append(run.PerfectCount)
               .Append("  GREAT ").Append(run.GreatCount)
               .Append("  GOOD ").Append(run.GoodCount)
+              .Append("  WELL ").Append(run.WellCount)
               .Append("  MISS ").Append(run.MissCount).Append("\n\n");
             sb.Append("XP +").Append(outcome.XpEarned).Append("   HH +").Append(outcome.HhEarned);
             if (outcome.LeveledUp) sb.Append("   LEVEL UP -> ").Append(outcome.LevelAfter);

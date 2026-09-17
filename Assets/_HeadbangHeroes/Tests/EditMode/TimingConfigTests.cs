@@ -45,9 +45,24 @@ namespace HeadbangHeroes.Tests
         }
 
         [Test]
-        public void OutsideGood_IsMiss()
+        public void OutsideGood_IsWell()
         {
             var e = Cfg.GoodWindow + 1e-4;
+            Assert.AreEqual(Judgment.Well, Cfg.Classify(e));
+            Assert.AreEqual(Judgment.Well, Cfg.Classify(-e));
+        }
+
+        [Test]
+        public void ExactlyWellBoundary_IsWell()
+        {
+            Assert.AreEqual(Judgment.Well, Cfg.Classify(Cfg.WellWindow));
+            Assert.AreEqual(Judgment.Well, Cfg.Classify(-Cfg.WellWindow));
+        }
+
+        [Test]
+        public void OutsideWell_IsMiss()
+        {
+            var e = Cfg.WellWindow + 1e-4;
             Assert.AreEqual(Judgment.Miss, Cfg.Classify(e));
             Assert.AreEqual(Judgment.Miss, Cfg.Classify(-e));
         }
@@ -55,11 +70,14 @@ namespace HeadbangHeroes.Tests
         [Test]
         public void CustomConfig_WindowsAreDataDriven()
         {
-            var cfg = new TimingConfig(0.02, 0.05, 0.10, 0.8, 0.10);
+            // perfect .02, great .05, good .10, well .20, lead .8, lateExpiry .20
+            var cfg = new TimingConfig(0.02, 0.05, 0.10, 0.20, 0.8, 0.20);
             Assert.AreEqual(Judgment.Perfect, cfg.Classify(0.02));
             Assert.AreEqual(Judgment.Great, cfg.Classify(0.05));
             Assert.AreEqual(Judgment.Good, cfg.Classify(0.10));
-            Assert.AreEqual(Judgment.Miss, cfg.Classify(0.11));
+            Assert.AreEqual(Judgment.Well, cfg.Classify(0.11));
+            Assert.AreEqual(Judgment.Well, cfg.Classify(0.20));
+            Assert.AreEqual(Judgment.Miss, cfg.Classify(0.21));
         }
     }
 }

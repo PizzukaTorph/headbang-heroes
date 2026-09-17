@@ -142,5 +142,38 @@ namespace HeadbangHeroes.Tests
             Assert.AreEqual(s.Scoring.LongestCombo, r.LongestCombo);
             Assert.AreEqual(s.TotalHypeEarned, r.TotalHypeEarned);
         }
+
+        // ---- WELL tier ----
+
+        [Test]
+        public void Well_ScoresExactlyOne_CountedSeparately_NoHype()
+        {
+            var s = NewScorer();
+            var o = s.Resolve(Hit("a", Judgment.Well, motion: 1f));
+
+            Assert.AreEqual(Judgment.Well, o.Judgment);
+            Assert.AreEqual(1L, o.ScoreContribution, "WELL credits a flat 1 point");
+            Assert.AreEqual(1L, s.Scoring.Score);
+            Assert.AreEqual(1, s.Scoring.WellCount);
+            Assert.AreEqual(0, s.Scoring.MissCount, "WELL is not a MISS");
+            Assert.AreEqual(0, o.HypeContribution, "WELL builds no HYPE");
+        }
+
+        [Test]
+        public void Well_EndsCombo_ButDoesNotResetMultiplierLikeMiss()
+        {
+            var s = NewScorer(); // Default: 10 hits per step, max 5
+            // Build multiplier progress with 10 perfects -> multiplier advances past 1.
+            for (var i = 0; i < 10; i++) s.Resolve(Hit($"p{i}", Judgment.Perfect));
+            var mulAfterPerfects = s.Scoring.Multiplier;
+            Assert.Greater(mulAfterPerfects, 1, "multiplier advanced after 10 perfects");
+
+            s.Resolve(Hit("well", Judgment.Well));
+            Assert.AreEqual(0, s.Scoring.Combo, "WELL ends the combo");
+            Assert.AreEqual(mulAfterPerfects, s.Scoring.Multiplier, "WELL does not reset the multiplier like a MISS");
+
+            s.Resolve(Hit("miss", Judgment.Miss));
+            Assert.AreEqual(1, s.Scoring.Multiplier, "MISS resets the multiplier");
+        }
     }
 }

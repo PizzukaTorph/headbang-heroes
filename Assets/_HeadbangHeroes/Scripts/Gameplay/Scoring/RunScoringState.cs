@@ -5,6 +5,7 @@ namespace HeadbangHeroes.Gameplay.Scoring
     /// judgment counts. Pure C#. Combo/multiplier follow SCORING_SYSTEM_V1 exactly:
     ///   PERFECT/GREAT -> combo +1, multiplier progress
     ///   GOOD          -> combo ENDS (records a completed combo), multiplier progress
+    ///   WELL          -> combo ENDS, NO multiplier progress (sloppy but credited, not a miss)
     ///   MISS          -> combo reset to 0, multiplier progress reset
     /// </summary>
     public sealed class RunScoringState
@@ -17,7 +18,7 @@ namespace HeadbangHeroes.Gameplay.Scoring
         int completedCombos;
         int multiplierHits;     // successful hits since last MISS (drives the multiplier)
 
-        int perfect, great, good, miss;
+        int perfect, great, good, well, miss;
 
         public RunScoringState(ScoringConfig config) => this.config = config;
 
@@ -31,12 +32,13 @@ namespace HeadbangHeroes.Gameplay.Scoring
         public int PerfectCount => perfect;
         public int GreatCount => great;
         public int GoodCount => good;
+        public int WellCount => well;
         public int MissCount => miss;
 
         public void Reset()
         {
             score = 0; combo = 0; longestCombo = 0; completedCombos = 0; multiplierHits = 0;
-            perfect = great = good = miss = 0;
+            perfect = great = good = well = miss = 0;
         }
 
         /// <summary>
@@ -55,6 +57,8 @@ namespace HeadbangHeroes.Gameplay.Scoring
                     great++; combo++; multiplierHits++; TrackLongest(); break;
                 case Judgment.Good:
                     good++; EndCombo(); multiplierHits++; break;   // GOOD ends combo but advances multiplier
+                case Judgment.Well:
+                    well++; EndCombo(); break;                     // WELL: sloppy hit — ends combo, no multiplier progress, but not a miss
                 case Judgment.Miss:
                     miss++; combo = 0; multiplierHits = 0; break;  // MISS resets combo AND multiplier
             }

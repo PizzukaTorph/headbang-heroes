@@ -300,8 +300,9 @@ namespace HeadbangHeroes.Core
             if (ready && !wasReady) haptics?.Play(HapticEvent.HypeReady);
             wasReady = ready;
 
-            // Show where this tap landed on the cue as a blue ring (early=below, late=above)
-            // so the player can build a mental map and self-calibrate.
+            // Snapshot the cue on the tap: a blue ring concentric to the target at the size the
+            // closing ring had at that instant — dead-on coincides with the target, early is a
+            // larger ring, late a smaller one. Lets the player build a mental map to self-calibrate.
             cue?.ShowHitMarker(outcome.SignedTimingError);
             cue?.Hide();
             RefreshHypeHud();

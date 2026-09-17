@@ -432,9 +432,10 @@ namespace HeadbangHeroes.Editor
             approachRing.color = new Color(0.9f, 0.2f, 0.2f, 1f);
             approachRing.raycastTarget = false;
 
-            // Hit marker: a blue ring that shows where the last tap landed
-            // (early = below centre, late = above). Starts hidden.
-            var marker = CreateRect("HitMarker", rect, Vector2.zero, new Vector2(64, 64));
+            // Hit marker: a blue ring, same base size as the rings, drawn concentric to the target
+            // at the approach ring's scale at the moment of the tap (freezes "how big the cue was
+            // when I tapped"). Starts hidden.
+            var marker = CreateRect("HitMarker", rect, Vector2.zero, new Vector2(215, 215));
             var markerRing = marker.gameObject.AddComponent<RingGraphic>();
             markerRing.color = new Color(0.25f, 0.55f, 1f, 1f);
             markerRing.raycastTarget = false;

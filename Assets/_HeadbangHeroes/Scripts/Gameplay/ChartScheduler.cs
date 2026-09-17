@@ -23,7 +23,8 @@ namespace HeadbangHeroes.Gameplay
         [SerializeField, Min(0.001f)] double perfectWindow = 0.045;
         [SerializeField, Min(0.001f)] double greatWindow = 0.090;
         [SerializeField, Min(0.001f)] double goodWindow = 0.160;
-        [SerializeField, Min(0.001f)] double lateExpiry = 0.160;
+        [SerializeField, Min(0.001f)] double wellWindow = 0.260;   // sloppy-but-there hit; beyond this a consumed cue is a MISS
+        [SerializeField, Min(0.001f)] double lateExpiry = 0.260;   // matches wellWindow so late Wells still consume the cue
         [Header("Presentation cue horizon (seconds)")]
         [SerializeField, Min(0.05f)] double cueLead = 1.0;
 
@@ -36,7 +37,7 @@ namespace HeadbangHeroes.Gameplay
         public event Action<RuntimeMotionEvent, double> CueActivated;   // presentation only
         public event Action<RuntimeMotionEvent> EventMissed;            // an unresolved event expired
 
-        public TimingConfig Timing => new TimingConfig(perfectWindow, greatWindow, goodWindow, cueLead, lateExpiry);
+        public TimingConfig Timing => new TimingConfig(perfectWindow, greatWindow, goodWindow, wellWindow, cueLead, lateExpiry);
 
         public bool HasActiveEvent => cueIndex >= 0;
         public RuntimeMotionEvent ActiveEvent => resolver.At(cueIndex);

@@ -1,6 +1,6 @@
 namespace HeadbangHeroes.Gameplay
 {
-    public enum Judgment { Perfect, Great, Good, Miss }
+    public enum Judgment { Perfect, Great, Good, Well, Miss }
 
     public readonly struct JudgmentResult
     {
@@ -37,6 +37,7 @@ namespace HeadbangHeroes.Gameplay
         public const float PerfectQuality = 1.00f;
         public const float GreatQuality = 0.85f;
         public const float GoodQuality = 0.60f;
+        public const float WellQuality = 0.25f;   // sloppy-but-there: still credited, low quality
         public const float MissQuality = 0.00f;
 
         public static float TimingQuality(Judgment judgment)
@@ -46,6 +47,7 @@ namespace HeadbangHeroes.Gameplay
                 case Judgment.Perfect: return PerfectQuality;
                 case Judgment.Great: return GreatQuality;
                 case Judgment.Good: return GoodQuality;
+                case Judgment.Well: return WellQuality;
                 default: return MissQuality;
             }
         }

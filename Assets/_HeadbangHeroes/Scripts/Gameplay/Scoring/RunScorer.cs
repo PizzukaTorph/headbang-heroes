@@ -98,7 +98,14 @@ namespace HeadbangHeroes.Gameplay.Scoring
 
             // 4) Separable score factors (no dimension rewrites another).
             long scoreContribution = 0;
-            if (isHit)
+            if (e.Judgment == Judgment.Well)
+            {
+                // WELL: a cue was there and the player acted, just sloppily. Credit a flat 1 point
+                // (effort acknowledged) without motion/multiplier/THE BANG amplification.
+                scoreContribution = 1L;
+                scoring.AddScore(scoreContribution);
+            }
+            else if (isHit)
             {
                 var timing = scoringConfig.TimingFactor(e.Judgment);
                 var motion = scoringConfig.MotionFactor(e.MotionQuality);
@@ -142,7 +149,7 @@ namespace HeadbangHeroes.Gameplay.Scoring
             return new RunResult(
                 songId, chartId, chartVersion, rulesVersion,
                 scoring.Score,
-                scoring.PerfectCount, scoring.GreatCount, scoring.GoodCount, scoring.MissCount,
+                scoring.PerfectCount, scoring.GreatCount, scoring.GoodCount, scoring.WellCount, scoring.MissCount,
                 scoring.LongestCombo, scoring.CompletedCombos,
                 totalHypeEarned, hype.TheBangActivations, hype.FinishersExecuted);
         }

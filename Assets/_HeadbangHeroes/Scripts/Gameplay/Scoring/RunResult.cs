@@ -19,6 +19,7 @@ namespace HeadbangHeroes.Gameplay.Scoring
         public readonly int PerfectCount;
         public readonly int GreatCount;
         public readonly int GoodCount;
+        public readonly int WellCount;
         public readonly int MissCount;
         public readonly int LongestCombo;
         public readonly int CompletedCombos;
@@ -29,7 +30,7 @@ namespace HeadbangHeroes.Gameplay.Scoring
         public RunResult(
             string songId, string chartId, int chartVersion, int rulesVersion,
             long score,
-            int perfectCount, int greatCount, int goodCount, int missCount,
+            int perfectCount, int greatCount, int goodCount, int wellCount, int missCount,
             int longestCombo, int completedCombos,
             int totalHypeEarned, int theBangActivations, int finishersExecuted)
         {
@@ -41,6 +42,7 @@ namespace HeadbangHeroes.Gameplay.Scoring
             PerfectCount = perfectCount;
             GreatCount = greatCount;
             GoodCount = goodCount;
+            WellCount = wellCount;
             MissCount = missCount;
             LongestCombo = longestCombo;
             CompletedCombos = completedCombos;

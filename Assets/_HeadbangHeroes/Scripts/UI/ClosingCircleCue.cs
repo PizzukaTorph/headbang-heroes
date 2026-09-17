@@ -24,9 +24,7 @@ namespace HeadbangHeroes.UI
         [SerializeField] float startScale = 2.4f;
         [SerializeField] Vector2 horizontalOffset = new Vector2(185f, 0f);
         [SerializeField] Vector2 verticalOffset = new Vector2(0f, 185f);
-        [SerializeField] float markerMaxRadius = 90f;   // px offset from target for a full-window error
         [SerializeField] float markerHold = 0.45f;      // seconds the marker stays fully visible
-        [SerializeField] float markerReferenceWindow = 0.16f; // error mapped onto this (the GOOD edge)
 
         double targetSongTime;
         double approachSeconds = 1.0;
@@ -35,7 +33,6 @@ namespace HeadbangHeroes.UI
 
         // Hit-marker state: where the player's last tap landed relative to the target.
         float markerTimer;
-        Vector2 markerBaseAnchored;
         Color markerBaseColor = Color.white;
         UnityEngine.UI.Graphic markerGraphic;
 
@@ -84,18 +81,22 @@ namespace HeadbangHeroes.UI
         }
 
         /// <summary>
-        /// Show where the player's tap landed relative to the target: a blue ring offset from the
-        /// centre in proportion to the signed timing error (early = below, late = above). Purely
-        /// presentation — gives the player a mental map to self-calibrate. Does not affect judging.
+        /// Snapshot the approach ring at the moment of the tap: a blue ring drawn CONCENTRIC to the
+        /// target and at the SAME size the closing ring had right now. It freezes "how big the cue
+        /// was when I tapped" — dead-on = coincides with the target ring, early = larger, late =
+        /// smaller. Purely presentation; does not affect judging. The signed error is accepted for
+        /// API symmetry / future use but position stays concentric per design.
         /// </summary>
         public void ShowHitMarker(double signedErrorSeconds)
         {
             if (hitMarker == null) return;
 
-            var frac = Mathf.Clamp01((float)(System.Math.Abs(signedErrorSeconds) / System.Math.Max(0.001, markerReferenceWindow)));
-            var dir = signedErrorSeconds >= 0d ? 1f : -1f;   // late = up, early = down
-            markerBaseAnchored = new Vector2(0f, dir * frac * markerMaxRadius);
-            hitMarker.anchoredPosition = markerBaseAnchored;
+            // Concentric with the target.
+            hitMarker.anchoredPosition = Vector2.zero;
+
+            // Match the approach ring's current scale so the blue ring is as big as the cue is now.
+            var ringScale = approachRing != null ? approachRing.localScale.x : 1f;
+            hitMarker.localScale = Vector3.one * ringScale;
 
             if (markerGraphic == null) markerGraphic = hitMarker.GetComponent<UnityEngine.UI.Graphic>();
             markerBaseColor = markerGraphic != null ? markerGraphic.color : Color.white;
