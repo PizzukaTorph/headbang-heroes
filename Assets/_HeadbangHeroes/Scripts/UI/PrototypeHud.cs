@@ -40,6 +40,8 @@ namespace HeadbangHeroes.UI
         long score;
         double calibrationOffsetMs;
         double latencyMs;
+        [SerializeField] float flashSeconds = 0.6f;
+        float flashUntil;
         int hype;
         int maxHype = 100;
         bool hypeReady;
@@ -123,6 +125,7 @@ namespace HeadbangHeroes.UI
             if (comboText != null) comboText.text = $"x{combo}";
             if (judgmentText != null)
                 judgmentText.text = $"{result.judgment}\n{lastErrorMs:+0;-0;0} ms";
+            flashUntil = Time.unscaledTime + flashSeconds;
         }
 
         public void ShowMiss(int comboValue, long scoreValue)
@@ -135,6 +138,7 @@ namespace HeadbangHeroes.UI
             if (scoreText != null) scoreText.text = score.ToString("N0");
             if (comboText != null) comboText.text = $"x{combo}";
             if (judgmentText != null) judgmentText.text = "MISS";
+            flashUntil = Time.unscaledTime + flashSeconds;
         }
 
         void Start()
@@ -144,6 +148,14 @@ namespace HeadbangHeroes.UI
 
         void Update()
         {
+            // Time out the big centre judgment flash so it does not freeze on the last event
+            // (notably an expired MISS between taps), which read as a permanent "MISS 0ms".
+            if (judgmentText != null && flashUntil > 0f && Time.unscaledTime >= flashUntil)
+            {
+                judgmentText.text = "";
+                flashUntil = 0f;
+            }
+
             if (allowToggleKey && Keyboard.current != null && Keyboard.current.f1Key.wasPressedThisFrame)
                 SetDebugVisible(!debugVisible);
 
