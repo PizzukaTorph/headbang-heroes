@@ -19,6 +19,8 @@ namespace HeadbangHeroes.Input
     public sealed class HeadbangInput : MonoBehaviour
     {
         [SerializeField] AudioClock clock;
+        [Tooltip("WASD keyboard bangs (A=Left, D=Right, W=Up, S=Down) alongside mouse/touch, for desktop playtesting.")]
+        [SerializeField] bool enableKeyboard = true;
 
         /// <summary>Emitted with the direction and the input's authoritative song-time.</summary>
         public event Action<BangInput> Bang;
@@ -38,12 +40,27 @@ namespace HeadbangHeroes.Input
             if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
                 Emit(Mouse.current.position.ReadValue());
 #endif
+
+            if (enableKeyboard) ReadKeyboard();
+        }
+
+        void ReadKeyboard()
+        {
+            var kb = Keyboard.current;
+            if (kb == null) return;
+
+            // A/D = horizontal inversion, W/S = vertical. Same semantics as the tap wedges.
+            if (kb.aKey.wasPressedThisFrame) EmitDirection(BangDirection.Left);
+            if (kb.dKey.wasPressedThisFrame) EmitDirection(BangDirection.Right);
+            if (kb.wKey.wasPressedThisFrame) EmitDirection(BangDirection.Up);
+            if (kb.sKey.wasPressedThisFrame) EmitDirection(BangDirection.Down);
         }
 
         void Emit(Vector2 screenPosition)
-        {
-            var direction = ResolveZone(screenPosition, Screen.width, Screen.height);
+            => EmitDirection(ResolveZone(screenPosition, Screen.width, Screen.height));
 
+        void EmitDirection(BangDirection direction)
+        {
             // Best available timestamp for a press this frame is the current DSP time; convert it
             // once into song-time so judgment compares like-for-like clocks.
             var dspNow = clock != null ? clock.DspNow : 0d;
