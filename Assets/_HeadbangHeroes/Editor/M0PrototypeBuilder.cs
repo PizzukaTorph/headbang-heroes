@@ -97,7 +97,7 @@ namespace HeadbangHeroes.Editor
 
             Assign(clock, "source", source);
             Assign(scheduler, "clock", clock);
-            Assign(scheduler, "approachTime", 1.0);
+            Assign(scheduler, "cueLead", 1.0);
 
             // --- UI ---
             var canvas = CreateCanvas();
