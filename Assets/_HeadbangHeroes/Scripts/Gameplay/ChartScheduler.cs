@@ -20,11 +20,15 @@ namespace HeadbangHeroes.Gameplay
         [SerializeField] AudioClock clock;
 
         [Header("Timing windows (data-driven, seconds)")]
-        [SerializeField, Min(0.001f)] double perfectWindow = 0.045;
-        [SerializeField, Min(0.001f)] double greatWindow = 0.090;
-        [SerializeField, Min(0.001f)] double goodWindow = 0.160;
-        [SerializeField, Min(0.001f)] double wellWindow = 0.260;   // sloppy-but-there hit; beyond this a consumed cue is a MISS
-        [SerializeField, Min(0.001f)] double lateExpiry = 0.260;   // matches wellWindow so late Wells still consume the cue
+        // Generous prototype windows: the point of M0 is "is the headbang fun", not millimetric
+        // precision. Being roughly on the beat should read as Good/Great; WELL is the sloppy edge
+        // that still credits 1 point; a consumed cue is only a MISS when the player is COMPLETELY
+        // early or late (beyond the WELL edge), plays the wrong direction, or there is no cue.
+        [SerializeField, Min(0.001f)] double perfectWindow = 0.090;
+        [SerializeField, Min(0.001f)] double greatWindow = 0.180;
+        [SerializeField, Min(0.001f)] double goodWindow = 0.300;
+        [SerializeField, Min(0.001f)] double wellWindow = 0.450;   // sloppy-but-there hit; beyond this a consumed cue is a MISS
+        [SerializeField, Min(0.001f)] double lateExpiry = 0.450;   // matches wellWindow so late Wells still consume the cue
         [Header("Presentation cue horizon (seconds)")]
         [SerializeField, Min(0.05f)] double cueLead = 1.0;
 

@@ -56,14 +56,18 @@ namespace HeadbangHeroes.Gameplay.Timing
             LateExpiry = lateExpiry;
         }
 
-        /// <summary>Canonical M0-derived defaults (35/70/120 ms windows, 1.0 s candidate lead).</summary>
+        /// <summary>
+        /// Generous prototype defaults. M0 optimizes for "is the headbang fun", so being roughly on
+        /// the beat reads as Good/Great; WELL is the sloppy edge (1 point); a consumed cue is only a
+        /// MISS when the player is completely early/late (beyond WELL), wrong-direction, or no cue.
+        /// </summary>
         public static TimingConfig Default => new TimingConfig(
-            perfectWindow: 0.045,
-            greatWindow: 0.090,
-            goodWindow: 0.160,
-            wellWindow: 0.260,
+            perfectWindow: 0.090,
+            greatWindow: 0.180,
+            goodWindow: 0.300,
+            wellWindow: 0.450,
             candidateLead: 1.0,
-            lateExpiry: 0.260);
+            lateExpiry: 0.450);
 
         /// <summary>Classifies an absolute timing error into a judgment tier (hit-only; no MISS gating here).</summary>
         public Judgment Classify(double signedError)
