@@ -30,6 +30,7 @@ namespace HeadbangHeroes.Gameplay
         RuntimeChart chart;
         CandidateResolver resolver;
         int cueIndex = -1;  // resolver slot whose cue is currently shown (CURRENT), or -1
+        bool chartExhaustedLogged;
         readonly List<MotionCandidate> candidateBuffer = new(16);
 
         public event Action<RuntimeMotionEvent, double> CueActivated;   // presentation only
@@ -67,6 +68,7 @@ namespace HeadbangHeroes.Gameplay
         {
             resolver = new CandidateResolver(chart != null ? chart.MotionEvents : null, Timing);
             cueIndex = -1;
+            chartExhaustedLogged = false;
         }
 
         void Update()
@@ -90,6 +92,11 @@ namespace HeadbangHeroes.Gameplay
                 {
                     cueIndex = idx;
                     CueActivated?.Invoke(resolver.At(idx), cueLead);
+                }
+                else if (resolver.NextUnresolvedTime() < 0d && !chartExhaustedLogged)
+                {
+                    chartExhaustedLogged = true;
+                    Debug.Log($"HH M0: chart exhausted (all {resolver.Count} events resolved) at songT {now:0.000}. No more cues by design.");
                 }
             }
         }
