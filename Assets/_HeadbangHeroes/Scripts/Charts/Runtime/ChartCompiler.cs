@@ -54,6 +54,8 @@ namespace HeadbangHeroes.Charts.Runtime
         static RuntimeMotionEvent[] CompileMotion(ChartJsonData data, NeckTechnique defaultTechnique, out HashSet<string> seenIds)
         {
             seenIds = new HashSet<string>(StringComparer.Ordinal);
+            if (data.events == null)
+                throw new ChartValidationException("Chart has no events collection.");
             var list = new List<RuntimeMotionEvent>(data.events.Count);
 
             for (var i = 0; i < data.events.Count; i++)
@@ -95,9 +97,9 @@ namespace HeadbangHeroes.Charts.Runtime
                     throw new ChartValidationException($"Rest {i} has invalid start time {r.time}.");
                 if (r.duration <= 0d || double.IsNaN(r.duration) || double.IsInfinity(r.duration))
                     throw new ChartValidationException($"Rest {i} has invalid duration {r.duration}.");
-                if (r.settlingDuration < 0d || r.settlingDuration > r.duration)
+                if (r.settlingDuration < 0d || r.settlingDuration >= r.duration)
                     throw new ChartValidationException(
-                        $"Rest {i} settlingDuration {r.settlingDuration} must be within [0, duration {r.duration}].");
+                        $"Rest {i} settlingDuration {r.settlingDuration} must be in [0, duration {r.duration}) so an evaluation phase exists.");
 
                 var id = string.IsNullOrWhiteSpace(r.id) ? $"r{i:0000}" : r.id.Trim();
                 if (!seenIds.Add(id))
@@ -111,6 +113,14 @@ namespace HeadbangHeroes.Charts.Runtime
                 var byTime = a.StartTime.CompareTo(b.StartTime);
                 return byTime != 0 ? byTime : string.CompareOrdinal(a.Id, b.Id);
             });
+
+            // Reject overlapping rest intervals (ambiguous stillness ownership).
+            for (var i = 1; i < list.Count; i++)
+            {
+                if (list[i].StartTime < list[i - 1].EndTime)
+                    throw new ChartValidationException(
+                        $"Rest '{list[i].Id}' overlaps rest '{list[i - 1].Id}'.");
+            }
             return list.ToArray();
         }
 
@@ -140,13 +150,17 @@ namespace HeadbangHeroes.Charts.Runtime
             }
 
             // Legacy M0 integer encoding: -1 = Left, +1 = Right, 2 = Up, 3 = Down.
+            // 0 is treated as "unset" (JsonUtility cannot distinguish a missing field from 0), so a
+            // malformed event without an explicit direction fails rather than silently becoming Left.
             switch (e.direction)
             {
                 case -1: return BangDirection.Left;
                 case 1: return BangDirection.Right;
                 case 2: return BangDirection.Up;
                 case 3: return BangDirection.Down;
-                case 0: return BangDirection.Left; // JSON default (missing field) maps to Left
+                case 0:
+                    throw new ChartValidationException(
+                        $"Event {index} has no direction (set 'directionName' or a non-zero legacy 'direction').");
                 default:
                     throw new ChartValidationException($"Event {index} has unknown direction code {e.direction}.");
             }

@@ -32,8 +32,10 @@ namespace HeadbangHeroes.Gameplay.Rest
     /// never punished for legitimate incoming momentum created by the preceding required action.
     ///
     /// Determinism / FPS-independence: the outcome depends only on the peak speed/displacement of
-    /// the authoritative neck history within the evaluation window — aggregating by max is
-    /// insensitive to how many samples were delivered, given equivalent authoritative motion.
+    /// the authoritative neck history sampled within the evaluation window. Aggregating by max is
+    /// insensitive to how many samples were delivered GIVEN EQUIVALENT SAMPLED HISTORY. To keep this
+    /// true in practice, the consumer must feed samples from the authoritative fixed simulation
+    /// tick (not a render frame), so a low render rate cannot skip a transient neck spike.
     /// Pure C#: no Unity refs, no scene, testable in isolation.
     /// </summary>
     public sealed class RestEvaluator

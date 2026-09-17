@@ -194,6 +194,39 @@ namespace HeadbangHeroes.Tests
             Assert.IsFalse(chart.TryGetRestAt(20.0, out _), "no authored rest is active in a natural gap");
         }
 
+        [Test]
+        public void MissingDirection_Fails()
+        {
+            // direction 0 with no directionName is malformed/unset and must fail, not become Left.
+            Assert.Throws<ChartValidationException>(() => ChartCompiler.Compile(Data(
+                new ChartJsonEvent { time = 1.0, direction = 0 })));
+        }
+
+        [Test]
+        public void NullEventsCollection_FailsClearly()
+        {
+            var data = new ChartJsonData { chartId = "c", songId = "s", events = null };
+            Assert.Throws<ChartValidationException>(() => ChartCompiler.Compile(data));
+        }
+
+        [Test]
+        public void OverlappingRests_Fail()
+        {
+            var data = Data(M(1.0, -1));
+            data.rests.Add(new ChartJsonRest { id = "a", time = 5.0, duration = 3.0, settlingDuration = 0.5 });
+            data.rests.Add(new ChartJsonRest { id = "b", time = 6.0, duration = 2.0, settlingDuration = 0.5 }); // starts before a ends (8.0)
+            Assert.Throws<ChartValidationException>(() => ChartCompiler.Compile(data));
+        }
+
+        [Test]
+        public void RuntimeChart_CannotBeMutatedViaArrayCast()
+        {
+            var chart = ChartCompiler.Compile(Data(M(1.0, -1)));
+            // The exposed collection must not be the backing array (which could be written to).
+            Assert.IsFalse(chart.MotionEvents is RuntimeMotionEvent[],
+                "MotionEvents must be a read-only view, not the mutable backing array");
+        }
+
         // ---- Long-song timing (no accumulation drift; times are precomputed absolutes) ----
 
         [Test]

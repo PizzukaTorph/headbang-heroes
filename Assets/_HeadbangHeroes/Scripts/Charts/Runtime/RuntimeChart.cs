@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace HeadbangHeroes.Charts.Runtime
 {
@@ -22,9 +23,12 @@ namespace HeadbangHeroes.Charts.Runtime
 
         readonly RuntimeMotionEvent[] motion;    // sorted (Time, Id)
         readonly RuntimeRestEvent[] rest;        // sorted (StartTime, Id)
+        readonly ReadOnlyCollection<RuntimeMotionEvent> motionView;
+        readonly ReadOnlyCollection<RuntimeRestEvent> restView;
 
-        public IReadOnlyList<RuntimeMotionEvent> MotionEvents => motion;
-        public IReadOnlyList<RuntimeRestEvent> RestEvents => rest;
+        // Exposed as a read-only view that cannot be cast back to the backing array and mutated.
+        public IReadOnlyList<RuntimeMotionEvent> MotionEvents => motionView;
+        public IReadOnlyList<RuntimeRestEvent> RestEvents => restView;
 
         public int MotionCount => motion.Length;
         public int RestCount => rest.Length;
@@ -44,6 +48,8 @@ namespace HeadbangHeroes.Charts.Runtime
             Difficulty = difficulty;
             motion = sortedMotion;
             rest = sortedRest;
+            motionView = new ReadOnlyCollection<RuntimeMotionEvent>(motion);
+            restView = new ReadOnlyCollection<RuntimeRestEvent>(rest);
         }
 
         /// <summary>
