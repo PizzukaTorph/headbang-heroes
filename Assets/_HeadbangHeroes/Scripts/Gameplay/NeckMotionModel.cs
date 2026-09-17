@@ -13,9 +13,9 @@ namespace HeadbangHeroes.Gameplay
     ///  - drives the visual head transform DOWNSTREAM only (presentation reads domain state;
     ///    it never writes back into it).
     ///
-    /// Gameplay-critical state lives entirely in the domain object. Scoring/MotionQuality are
-    /// out of scope for this package; see <see cref="ProvisionalMotionQuality"/> for the M0 glue
-    /// that will be replaced by a dedicated MotionQualityEvaluator in a later package.
+    /// Gameplay-critical state lives entirely in the domain object. Motion Quality is evaluated
+    /// separately by the pure MotionQualityEvaluator, which consumes the pre-inversion snapshot
+    /// returned by <see cref="Bang"/>.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class NeckMotionModel : MonoBehaviour
@@ -108,25 +108,6 @@ namespace HeadbangHeroes.Gameplay
         /// <summary>Captures pre-inversion evidence without applying an impulse.</summary>
         public NeckMotionSnapshot CapturePreInversionSnapshot(BangDirection inversionPoint)
             => State.CapturePreInversionSnapshot(inversionPoint);
-
-        /// <summary>
-        /// PROVISIONAL M0 glue: derive a 0..1 motion-quality estimate from a pre-inversion snapshot.
-        /// This is NOT the canonical MotionQualityEvaluator (that is a later package). It lives here
-        /// only to keep the M0 scoring pipeline running while the neck runtime is stabilized.
-        /// </summary>
-        public float ProvisionalMotionQuality(in NeckMotionSnapshot snapshot)
-        {
-            var cfg = State.Config;
-            var velMag = Mathf.Clamp01(snapshot.IncomingSpeed / cfg.ReferenceVelocity);
-            var travel = Mathf.Clamp01(snapshot.TravelSinceInversion / cfg.ReferenceTravel);
-
-            // First bang from neutral is a setup action: no preceding travel to reward.
-            if (!snapshot.Prepared)
-                return Mathf.Clamp01(0.2f + 0.3f * velMag);
-
-            var quality = 0.6f * travel + 0.4f * velMag;
-            return Mathf.Clamp01(0.2f + 0.8f * quality);
-        }
 
         void Update()
         {

@@ -2,6 +2,8 @@ using HeadbangHeroes.Audio;
 using HeadbangHeroes.Charts;
 using HeadbangHeroes.Charts.Runtime;
 using HeadbangHeroes.Gameplay;
+using HeadbangHeroes.Gameplay.Neck;
+using HeadbangHeroes.Gameplay.Scoring;
 using HeadbangHeroes.Gameplay.Timing;
 using HeadbangHeroes.Input;
 using HeadbangHeroes.UI;
@@ -27,7 +29,8 @@ namespace HeadbangHeroes.Core
         [SerializeField] bool enablePlaytestControls = true;
         [SerializeField] double calibrationStepMs = 5.0;
 
-        readonly ComboScore score = new();
+        readonly RunScorer scorer = new(ScoringConfig.Default, HypeConfig.Default);
+        readonly MotionQualityConfig motionConfig = MotionQualityConfig.Default;
         RuntimeChart runtimeChart;
 
         void Start()
@@ -89,7 +92,7 @@ namespace HeadbangHeroes.Core
 
             scheduler.ConfigureApproachTime(data.approachTime);
 
-            score.Reset();
+            scorer.Reset();
             hud?.ResetHud();
             hud?.BindSources(clock, scheduler, head);
             hud?.SetCalibrationOffset(clock.Calibration);
@@ -102,6 +105,12 @@ namespace HeadbangHeroes.Core
 
         void Update()
         {
+            // Advance time-based scoring state (THE BANG expiry) on the authoritative clock.
+            if (clock != null && clock.IsScheduled && !clock.IsPaused)
+                scorer.Advance(clock.SongTime);
+
+            RefreshHypeHud();
+
             if (enablePlaytestControls) HandlePlaytestControls();
         }
 
@@ -122,6 +131,13 @@ namespace HeadbangHeroes.Core
                 else clock.Pause();
             }
 
+            // Manual THE BANG activation (only succeeds when HYPE is READY).
+            if (kb.bKey.wasPressedThisFrame && clock != null && clock.IsScheduled)
+            {
+                if (scorer.TryActivateTheBang(clock.SongTime))
+                    Debug.Log("THE BANG activated!");
+            }
+
             if (kb.leftBracketKey.wasPressedThisFrame)
                 AdjustCalibration(-calibrationStepMs / 1000.0);
 
@@ -137,44 +153,68 @@ namespace HeadbangHeroes.Core
             Debug.Log($"HH M0 calibration offset: {clock.Calibration * 1000.0:+0;-0;0} ms");
         }
 
+        void RefreshHypeHud()
+        {
+            var h = scorer.Hype;
+            hud?.SetHype(h.Hype, h.MaxHype, h.IsReady, h.TheBangActive, h.FinishersExecuted);
+        }
+
         void OnCue(RuntimeMotionEvent ev, double approachTime) => cue?.Show(ev.Time, approachTime, ev.Direction);
 
         void OnBang(BangInput bang)
         {
-            // Physical input is always accepted. Tapping early, late, on the wrong zone, or
-            // with no active chart event still changes the neck state; chart judgment is separate.
+            // Physical input is always accepted. Tapping early, late, on the wrong zone, or with no
+            // active chart event still changes the neck state; chart judgment is separate.
             var intensity = scheduler != null && scheduler.HasActiveEvent
                 ? scheduler.ActiveEvent.Intensity
                 : 1f;
 
-            // Canonical order: capture pre-inversion evidence + apply the neck impulse immediately,
-            // then resolve the authored candidate and judge timing. With no neck wired we cannot
-            // evaluate arrival quality, so we do not fabricate a full-quality sample.
+            // Canonical order: snapshot pre-inversion evidence + apply the neck impulse immediately,
+            // then resolve the authored candidate, judge timing, and evaluate motion quality from
+            // the pre-inversion snapshot. Candidate failure never undoes the neck input.
             var motionQuality = 0f;
+            var wasSetup = true;
             if (head != null)
             {
                 var snapshot = head.Bang(bang.Direction, intensity);
-                motionQuality = head.ProvisionalMotionQuality(snapshot);
+                var mq = MotionQualityEvaluator.Evaluate(snapshot, motionConfig);
+                motionQuality = mq.Quality;
+                wasSetup = mq.WasSetup;
             }
 
-            // Candidate resolution never undoes the neck input above.
             if (scheduler == null || !scheduler.Resolve(bang, out var match))
                 return; // too early / no candidate: neck moved, nothing consumed.
 
-            var result = new JudgmentResult(match.Judgment, match.SignedError, motionQuality);
-            score.Apply(result);
-            cue?.Hide();
-            hud?.Show(result, score.Combo, score.Score);
+            scheduler.TryGetEvent(match.MatchedId, out var ev);
 
-            Debug.Log($"{result.judgment} {result.error * 1000.0:+0;-0;0} ms | motion {result.motionQuality:0.00} | perf {result.Performance:0.00} | combo {score.Combo} | score {score.Score}");
+            var resolved = new ResolvedEvent(
+                ev.Id ?? match.MatchedId.ToString(),
+                match.Judgment,
+                match.SignedError,
+                motionQuality,
+                wasSetup,
+                ev.FinisherCandidate);
+
+            var outcome = scorer.Resolve(resolved);
+
+            cue?.Hide();
+            hud?.Show(new JudgmentResult(outcome.Judgment, outcome.SignedTimingError, outcome.MotionQuality),
+                      outcome.ComboAfter, scorer.Scoring.Score);
+            RefreshHypeHud();
+
+            Debug.Log($"{outcome.Judgment} {outcome.SignedTimingError * 1000.0:+0;-0;0} ms | motion {outcome.MotionQuality:0.00} | +{outcome.ScoreContribution} | combo {outcome.ComboAfter} | x{outcome.MultiplierAfter} | hype {scorer.Hype.Hype}{(outcome.WasFinisher ? " | FINISHER!" : "")}{(outcome.DuringTheBang ? " | THE BANG" : "")}");
         }
 
         void OnMiss(RuntimeMotionEvent ev)
         {
-            score.Apply(JudgmentResult.ExpiredMiss());
+            // An authored event expired unresolved: score it as a MISS (combo/multiplier reset,
+            // HYPE preserved) through the same authoritative path.
+            var resolved = new ResolvedEvent(ev.Id, Judgment.Miss, 0d, 0f, false, ev.FinisherCandidate);
+            var outcome = scorer.Resolve(resolved);
             cue?.Hide();
-            hud?.ShowMiss(score.Combo, score.Score);
-            Debug.Log($"MISS (expired) at {ev.Time:0.000}s | combo {score.Combo} | score {score.Score}");
+            hud?.Show(new JudgmentResult(Judgment.Miss, 0d, 0f), outcome.ComboAfter, scorer.Scoring.Score);
+            RefreshHypeHud();
+            Debug.Log($"MISS (expired) at {ev.Time:0.000}s | combo {outcome.ComboAfter} | hype {scorer.Hype.Hype}");
         }
     }
 }

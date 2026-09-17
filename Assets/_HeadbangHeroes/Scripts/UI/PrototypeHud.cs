@@ -38,6 +38,20 @@ namespace HeadbangHeroes.UI
         int combo;
         long score;
         double calibrationOffsetMs;
+        int hype;
+        int maxHype = 100;
+        bool hypeReady;
+        bool theBangActive;
+        int finishers;
+
+        public void SetHype(int value, int max, bool ready, bool bangActive, int finishersExecuted)
+        {
+            hype = value;
+            maxHype = max < 1 ? 1 : max;
+            hypeReady = ready;
+            theBangActive = bangActive;
+            finishers = finishersExecuted;
+        }
 
         public void BindSources(AudioClock audioClock, ChartScheduler chartScheduler, NeckMotionModel headMotion)
         {
@@ -58,6 +72,10 @@ namespace HeadbangHeroes.UI
         {
             score = 0;
             combo = 0;
+            hype = 0;
+            hypeReady = false;
+            theBangActive = false;
+            finishers = 0;
             lastJudgment = "-";
             lastErrorMs = 0;
             lastMotion = 0;
@@ -126,6 +144,11 @@ namespace HeadbangHeroes.UI
             sb.Append("perf   : ").Append(lastPerformance.ToString("0.00")).Append('\n');
             sb.Append("combo  : ").Append(combo).Append('\n');
             sb.Append("score  : ").Append(score.ToString("N0")).Append('\n');
+            sb.Append("hype   : ").Append(hype).Append('/').Append(maxHype);
+            if (theBangActive) sb.Append("  [THE BANG]");
+            else if (hypeReady) sb.Append("  [READY - press B]");
+            sb.Append('\n');
+            sb.Append("finish : ").Append(finishers).Append('\n');
             sb.Append("h ang  : ").Append(angle.ToString("0.0")).Append("\u00B0\n");
             sb.Append("v ang  : ").Append(vAngle.ToString("0.0")).Append("\u00B0\n");
             sb.Append("h vel  : ").Append(angVel.ToString("0")).Append("\u00B0/s\n");

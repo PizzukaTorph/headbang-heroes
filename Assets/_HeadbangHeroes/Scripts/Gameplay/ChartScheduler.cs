@@ -42,6 +42,18 @@ namespace HeadbangHeroes.Gameplay
         public double ApproachTime => cueLead;
         public double NextEventTime => resolver?.NextUnresolvedTime() ?? -1d;
 
+        /// <summary>Returns the authored runtime event for a resolved match id (slot), for outcome assembly.</summary>
+        public bool TryGetEvent(int matchedId, out RuntimeMotionEvent ev)
+        {
+            if (resolver != null && matchedId >= 0 && matchedId < resolver.Count)
+            {
+                ev = resolver.At(matchedId);
+                return true;
+            }
+            ev = default;
+            return false;
+        }
+
         /// <summary>Sets the immutable runtime chart for the run and resets per-run resolution state.</summary>
         public void Configure(RuntimeChart runtimeChart)
         {
