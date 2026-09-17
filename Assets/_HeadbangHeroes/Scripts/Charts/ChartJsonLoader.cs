@@ -1,43 +1,30 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace HeadbangHeroes.Charts
 {
-    [Serializable]
-    public sealed class ChartJsonData
-    {
-        public string chartId;
-        public int version;
-        public string songId;
-        public string technique;
-        public string difficulty;
-        public double approachTime = 1.0;
-        public List<ChartEvent> events = new();
-    }
-
+    /// <summary>
+    /// Parses authoring chart JSON into <see cref="ChartJsonData"/>. Parsing happens once
+    /// (song load / editor build), never in the gameplay hot path. Compilation into the immutable
+    /// runtime chart is <see cref="Runtime.ChartCompiler"/>'s responsibility.
+    /// </summary>
     public static class ChartJsonLoader
     {
         public static ChartJsonData Parse(TextAsset source)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-            var data = JsonUtility.FromJson<ChartJsonData>(source.text);
-            if (data == null) throw new InvalidOperationException("Could not parse Headbang Heroes chart JSON.");
-            data.events ??= new List<ChartEvent>();
-            return data;
+            return Parse(source.text);
         }
 
-        public static ChartDefinition CreateRuntimeChart(TextAsset source)
-            => CreateRuntimeChart(Parse(source));
-
-        public static ChartDefinition CreateRuntimeChart(ChartJsonData data)
+        public static ChartJsonData Parse(string json)
         {
-            if (data == null) throw new ArgumentNullException(nameof(data));
-            var chart = ScriptableObject.CreateInstance<ChartDefinition>();
-            chart.chartId = data.chartId;
-            chart.version = data.version;
-            chart.events = data.events;
-            return chart;
+            if (string.IsNullOrWhiteSpace(json))
+                throw new InvalidOperationException("Empty Headbang Heroes chart JSON.");
+            var data = JsonUtility.FromJson<ChartJsonData>(json);
+            if (data == null) throw new InvalidOperationException("Could not parse Headbang Heroes chart JSON.");
+            data.events ??= new System.Collections.Generic.List<ChartJsonEvent>();
+            data.rests ??= new System.Collections.Generic.List<ChartJsonRest>();
+            return data;
         }
     }
 }

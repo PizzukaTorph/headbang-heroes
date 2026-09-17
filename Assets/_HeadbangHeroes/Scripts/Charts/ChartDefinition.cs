@@ -1,9 +1,13 @@
-using System;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace HeadbangHeroes.Charts
 {
+    /// <summary>
+    /// Canonical cardinal inversion vocabulary shared by input, neck and chart runtime.
+    /// (The legacy M0 <c>ChartEvent</c> struct and <c>ChartDefinition</c> ScriptableObject were
+    /// removed in Package 03: gameplay now consumes the immutable
+    /// <see cref="Runtime.RuntimeChart"/> compiled from authoring data.)
+    /// </summary>
     public enum BangDirection
     {
         Left = 0,
@@ -40,21 +44,5 @@ namespace HeadbangHeroes.Charts
                 default: return Vector2.zero;
             }
         }
-    }
-
-    [Serializable]
-    public struct ChartEvent
-    {
-        [Min(0)] public double time;
-        public BangDirection direction;
-        [Range(0f, 1f)] public float intensity;
-    }
-
-    [CreateAssetMenu(menuName = "Headbang Heroes/Chart", fileName = "Chart_")]
-    public sealed class ChartDefinition : ScriptableObject
-    {
-        public string chartId = "lab-001";
-        public int version = 1;
-        public List<ChartEvent> events = new();
     }
 }

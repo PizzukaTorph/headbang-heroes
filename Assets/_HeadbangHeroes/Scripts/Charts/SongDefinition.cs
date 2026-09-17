@@ -9,6 +9,6 @@ namespace HeadbangHeroes.Charts
         public string title = "HH Lab Track #001";
         public string artist = "Asidie";
         public AudioClip audio;
-        public ChartDefinition chart;
+        // Chart authoring lives in the chart JSON (compiled to an immutable RuntimeChart at load).
     }
 }
