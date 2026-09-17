@@ -19,6 +19,7 @@ namespace HeadbangHeroes.UI
         [SerializeField] Text comboText;
         [SerializeField] Text judgmentText;
         [SerializeField] Text debugText;
+        [SerializeField] Text topBarText;
 
         [Header("Live telemetry sources (optional)")]
         [SerializeField] AudioClock clock;
@@ -51,6 +52,28 @@ namespace HeadbangHeroes.UI
             hypeReady = ready;
             theBangActive = bangActive;
             finishers = finishersExecuted;
+        }
+
+        readonly StringBuilder topBar = new(96);
+
+        /// <summary>
+        /// Renders the compact, always-visible top bar: score, song progress, multiplier and HYPE.
+        /// Pure display of authoritative values pushed by the controller (no gameplay authority).
+        /// </summary>
+        public void SetTopBar(long scoreValue, double songTime, double songLength, int multiplier)
+        {
+            if (topBarText == null) return;
+            var progress = songLength > 0.01 ? System.Math.Min(1.0, songTime / songLength) : 0.0;
+
+            topBar.Clear();
+            topBar.Append("\u2016  ")                       // pause glyph
+                  .Append(scoreValue.ToString("N0")).Append("   ")
+                  .Append((progress * 100.0).ToString("0")).Append("%   x")
+                  .Append(multiplier).Append("   HYPE ")
+                  .Append(hype).Append('/').Append(maxHype);
+            if (theBangActive) topBar.Append("  THE BANG");
+            else if (hypeReady) topBar.Append("  READY");
+            topBarText.text = topBar.ToString();
         }
 
         public void BindSources(AudioClock audioClock, ChartScheduler chartScheduler, NeckMotionModel headMotion)

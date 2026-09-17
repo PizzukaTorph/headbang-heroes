@@ -3,6 +3,7 @@ using HeadbangHeroes.Charts;
 using HeadbangHeroes.Core;
 using HeadbangHeroes.Gameplay;
 using HeadbangHeroes.Input;
+using HeadbangHeroes.Presentation;
 using HeadbangHeroes.UI;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -105,10 +106,29 @@ namespace HeadbangHeroes.Editor
 
             // --- UI ---
             var canvas = CreateCanvas();
-            CreateBackground(canvas.transform);
-            var avatar = CreateAvatar(canvas.transform, out var headMotion);
+            var backgroundImage = CreateBackground(canvas.transform);
+            var avatar = CreateAvatar(canvas.transform, out var headMotion, out var head, out var torso, out var hair);
             var cue = CreateTimingCue(canvas.transform, clock);
             var hud = CreateHud(canvas.transform, clock, scheduler, headMotion);
+
+            // --- Presentation (downstream only) ---
+            var presentation = new GameObject("HH_M0_Presentation");
+            var neckPresenter = presentation.AddComponent<NeckPresenter>();
+            Assign(neckPresenter, "neck", headMotion);
+            Assign(neckPresenter, "head", head);
+
+            var bodyPresenter = presentation.AddComponent<BodyReactionPresenter>();
+            Assign(bodyPresenter, "neck", headMotion);
+            Assign(bodyPresenter, "body", torso);
+
+            var hairPresenter = presentation.AddComponent<HairReactionPresenter>();
+            Assign(hairPresenter, "neck", headMotion);
+            Assign(hairPresenter, "strand", hair);
+
+            var venuePresenter = presentation.AddComponent<VenueReactionPresenter>();
+            Assign(venuePresenter, "background", backgroundImage);
+
+            var haptics = presentation.AddComponent<HapticsService>();
 
             // --- Controller wiring ---
             Assign(controller, "song", song);
@@ -119,6 +139,11 @@ namespace HeadbangHeroes.Editor
             Assign(controller, "head", headMotion);
             Assign(controller, "cue", cue);
             Assign(controller, "hud", hud);
+            Assign(controller, "neckPresenter", neckPresenter);
+            Assign(controller, "bodyPresenter", bodyPresenter);
+            Assign(controller, "hairPresenter", hairPresenter);
+            Assign(controller, "venuePresenter", venuePresenter);
+            Assign(controller, "haptics", haptics);
             Assign(controller, "startOnPlay", true);
             Assign(controller, "startSongTime", startSongTime);
 
@@ -301,7 +326,7 @@ namespace HeadbangHeroes.Editor
             return canvas;
         }
 
-        static void CreateBackground(Transform parent)
+        static Image CreateBackground(Transform parent)
         {
             var bg = CreateRect("Background", parent, Vector2.zero, new Vector2(1080, 1920));
             var image = bg.gameObject.AddComponent<Image>();
@@ -311,9 +336,11 @@ namespace HeadbangHeroes.Editor
             bg.anchorMax = Vector2.one;
             bg.offsetMin = Vector2.zero;
             bg.offsetMax = Vector2.zero;
+            return image;
         }
 
-        static GameObject CreateAvatar(Transform parent, out NeckMotionModel motion)
+        static GameObject CreateAvatar(Transform parent, out NeckMotionModel motion,
+            out RectTransform head, out RectTransform torso, out RectTransform hair)
         {
             var avatar = new GameObject("Prototype_Avatar", typeof(RectTransform));
             var root = avatar.GetComponent<RectTransform>();
@@ -321,19 +348,26 @@ namespace HeadbangHeroes.Editor
             root.anchorMin = root.anchorMax = new Vector2(0.5f, 0.42f);
             root.sizeDelta = new Vector2(420, 620);
 
-            var torso = CreateRect("Torso", root, new Vector2(0, -105), new Vector2(310, 390));
+            torso = CreateRect("Torso", root, new Vector2(0, -105), new Vector2(310, 390));
             var torsoImage = torso.gameObject.AddComponent<Image>();
             torsoImage.color = new Color(0.18f, 0.18f, 0.2f, 1f);
             torsoImage.raycastTarget = false;
 
-            var head = CreateRect("Head", root, new Vector2(0, 170), new Vector2(185, 185));
+            head = CreateRect("Head", root, new Vector2(0, 170), new Vector2(185, 185));
             var headImage = head.gameObject.AddComponent<Image>();
             headImage.sprite = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/Knob.psd");
             headImage.color = new Color(0.62f, 0.52f, 0.43f, 1f);
             headImage.raycastTarget = false;
 
+            // Placeholder hair strand as a child of the head (secondary motion surface).
+            hair = CreateRect("HairStrand", head, new Vector2(0, 95), new Vector2(70, 150));
+            var hairImage = hair.gameObject.AddComponent<Image>();
+            hairImage.color = new Color(0.12f, 0.10f, 0.14f, 1f);
+            hairImage.raycastTarget = false;
+            hair.pivot = new Vector2(0.5f, 0f); // pivot at the roots so it swings from the head
+
+            // The neck model is domain-only now: it does NOT hold the head transform.
             motion = avatar.AddComponent<NeckMotionModel>();
-            Assign(motion, "head", head);
             return avatar;
         }
 
@@ -381,6 +415,9 @@ namespace HeadbangHeroes.Editor
             var combo = CreateText("Combo", rect, new Vector2(300, 790), new Vector2(300, 100), 54, TextAnchor.MiddleRight);
             var judgment = CreateText("Judgment", rect, new Vector2(0, 360), new Vector2(700, 180), 62, TextAnchor.MiddleCenter);
 
+            // Compact always-visible top bar (pause/score/progress/multiplier/HYPE), ~top of screen.
+            var topBar = CreateText("TopBar", rect, new Vector2(0, 900), new Vector2(1040, 70), 34, TextAnchor.MiddleCenter);
+
             // Debug telemetry block, anchored to the bottom-left corner.
             var debug = CreateCornerText("Debug", rect);
 
@@ -388,6 +425,7 @@ namespace HeadbangHeroes.Editor
             Assign(hud, "scoreText", score);
             Assign(hud, "comboText", combo);
             Assign(hud, "judgmentText", judgment);
+            Assign(hud, "topBarText", topBar);
             Assign(hud, "debugText", debug);
             Assign(hud, "clock", clock);
             Assign(hud, "scheduler", scheduler);

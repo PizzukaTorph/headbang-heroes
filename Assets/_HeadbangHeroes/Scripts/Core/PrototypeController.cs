@@ -6,6 +6,7 @@ using HeadbangHeroes.Gameplay.Neck;
 using HeadbangHeroes.Gameplay.Scoring;
 using HeadbangHeroes.Gameplay.Timing;
 using HeadbangHeroes.Input;
+using HeadbangHeroes.Presentation;
 using HeadbangHeroes.UI;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -22,6 +23,14 @@ namespace HeadbangHeroes.Core
         [SerializeField] NeckMotionModel head;
         [SerializeField] ClosingCircleCue cue;
         [SerializeField] PrototypeHud hud;
+
+        [Header("Presentation (downstream only)")]
+        [SerializeField] NeckPresenter neckPresenter;
+        [SerializeField] BodyReactionPresenter bodyPresenter;
+        [SerializeField] HairReactionPresenter hairPresenter;
+        [SerializeField] VenueReactionPresenter venuePresenter;
+        [SerializeField] HapticsService haptics;
+
         [SerializeField] bool startOnPlay = true;
         [SerializeField, Min(0f)] double startSongTime = 22.0;
 
@@ -98,6 +107,10 @@ namespace HeadbangHeroes.Core
             hud?.SetCalibrationOffset(clock.Calibration);
             input?.SetClock(clock);
             head?.ResetMotion();
+            neckPresenter?.ResetPresentation();
+            bodyPresenter?.ResetPresentation();
+            hairPresenter?.ResetPresentation();
+            venuePresenter?.ResetPresentation();
             cue?.ResetCue();
             scheduler.Configure(runtimeChart);
             clock.Play(song.audio, startSongTime);
@@ -110,8 +123,22 @@ namespace HeadbangHeroes.Core
                 scorer.Advance(clock.SongTime);
 
             RefreshHypeHud();
+            PushPresentationSignals();
 
             if (enablePlaytestControls) HandlePlaytestControls();
+        }
+
+        void PushPresentationSignals()
+        {
+            var h = scorer.Hype;
+            var hypeFraction = h.MaxHype > 0 ? (float)h.Hype / h.MaxHype : 0f;
+            venuePresenter?.SetPerformanceSignals(hypeFraction, h.TheBangActive);
+
+            if (clock != null && clock.IsScheduled)
+            {
+                var length = song != null && song.audio != null ? song.audio.length : 0.0;
+                hud?.SetTopBar(scorer.Scoring.Score, clock.SongTime, length, scorer.Scoring.Multiplier);
+            }
         }
 
         void HandlePlaytestControls()
@@ -135,7 +162,10 @@ namespace HeadbangHeroes.Core
             if (kb.bKey.wasPressedThisFrame && clock != null && clock.IsScheduled)
             {
                 if (scorer.TryActivateTheBang(clock.SongTime))
+                {
+                    haptics?.Play(HapticEvent.TheBangActivated);
                     Debug.Log("THE BANG activated!");
+                }
             }
 
             if (kb.leftBracketKey.wasPressedThisFrame)
@@ -197,12 +227,31 @@ namespace HeadbangHeroes.Core
 
             var outcome = scorer.Resolve(resolved);
 
+            // Semantic presentation feedback (downstream only; never affects the outcome above).
+            PlayJudgmentHaptic(outcome.Judgment);
+            if (outcome.WasFinisher)
+            {
+                haptics?.Play(HapticEvent.Finisher);
+                venuePresenter?.PulseFinisher();
+            }
+            if (scorer.Hype.IsReady) haptics?.Play(HapticEvent.HypeReady);
+
             cue?.Hide();
             hud?.Show(new JudgmentResult(outcome.Judgment, outcome.SignedTimingError, outcome.MotionQuality),
                       outcome.ComboAfter, scorer.Scoring.Score);
             RefreshHypeHud();
 
             Debug.Log($"{outcome.Judgment} {outcome.SignedTimingError * 1000.0:+0;-0;0} ms | motion {outcome.MotionQuality:0.00} | +{outcome.ScoreContribution} | combo {outcome.ComboAfter} | x{outcome.MultiplierAfter} | hype {scorer.Hype.Hype}{(outcome.WasFinisher ? " | FINISHER!" : "")}{(outcome.DuringTheBang ? " | THE BANG" : "")}");
+        }
+
+        void PlayJudgmentHaptic(Judgment judgment)
+        {
+            switch (judgment)
+            {
+                case Judgment.Perfect: haptics?.Play(HapticEvent.Perfect); break;
+                case Judgment.Great: haptics?.Play(HapticEvent.Great); break;
+                case Judgment.Miss: haptics?.Play(HapticEvent.Miss); break;
+            }
         }
 
         void OnMiss(RuntimeMotionEvent ev)
