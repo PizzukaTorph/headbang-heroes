@@ -1,42 +1,44 @@
 using HeadbangHeroes.Audio;
 using HeadbangHeroes.Charts;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace HeadbangHeroes.UI
 {
     /// <summary>
-    /// Timing cue per ADR 0001 (v0.0.2): a PULSE-IN-SECTOR with build-up. Instead of a circle
-    /// shrinking on the head, the screen quadrant of the expected direction (Left/Right/Up/Down)
-    /// pulses — intensity/scale grow over the approach window and PEAK exactly on the event time,
-    /// then relax. This unifies WHEN (build-up + peak) and WHERE (which sector) and reads as "feel
-    /// the beat" rather than "aim at a dot".
+    /// Timing cue per ADR 0001 (v0.0.2): a PULSE pill next to the avatar in the expected direction
+    /// (Left/Right/Up/Down). Instead of a circle shrinking on the head, a small pill GROWS and
+    /// brightens over the approach window and PEAKS exactly on the event time, then relaxes —
+    /// "feel the beat", not "aim at a dot". The tap area remains the whole screen sector; this pill
+    /// is only the signal (where + when), not the touch target.
     ///
-    /// Time authority is the DSP-backed <see cref="AudioClock"/>; this is presentation only and
-    /// never shifts authored time or scoring. Graphics are non-raycast (never intercept a tap).
-    /// One sector pulses per active event (no note-highway).
+    /// Time authority is the DSP-backed <see cref="AudioClock"/>; presentation only, never shifts
+    /// authored time or scoring. Non-raycast (never intercepts a tap). One pill pulses per event.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class SectorPulseCue : MonoBehaviour
     {
         [SerializeField] AudioClock clock;
-        [SerializeField] CanvasGroup left;
-        [SerializeField] CanvasGroup right;
-        [SerializeField] CanvasGroup up;
-        [SerializeField] CanvasGroup down;
+        [SerializeField] RectTransform left;
+        [SerializeField] RectTransform right;
+        [SerializeField] RectTransform up;
+        [SerializeField] RectTransform down;
 
-        [Header("Look")]
-        [SerializeField, Range(0f, 1f)] float peakAlpha = 0.55f;
-        [Tooltip("Curve shaping the build-up from cue appearance (0) to the event (1).")]
+        [Header("Pulse shape")]
+        [Tooltip("Scale of the pill at cue appearance (approach start).")]
+        [SerializeField] float startScale = 0.45f;
+        [Tooltip("Scale of the pill at the peak (event time).")]
+        [SerializeField] float peakScale = 1.3f;
+        [Tooltip("Curve shaping the build-up from appearance (0) to event (1).")]
         [SerializeField] AnimationCurve buildup = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
-        [Tooltip("Seconds the sector keeps flashing after the event before it clears.")]
+        [Tooltip("Seconds the pill lingers/relaxes after the event before clearing.")]
         [SerializeField] float releaseSeconds = 0.18f;
 
-        [SerializeField] Color approachColor = new Color(0.95f, 0.55f, 0.2f, 1f);
-        [SerializeField] Color hitColor = new Color(0.3f, 1f, 0.45f, 1f);
+        [SerializeField] Color approachColor = new Color(0.95f, 0.55f, 0.2f, 0.55f);
+        [SerializeField] Color hitColor = new Color(0.3f, 1f, 0.45f, 0.95f);
 
-        BangDirection activeDir;
-        CanvasGroup activeGroup;
-        UnityEngine.UI.Graphic activeGraphic;
+        RectTransform activePill;
+        Graphic activeGraphic;
         double eventTime;
         double approachSeconds = 1.0;
         double hitWindowSeconds = 0.15;
@@ -45,25 +47,22 @@ namespace HeadbangHeroes.UI
 
         void OnEnable() => ResetCue();
 
-        /// <summary>Begin a pulse for an event: direction sector, event song-time, approach lead, hit window.</summary>
         public void Show(BangDirection direction, double eventSongTime, double approachDuration, double hitWindow)
         {
-            ClearAll();
-            activeDir = direction;
-            activeGroup = GroupFor(direction);
-            activeGraphic = activeGroup != null ? activeGroup.GetComponent<UnityEngine.UI.Graphic>() : null;
+            HideAllPills();
+            activePill = PillFor(direction);
+            activeGraphic = activePill != null ? activePill.GetComponent<Graphic>() : null;
             eventTime = eventSongTime;
             approachSeconds = System.Math.Max(0.05, approachDuration);
             hitWindowSeconds = System.Math.Max(0.02, hitWindow);
             running = true;
             releaseTimer = 0f;
+            if (activePill != null) activePill.gameObject.SetActive(true);
             Apply();
         }
 
-        /// <summary>Clear the current pulse (event resolved / hidden).</summary>
         public void Hide()
         {
-            // Enter a short release so the peak is visible for a beat even if resolved exactly on time.
             if (running) { running = false; releaseTimer = releaseSeconds; }
         }
 
@@ -71,7 +70,9 @@ namespace HeadbangHeroes.UI
         {
             running = false;
             releaseTimer = 0f;
-            ClearAll();
+            HideAllPills();
+            activePill = null;
+            activeGraphic = null;
         }
 
         void Update()
@@ -80,32 +81,39 @@ namespace HeadbangHeroes.UI
             {
                 Apply();
             }
-            else if (releaseTimer > 0f)
+            else if (releaseTimer > 0f && activePill != null)
             {
                 releaseTimer -= Time.deltaTime;
-                if (activeGroup != null)
-                    activeGroup.alpha = peakAlpha * Mathf.Clamp01(releaseTimer / Mathf.Max(0.01f, releaseSeconds));
-                if (releaseTimer <= 0f) ClearAll();
+                var k = Mathf.Clamp01(releaseTimer / Mathf.Max(0.01f, releaseSeconds));
+                SetPill(peakScale, hitColor, k);
+                if (releaseTimer <= 0f) { activePill.gameObject.SetActive(false); activePill = null; }
             }
         }
 
         void Apply()
         {
-            if (activeGroup == null) return;
+            if (activePill == null) return;
 
             var remaining = eventTime - clock.SongTime;                 // >0 before event
-            // Normalized build-up: 0 at cue appearance (approachSeconds before), 1 at the event.
-            var t = 1.0 - remaining / approachSeconds;
+            var t = 1.0 - remaining / approachSeconds;                  // 0 at appearance, 1 at event
             var shaped = buildup.Evaluate(Mathf.Clamp01((float)t));
-
             var inHit = System.Math.Abs(remaining) <= hitWindowSeconds;
-            activeGroup.alpha = inHit ? peakAlpha : peakAlpha * shaped;
 
-            if (activeGraphic != null)
-                activeGraphic.color = inHit ? hitColor : approachColor;
+            var scale = Mathf.Lerp(startScale, peakScale, inHit ? 1f : shaped);
+            SetPill(scale, inHit ? hitColor : approachColor, 1f);
         }
 
-        CanvasGroup GroupFor(BangDirection d)
+        void SetPill(float scale, Color color, float alphaMul)
+        {
+            activePill.localScale = Vector3.one * scale;
+            if (activeGraphic != null)
+            {
+                var c = color; c.a *= Mathf.Clamp01(alphaMul);
+                activeGraphic.color = c;
+            }
+        }
+
+        RectTransform PillFor(BangDirection d)
         {
             switch (d)
             {
@@ -116,13 +124,12 @@ namespace HeadbangHeroes.UI
             }
         }
 
-        void ClearAll()
+        void HideAllPills()
         {
-            SetOff(left); SetOff(right); SetOff(up); SetOff(down);
-            activeGroup = null;
-            activeGraphic = null;
+            if (left != null) left.gameObject.SetActive(false);
+            if (right != null) right.gameObject.SetActive(false);
+            if (up != null) up.gameObject.SetActive(false);
+            if (down != null) down.gameObject.SetActive(false);
         }
-
-        static void SetOff(CanvasGroup g) { if (g != null) g.alpha = 0f; }
     }
 }

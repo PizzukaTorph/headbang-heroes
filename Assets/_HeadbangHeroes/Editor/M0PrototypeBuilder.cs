@@ -527,23 +527,27 @@ namespace HeadbangHeroes.Editor
         /// player sees the whole half was a valid tap area.
         /// </summary>
         /// <summary>
-        /// Builds the ADR-0001 pulse-in-sector timing cue: 4 half-screen sector overlays that pulse
-        /// with a build-up culminating on the event. Non-raycast; behind gameplay UI.
+        /// Builds the ADR-0001 pulse cue: 4 small pills positioned next to the avatar head in each
+        /// direction (Left/Right/Up/Down). Each pill grows + brightens toward the event (build-up)
+        /// then relaxes. Non-raycast; above the background, below the avatar.
         /// </summary>
         static SectorPulseCue CreateSectorPulseCue(Transform canvas, AudioClock clock)
         {
             var go = new GameObject("HH_SectorPulseCue", typeof(RectTransform));
             var rect = go.GetComponent<RectTransform>();
             rect.SetParent(canvas, false);
-            rect.anchorMin = Vector2.zero; rect.anchorMax = Vector2.one;
-            rect.offsetMin = rect.offsetMax = Vector2.zero;
-            rect.SetSiblingIndex(1);   // just above the opaque background (index 0), behind avatar/UI
+            // Anchor to the avatar band (same reference as the old head cue) so pills sit around it.
+            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.42f);
+            rect.anchoredPosition = new Vector2(0, 170);   // head height
+            rect.sizeDelta = new Vector2(10, 10);
+            rect.SetSiblingIndex(1);   // above the opaque background, behind the avatar/UI
 
-            var col = new Color(0.95f, 0.55f, 0.2f, 1f);   // alpha via CanvasGroup; recolored at runtime
-            var left = MakeFlagHalf(rect, "PulseLeft", new Vector2(0f, 0f), new Vector2(0.5f, 1f), col);
-            var right = MakeFlagHalf(rect, "PulseRight", new Vector2(0.5f, 0f), new Vector2(1f, 1f), col);
-            var up = MakeFlagHalf(rect, "PulseUp", new Vector2(0f, 0.5f), new Vector2(1f, 1f), col);
-            var down = MakeFlagHalf(rect, "PulseDown", new Vector2(0f, 0f), new Vector2(1f, 0.5f), col);
+            var pillCol = new Color(0.95f, 0.55f, 0.2f, 0.55f);
+            var reach = 300f;   // distance from the head to each direction's pill
+            var left = MakePill(rect, "PulseLeft", new Vector2(-reach, 0), pillCol);
+            var right = MakePill(rect, "PulseRight", new Vector2(reach, 0), pillCol);
+            var up = MakePill(rect, "PulseUp", new Vector2(0, reach), pillCol);
+            var down = MakePill(rect, "PulseDown", new Vector2(0, -reach), pillCol);
 
             var pulse = go.AddComponent<SectorPulseCue>();
             Assign(pulse, "clock", clock);
@@ -552,6 +556,17 @@ namespace HeadbangHeroes.Editor
             Assign(pulse, "up", up);
             Assign(pulse, "down", down);
             return pulse;
+        }
+
+        static RectTransform MakePill(Transform parent, string name, Vector2 pos, Color col)
+        {
+            var rect = CreateRect(name, parent, pos, new Vector2(160, 160));
+            var img = rect.gameObject.AddComponent<Image>();
+            img.sprite = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/Knob.psd");  // round pill
+            img.color = col;
+            img.raycastTarget = false;      // never intercept a tap; tap-area is the whole sector
+            rect.gameObject.SetActive(false);
+            return rect;
         }
 
         static ZoneTapFlash CreateZoneTapFlash(Transform canvas)
