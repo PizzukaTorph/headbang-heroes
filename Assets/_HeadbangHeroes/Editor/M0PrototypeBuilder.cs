@@ -126,7 +126,6 @@ namespace HeadbangHeroes.Editor
             var canvas = CreateCanvas();
             var backgroundImage = CreateBackground(canvas.transform);
             var avatar = CreateAvatar(canvas.transform, out var headMotion, out var head, out var torso, out var hair);
-            var cue = CreateTimingCue(canvas.transform, clock);
             var hud = CreateHud(canvas.transform, clock, scheduler, headMotion);
 
             // --- Presentation (downstream only) ---
@@ -155,7 +154,6 @@ namespace HeadbangHeroes.Editor
             Assign(controller, "scheduler", scheduler);
             Assign(controller, "input", input);
             Assign(controller, "head", headMotion);
-            Assign(controller, "cue", cue);
             Assign(controller, "hud", hud);
             Assign(controller, "neckPresenter", neckPresenter);
             Assign(controller, "bodyPresenter", bodyPresenter);
@@ -421,47 +419,6 @@ namespace HeadbangHeroes.Editor
             // The neck model is domain-only now: it does NOT hold the head transform.
             motion = avatar.AddComponent<NeckMotionModel>();
             return avatar;
-        }
-
-        static ClosingCircleCue CreateTimingCue(Transform parent, AudioClock clock)
-        {
-            var root = new GameObject("TimingCue", typeof(RectTransform), typeof(CanvasGroup));
-            var rect = root.GetComponent<RectTransform>();
-            rect.SetParent(parent, false);
-            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.42f);
-            rect.anchoredPosition = new Vector2(0, 170);
-            rect.sizeDelta = new Vector2(260, 260);
-
-            var group = root.GetComponent<CanvasGroup>();
-            group.alpha = 0f;
-            group.interactable = false;
-            group.blocksRaycasts = false;
-
-            var target = CreateRect("TargetRing", rect, Vector2.zero, new Vector2(215, 215));
-            var targetRing = target.gameObject.AddComponent<RingGraphic>();
-            targetRing.color = new Color(1f, 1f, 1f, 0.9f);
-            targetRing.raycastTarget = false;
-
-            var approach = CreateRect("ApproachRing", rect, Vector2.zero, new Vector2(215, 215));
-            var approachRing = approach.gameObject.AddComponent<RingGraphic>();
-            approachRing.color = new Color(0.9f, 0.2f, 0.2f, 1f);
-            approachRing.raycastTarget = false;
-
-            // Hit marker: a blue ring, same base size as the rings, drawn concentric to the target
-            // at the approach ring's scale at the moment of the tap (freezes "how big the cue was
-            // when I tapped"). Starts hidden.
-            var marker = CreateRect("HitMarker", rect, Vector2.zero, new Vector2(215, 215));
-            var markerRing = marker.gameObject.AddComponent<RingGraphic>();
-            markerRing.color = new Color(0.25f, 0.55f, 1f, 1f);
-            markerRing.raycastTarget = false;
-            marker.gameObject.SetActive(false);
-
-            var cue = root.AddComponent<ClosingCircleCue>();
-            Assign(cue, "clock", clock);
-            Assign(cue, "approachRing", approach);
-            Assign(cue, "canvasGroup", group);
-            Assign(cue, "hitMarker", marker);
-            return cue;
         }
 
         static PrototypeHud CreateHud(Transform parent, AudioClock clock, ChartScheduler scheduler, NeckMotionModel head)

@@ -21,7 +21,6 @@ namespace HeadbangHeroes.Core
         [SerializeField] ChartScheduler scheduler;
         [SerializeField] HeadbangInput input;
         [SerializeField] NeckMotionModel head;
-        [SerializeField] ClosingCircleCue cue;
         [SerializeField] PrototypeHud hud;
         [SerializeField] BangZoneHint zoneHint;   // onboarding: reveal the 4 bang zones at run start
         [SerializeField] ZoneTapFlash zoneFlash;  // per-tap: flash the tapped section
@@ -203,7 +202,6 @@ namespace HeadbangHeroes.Core
             venuePresenter?.ResetPresentation();
             venuePresenter?.ApplySettings(access);
             haptics?.ApplySettings(access);
-            cue?.ResetCue();
             sectorPulse?.ResetCue();
             zoneHint?.Show();
             zoneFlash?.ResetAll();
@@ -296,10 +294,8 @@ namespace HeadbangHeroes.Core
         void OnCue(RuntimeMotionEvent ev, double approachTime)
         {
             var hitWindow = scheduler != null ? scheduler.Timing.GoodWindow : 0.12;
-            // ADR-0001: primary timing cue is the pulse-in-sector.
+            // ADR-0001: timing cue is the pulse-in-sector (closing-circle-on-head retired).
             sectorPulse?.Show(ev.Direction, ev.Time, approachTime, hitWindow);
-            // Legacy closing-circle kept wired but optional (null in the pulse-only build).
-            cue?.Show(ev.Time, approachTime, ev.Direction, hitWindow);
         }
 
         void OnBang(BangInput bang)
@@ -358,11 +354,6 @@ namespace HeadbangHeroes.Core
             if (ready && !wasReady) haptics?.Play(HapticEvent.HypeReady);
             wasReady = ready;
 
-            // Snapshot the cue on the tap: a blue ring concentric to the target at the size the
-            // closing ring had at that instant — dead-on coincides with the target, early is a
-            // larger ring, late a smaller one. Lets the player build a mental map to self-calibrate.
-            cue?.ShowHitMarker(outcome.SignedTimingError);
-            cue?.Hide();
             sectorPulse?.Hide();
             hud?.Show(new JudgmentResult(outcome.Judgment, outcome.SignedTimingError, outcome.MotionQuality),
                       outcome.ComboAfter, scorer.Scoring.Score);
@@ -391,7 +382,6 @@ namespace HeadbangHeroes.Core
             // HYPE preserved) through the same authoritative path.
             var resolved = new ResolvedEvent(ev.Id, Judgment.Miss, 0d, 0f, false, ev.FinisherCandidate);
             var outcome = scorer.Resolve(resolved);
-            cue?.Hide();
             sectorPulse?.Hide();
             hud?.Show(new JudgmentResult(Judgment.Miss, 0d, 0f), outcome.ComboAfter, scorer.Scoring.Score);
             RefreshHypeHud();
