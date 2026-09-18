@@ -1,5 +1,18 @@
 # Errors / Issues To Be Fixed
 
+> **Project status — v0.0.1 (2026-09-18): CORE FEEL VALIDATED.**
+> The POC question ("is controlling the head/neck to music fun?") is answered YES after extensive
+> playtesting. The full loop works (Home → Song → Gameplay → Results → Retry), timing/scoring/HYPE
+> are coherent, and the neck reads as having mass (overshoot spring + squash&stretch). This tag is
+> a frozen milestone — everything below is deferred, non-blocking polish/hardening for future work,
+> NOT defects that block the milestone.
+>
+> **Deferred to a later effort (not in v0.0.1):**
+> - iOS on-device validation (Package 07): blocked on Apple signing/provisioning on the dev's
+>   account, not on code. Touch input already works; the missing piece for a full on-device test is
+>   an on-screen touch UI for pause/retry/THE BANG/calibration (currently keyboard-only).
+> - All items in sections 1–6 below.
+
 Running list of known problems deferred so implementation can continue. Each entry: what,
 evidence, impact, and the intended fix / owning package. Do not silently close an item — resolve
 it or move it to a package plan.
