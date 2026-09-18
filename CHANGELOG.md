@@ -2,6 +2,20 @@
 
 All notable changes to Headbang Heroes are documented here.
 
+## [0.0.2] — Unreleased — "From validated toy to playable prototype"
+
+In progress on `develop`. Scope + implementation plan: `docs/implementation/08_V0_0_2_PLAN.md`.
+Builds on the frozen `v0.0.1` core (feel validated). No changes to neck physics / timing windows /
+scoring math — all new work is presentation/UI/hardening.
+
+Planned packages (see plan for details and exit gates):
+- **P08** Touch controls & on-screen UI (pause/retry/continue/THE BANG/calibration + touch bang zones)
+- **P09** NEXT cue preview
+- **P10** Results emotion-first (grade-dominant + data-driven ResultComment selector)
+- **P11** Hair secondary motion (lag → overshoot → settle, motion tiers, presentation-only)
+- **P12** Feel polish (motion trail, micro screen-shake; reduced-effects respect)
+- **P13** Hardening (atomic save, gate playtest controls behind DEVELOPMENT_BUILD)
+
 ## [0.0.1] — 2026-09-18 — POC: "Make The Headbang Fun" (core validated)
 
 First frozen milestone. The prototype answers its one question — **controlling the head/neck to
