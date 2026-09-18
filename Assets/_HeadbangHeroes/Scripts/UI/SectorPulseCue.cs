@@ -86,13 +86,13 @@ namespace HeadbangHeroes.UI
                 releaseTimer -= Time.deltaTime;
                 var k = Mathf.Clamp01(releaseTimer / Mathf.Max(0.01f, releaseSeconds));
                 SetPill(peakScale, hitColor, k);
-                if (releaseTimer <= 0f) { activePill.gameObject.SetActive(false); activePill = null; }
+                if (releaseTimer <= 0f && activePill != null) { activePill.gameObject.SetActive(false); activePill = null; }
             }
         }
 
         void Apply()
         {
-            if (activePill == null) return;
+            if (activePill == null || clock == null) return;   // destroyed/unset -> Unity == null
 
             var remaining = eventTime - clock.SongTime;                 // >0 before event
             var t = 1.0 - remaining / approachSeconds;                  // 0 at appearance, 1 at event
@@ -105,6 +105,7 @@ namespace HeadbangHeroes.UI
 
         void SetPill(float scale, Color color, float alphaMul)
         {
+            if (activePill == null) return;   // pill destroyed (rebuild/retry) -> skip safely
             activePill.localScale = Vector3.one * scale;
             if (activeGraphic != null)
             {
