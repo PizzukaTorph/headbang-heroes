@@ -191,6 +191,10 @@ namespace HeadbangHeroes.Editor
             var zoneHint = CreateBangZoneHint(canvas.transform);
             Assign(controller, "zoneHint", zoneHint);
 
+            // --- P08 affordance: per-tap section flash ---
+            var zoneFlash = CreateZoneTapFlash(canvas.transform);
+            Assign(controller, "zoneFlash", zoneFlash);
+
             // --- Input event system ---
             var eventSystem = new GameObject("EventSystem");
             eventSystem.AddComponent<EventSystem>();
@@ -556,6 +560,52 @@ namespace HeadbangHeroes.Editor
         /// quadrants (screen split from centre into L/R/U/D). Non-raycast (never eats a bang), inside
         /// a CanvasGroup that BangZoneHint fades out shortly after run start.
         /// </summary>
+        /// <summary>
+        /// Builds the per-tap section flash: 4 half-screen overlays (Left/Right/Up/Down) each in its
+        /// own CanvasGroup, faint, non-raycast. ZoneTapFlash briefly lights the tapped section so the
+        /// player sees the whole half was a valid tap area.
+        /// </summary>
+        static ZoneTapFlash CreateZoneTapFlash(Transform canvas)
+        {
+            var go = new GameObject("HH_ZoneTapFlash", typeof(RectTransform));
+            var rect = go.GetComponent<RectTransform>();
+            rect.SetParent(canvas, false);
+            rect.anchorMin = Vector2.zero; rect.anchorMax = Vector2.one;
+            rect.offsetMin = rect.offsetMax = Vector2.zero;
+            // Sit behind the avatar/cue but above the background; created early in the hierarchy.
+            rect.SetAsFirstSibling();
+
+            var col = new Color(0.9f, 0.9f, 1f, 1f);   // alpha driven by the CanvasGroup
+            var left = MakeFlagHalf(rect, "FlashLeft", new Vector2(0f, 0f), new Vector2(0.5f, 1f), col);
+            var right = MakeFlagHalf(rect, "FlashRight", new Vector2(0.5f, 0f), new Vector2(1f, 1f), col);
+            var up = MakeFlagHalf(rect, "FlashUp", new Vector2(0f, 0.5f), new Vector2(1f, 1f), col);
+            var down = MakeFlagHalf(rect, "FlashDown", new Vector2(0f, 0f), new Vector2(1f, 0.5f), col);
+
+            var flash = go.AddComponent<ZoneTapFlash>();
+            Assign(flash, "left", left);
+            Assign(flash, "right", right);
+            Assign(flash, "up", up);
+            Assign(flash, "down", down);
+            return flash;
+        }
+
+        static CanvasGroup MakeFlagHalf(Transform parent, string name, Vector2 anchorMin, Vector2 anchorMax, Color col)
+        {
+            var go = new GameObject(name, typeof(RectTransform), typeof(CanvasGroup), typeof(Image));
+            var rect = go.GetComponent<RectTransform>();
+            rect.SetParent(parent, false);
+            rect.anchorMin = anchorMin; rect.anchorMax = anchorMax;
+            rect.offsetMin = rect.offsetMax = Vector2.zero;
+            var img = go.GetComponent<Image>();
+            img.color = col;
+            img.raycastTarget = false;             // must never intercept a tap
+            var group = go.GetComponent<CanvasGroup>();
+            group.alpha = 0f;
+            group.interactable = false;
+            group.blocksRaycasts = false;
+            return group;
+        }
+
         static BangZoneHint CreateBangZoneHint(Transform canvas)
         {
             var go = new GameObject("HH_BangZoneHint", typeof(RectTransform), typeof(CanvasGroup));

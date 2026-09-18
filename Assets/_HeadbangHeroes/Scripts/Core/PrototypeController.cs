@@ -24,6 +24,7 @@ namespace HeadbangHeroes.Core
         [SerializeField] ClosingCircleCue cue;
         [SerializeField] PrototypeHud hud;
         [SerializeField] BangZoneHint zoneHint;   // onboarding: reveal the 4 bang zones at run start
+        [SerializeField] ZoneTapFlash zoneFlash;  // per-tap: flash the tapped section
 
         [Header("Presentation (downstream only)")]
         [SerializeField] NeckPresenter neckPresenter;
@@ -203,6 +204,7 @@ namespace HeadbangHeroes.Core
             haptics?.ApplySettings(access);
             cue?.ResetCue();
             zoneHint?.Show();
+            zoneFlash?.ResetAll();
             scheduler.Configure(runtimeChart);
             clock.Play(song.audio, startSongTime);
             running = true;
@@ -294,6 +296,9 @@ namespace HeadbangHeroes.Core
 
         void OnBang(BangInput bang)
         {
+            // Section tap feedback: flash the whole quadrant the player tapped (presentation only).
+            zoneFlash?.Flash(bang.Direction);
+
             // Physical input is always accepted. Tapping early, late, on the wrong zone, or with no
             // active chart event still changes the neck state; chart judgment is separate.
             var intensity = scheduler != null && scheduler.HasActiveEvent
