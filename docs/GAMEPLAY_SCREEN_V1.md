@@ -6,6 +6,12 @@ Canonical active-gameplay screen direction.
 
 Exact pixel placement, timing values, and touch ergonomics remain prototype/playtest work.
 
+> **v0.0.2 amendment — see [ADR 0001](DECISIONS/0001-pulse-in-sector-cue.md).** The CURRENT timing
+> cue is now a **pulse-in-sector with build-up** rendered in the expected direction's screen
+> quadrant (culminating on the event), not a closing circle on the head. The head/neck remains the
+> expressive focus. The "protected region" and "one sector pulses at a time (no note-highway)"
+> guardrails still hold.
+
 ## Composition
 
 Portrait screen with four visual layers:
