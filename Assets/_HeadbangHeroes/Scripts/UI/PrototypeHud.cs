@@ -19,11 +19,12 @@ namespace HeadbangHeroes.UI
         [SerializeField] Text comboText;
         [SerializeField] Text judgmentText;
         [SerializeField] Text debugText;
+        [SerializeField] Text topBarText;
 
         [Header("Live telemetry sources (optional)")]
         [SerializeField] AudioClock clock;
         [SerializeField] ChartScheduler scheduler;
-        [SerializeField] HeadMotionModel head;
+        [SerializeField] NeckMotionModel head;
 
         [SerializeField] bool debugVisible = true;
         [SerializeField] bool allowToggleKey = true;
@@ -38,8 +39,47 @@ namespace HeadbangHeroes.UI
         int combo;
         long score;
         double calibrationOffsetMs;
+        double latencyMs;
+        [SerializeField] float flashSeconds = 0.6f;
+        float flashUntil;
+        int hype;
+        int maxHype = 100;
+        bool hypeReady;
+        bool theBangActive;
+        int finishers;
 
-        public void BindSources(AudioClock audioClock, ChartScheduler chartScheduler, HeadMotionModel headMotion)
+        public void SetHype(int value, int max, bool ready, bool bangActive, int finishersExecuted)
+        {
+            hype = value;
+            maxHype = max < 1 ? 1 : max;
+            hypeReady = ready;
+            theBangActive = bangActive;
+            finishers = finishersExecuted;
+        }
+
+        readonly StringBuilder topBar = new(96);
+
+        /// <summary>
+        /// Renders the compact, always-visible top bar: score, song progress, multiplier and HYPE.
+        /// Pure display of authoritative values pushed by the controller (no gameplay authority).
+        /// </summary>
+        public void SetTopBar(long scoreValue, double songTime, double songLength, int multiplier)
+        {
+            if (topBarText == null) return;
+            var progress = songLength > 0.01 ? System.Math.Min(1.0, songTime / songLength) : 0.0;
+
+            topBar.Clear();
+            topBar.Append("\u2016  ")                       // pause glyph
+                  .Append(scoreValue.ToString("N0")).Append("   ")
+                  .Append((progress * 100.0).ToString("0")).Append("%   x")
+                  .Append(multiplier).Append("   HYPE ")
+                  .Append(hype).Append('/').Append(maxHype);
+            if (theBangActive) topBar.Append("  THE BANG");
+            else if (hypeReady) topBar.Append("  READY");
+            topBarText.text = topBar.ToString();
+        }
+
+        public void BindSources(AudioClock audioClock, ChartScheduler chartScheduler, NeckMotionModel headMotion)
         {
             clock = audioClock;
             scheduler = chartScheduler;
@@ -53,11 +93,16 @@ namespace HeadbangHeroes.UI
         }
 
         public void SetCalibrationOffset(double offsetSeconds) => calibrationOffsetMs = offsetSeconds * 1000.0;
+        public void SetLatencyOffset(double latencySeconds) => latencyMs = latencySeconds * 1000.0;
 
         public void ResetHud()
         {
             score = 0;
             combo = 0;
+            hype = 0;
+            hypeReady = false;
+            theBangActive = false;
+            finishers = 0;
             lastJudgment = "-";
             lastErrorMs = 0;
             lastMotion = 0;
@@ -80,6 +125,7 @@ namespace HeadbangHeroes.UI
             if (comboText != null) comboText.text = $"x{combo}";
             if (judgmentText != null)
                 judgmentText.text = $"{result.judgment}\n{lastErrorMs:+0;-0;0} ms";
+            flashUntil = Time.unscaledTime + flashSeconds;
         }
 
         public void ShowMiss(int comboValue, long scoreValue)
@@ -92,6 +138,7 @@ namespace HeadbangHeroes.UI
             if (scoreText != null) scoreText.text = score.ToString("N0");
             if (comboText != null) comboText.text = $"x{combo}";
             if (judgmentText != null) judgmentText.text = "MISS";
+            flashUntil = Time.unscaledTime + flashSeconds;
         }
 
         void Start()
@@ -101,6 +148,14 @@ namespace HeadbangHeroes.UI
 
         void Update()
         {
+            // Time out the big centre judgment flash so it does not freeze on the last event
+            // (notably an expired MISS between taps), which read as a permanent "MISS 0ms".
+            if (judgmentText != null && flashUntil > 0f && Time.unscaledTime >= flashUntil)
+            {
+                judgmentText.text = "";
+                flashUntil = 0f;
+            }
+
             if (allowToggleKey && Keyboard.current != null && Keyboard.current.f1Key.wasPressedThisFrame)
                 SetDebugVisible(!debugVisible);
 
@@ -108,9 +163,10 @@ namespace HeadbangHeroes.UI
 
             var songTime = clock != null ? clock.SongTime : 0d;
             var nextEvent = scheduler != null ? scheduler.NextEventTime : -1d;
-            var angle = head != null ? head.Angle : 0f;
-            var angVel = head != null ? head.Velocity : 0f;
-            var peak = head != null ? head.PeakAmplitude : 0f;
+            var angle = head != null ? head.HorizontalAngle : 0f;
+            var angVel = head != null ? head.HorizontalVelocity : 0f;
+            var vAngle = head != null ? head.VerticalAngle : 0f;
+            var prepared = head != null && head.Prepared;
             var paused = clock != null && clock.IsPaused;
 
             sb.Clear();
@@ -125,10 +181,17 @@ namespace HeadbangHeroes.UI
             sb.Append("perf   : ").Append(lastPerformance.ToString("0.00")).Append('\n');
             sb.Append("combo  : ").Append(combo).Append('\n');
             sb.Append("score  : ").Append(score.ToString("N0")).Append('\n');
-            sb.Append("angle  : ").Append(angle.ToString("0.0")).Append("\u00B0\n");
-            sb.Append("ang vel: ").Append(angVel.ToString("0")).Append("\u00B0/s\n");
-            sb.Append("peak   : ").Append(peak.ToString("0.0")).Append("\u00B0\n");
-            sb.Append("offset : ").Append(calibrationOffsetMs.ToString("+0;-0;0")).Append(" ms");
+            sb.Append("hype   : ").Append(hype).Append('/').Append(maxHype);
+            if (theBangActive) sb.Append("  [THE BANG]");
+            else if (hypeReady) sb.Append("  [READY - press B]");
+            sb.Append('\n');
+            sb.Append("finish : ").Append(finishers).Append('\n');
+            sb.Append("h ang  : ").Append(angle.ToString("0.0")).Append("\u00B0\n");
+            sb.Append("v ang  : ").Append(vAngle.ToString("0.0")).Append("\u00B0\n");
+            sb.Append("h vel  : ").Append(angVel.ToString("0")).Append("\u00B0/s\n");
+            sb.Append("prep   : ").Append(prepared ? "yes" : "setup").Append('\n');
+            sb.Append("offset : ").Append(calibrationOffsetMs.ToString("+0;-0;0")).Append(" ms\n");
+            sb.Append("latency: ").Append(latencyMs.ToString("0")).Append(" ms");
 
             debugText.text = sb.ToString();
         }

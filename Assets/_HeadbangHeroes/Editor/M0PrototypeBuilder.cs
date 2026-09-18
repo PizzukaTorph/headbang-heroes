@@ -3,6 +3,7 @@ using HeadbangHeroes.Charts;
 using HeadbangHeroes.Core;
 using HeadbangHeroes.Gameplay;
 using HeadbangHeroes.Input;
+using HeadbangHeroes.Presentation;
 using HeadbangHeroes.UI;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -25,23 +26,42 @@ namespace HeadbangHeroes.Editor
         const string Root = "Assets/_HeadbangHeroes";
         const string ChartJsonPath = Root + "/Content/Lab/lab-001-beyond-the-pain-classic-m0.json";
         const string LocalAudioPath = Root + "/Content/Lab/LocalAudio/BeyondThePain.mp3";
+        const string TempoRampChartPath = Root + "/Content/Lab/lab-002-tempo-ramp.json";
+        const string TempoRampAudioPath = Root + "/Content/Lab/TempoRamp.wav";
         const string GeneratedFolder = Root + "/Content/Lab/Generated";
         const string SongAssetPath = GeneratedFolder + "/Song_Lab001.asset";
         const string SceneFolder = Root + "/Scenes";
         const string ScenePath = SceneFolder + "/Prototype_Headbang.unity";
 
+        // Where we look for the (gitignored) real audio. First match wins. Both the canonical
+        // LocalAudio/ subfolder and the Content/Lab/ root are accepted, in a few common formats.
+        static readonly string[] AudioCandidatePaths =
+        {
+            Root + "/Content/Lab/LocalAudio/BeyondThePain.mp3",
+            Root + "/Content/Lab/LocalAudio/BeyondThePain.wav",
+            Root + "/Content/Lab/LocalAudio/BeyondThePain.ogg",
+            Root + "/Content/Lab/BeyondThePain.mp3",
+            Root + "/Content/Lab/BeyondThePain.wav",
+            Root + "/Content/Lab/BeyondThePain.ogg",
+        };
+
         static readonly Color BackgroundColor = new(0.055f, 0.055f, 0.07f, 1f);
 
         [MenuItem("Tools/Headbang Heroes/Build M0 Prototype")]
-        public static void Build()
+        public static void Build() => BuildInternal(ChartJsonPath, tempoRamp: false);
+
+        [MenuItem("Tools/Headbang Heroes/Build M0 Prototype (Tempo Ramp)")]
+        public static void BuildTempoRamp() => BuildInternal(TempoRampChartPath, tempoRamp: true);
+
+        static void BuildInternal(string chartPath, bool tempoRamp)
         {
             EnsureFolder(Root + "/Content/Lab", "Generated");
             EnsureFolder(Root, "Scenes");
 
-            var chartJson = AssetDatabase.LoadAssetAtPath<TextAsset>(ChartJsonPath);
+            var chartJson = AssetDatabase.LoadAssetAtPath<TextAsset>(chartPath);
             if (chartJson == null)
             {
-                Debug.LogError($"HH M0 build failed: missing chart JSON at {ChartJsonPath}. Cannot build the prototype.");
+                Debug.LogError($"HH M0 build failed: missing chart JSON at {chartPath}. Cannot build the prototype.");
                 return;
             }
 
@@ -52,32 +72,35 @@ namespace HeadbangHeroes.Editor
             }
             catch (System.Exception e)
             {
-                Debug.LogError($"HH M0 build failed: could not parse chart JSON at {ChartJsonPath}. {e.Message}");
+                Debug.LogError($"HH M0 build failed: could not parse chart JSON at {chartPath}. {e.Message}");
                 return;
             }
 
-            var realAudio = AssetDatabase.LoadAssetAtPath<AudioClip>(LocalAudioPath);
+            AudioClip audio;
+            bool usingClickTrack;
+            double startSongTime;
 
-            // If the MP3 exists on disk but hasn't been imported yet (e.g. just copied in),
-            // force a synchronous import so we don't fall back to the click-track unnecessarily.
-            if (realAudio == null && System.IO.File.Exists(AbsoluteFromProject(LocalAudioPath)))
+            if (tempoRamp)
             {
-                AssetDatabase.ImportAsset(LocalAudioPath, ImportAssetOptions.ForceSynchronousImport);
-                realAudio = AssetDatabase.LoadAssetAtPath<AudioClip>(LocalAudioPath);
+                // Synchronized tuning track: WAV clicks match the chart exactly; start at 0.
+                if (System.IO.File.Exists(AbsoluteFromProject(TempoRampAudioPath)))
+                    AssetDatabase.ImportAsset(TempoRampAudioPath, ImportAssetOptions.ForceSynchronousImport);
+                audio = AssetDatabase.LoadAssetAtPath<AudioClip>(TempoRampAudioPath);
+                usingClickTrack = false;
+                if (audio == null) { audio = GetOrCreateClickTrack(chartData); usingClickTrack = true; }
+                startSongTime = 0.0;
+            }
+            else
+            {
+                var realAudio = FindRealAudio();
+                // Testability without the licensed MP3: if missing, generate a synthetic click-track.
+                usingClickTrack = realAudio == null;
+                audio = realAudio != null ? realAudio : GetOrCreateClickTrack(chartData);
+                // The MIDI-derived chart's first hit is ~12.8s; start ~1s before.
+                startSongTime = 11.8;
             }
 
-            // Testability without the licensed MP3: if it is missing, generate a synthetic
-            // click-track that plays a short tick at each chart event so the whole loop
-            // (clock, closing circle, input, head, judgment, score) is playable on desktop.
-            var usingClickTrack = realAudio == null;
-            var audio = realAudio != null ? realAudio : GetOrCreateClickTrack(chartData);
-
             var song = GetOrCreateSong(audio);
-
-            // The chart events are authored at absolute song times (~23s onward, matching the
-            // real track's M0 segment). Start both the real song and the click-track at ~22s so
-            // the first cue appears within ~1.5s instead of after a 22s silence.
-            var startSongTime = 22.0;
 
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             scene.name = "Prototype_Headbang";
@@ -97,14 +120,33 @@ namespace HeadbangHeroes.Editor
 
             Assign(clock, "source", source);
             Assign(scheduler, "clock", clock);
-            Assign(scheduler, "approachTime", 1.0);
+            Assign(scheduler, "cueLead", 1.0);
 
             // --- UI ---
             var canvas = CreateCanvas();
-            CreateBackground(canvas.transform);
-            var avatar = CreateAvatar(canvas.transform, out var headMotion);
+            var backgroundImage = CreateBackground(canvas.transform);
+            var avatar = CreateAvatar(canvas.transform, out var headMotion, out var head, out var torso, out var hair);
             var cue = CreateTimingCue(canvas.transform, clock);
             var hud = CreateHud(canvas.transform, clock, scheduler, headMotion);
+
+            // --- Presentation (downstream only) ---
+            var presentation = new GameObject("HH_M0_Presentation");
+            var neckPresenter = presentation.AddComponent<NeckPresenter>();
+            Assign(neckPresenter, "neck", headMotion);
+            Assign(neckPresenter, "head", head);
+
+            var bodyPresenter = presentation.AddComponent<BodyReactionPresenter>();
+            Assign(bodyPresenter, "neck", headMotion);
+            Assign(bodyPresenter, "body", torso);
+
+            var hairPresenter = presentation.AddComponent<HairReactionPresenter>();
+            Assign(hairPresenter, "neck", headMotion);
+            Assign(hairPresenter, "strand", hair);
+
+            var venuePresenter = presentation.AddComponent<VenueReactionPresenter>();
+            Assign(venuePresenter, "background", backgroundImage);
+
+            var haptics = presentation.AddComponent<HapticsService>();
 
             // --- Controller wiring ---
             Assign(controller, "song", song);
@@ -115,8 +157,32 @@ namespace HeadbangHeroes.Editor
             Assign(controller, "head", headMotion);
             Assign(controller, "cue", cue);
             Assign(controller, "hud", hud);
-            Assign(controller, "startOnPlay", true);
+            Assign(controller, "neckPresenter", neckPresenter);
+            Assign(controller, "bodyPresenter", bodyPresenter);
+            Assign(controller, "hairPresenter", hairPresenter);
+            Assign(controller, "venuePresenter", venuePresenter);
+            Assign(controller, "haptics", haptics);
+            Assign(controller, "startOnPlay", false);   // the GameFlowController starts the run
             Assign(controller, "startSongTime", startSongTime);
+
+            // --- POC product loop: Home / Song Select / Pre-song / Results panels + flow ---
+            var flowGo = new GameObject("HH_M0_Flow");
+            var flow = flowGo.AddComponent<GameFlowController>();
+
+            var homeText = CreatePanel(canvas.transform, "HomePanel", out var homePanel);
+            var songText = CreatePanel(canvas.transform, "SongSelectPanel", out var songPanel);
+            var preText = CreatePanel(canvas.transform, "PreSongPanel", out var prePanel);
+            var resultsText = CreatePanel(canvas.transform, "ResultsPanel", out var resultsPanel);
+
+            Assign(flow, "gameplay", controller);
+            Assign(flow, "homePanel", homePanel);
+            Assign(flow, "songSelectPanel", songPanel);
+            Assign(flow, "preSongPanel", prePanel);
+            Assign(flow, "resultsPanel", resultsPanel);
+            Assign(flow, "homeText", homeText);
+            Assign(flow, "songSelectText", songText);
+            Assign(flow, "preSongText", preText);
+            Assign(flow, "resultsText", resultsText);
 
             // --- Input event system ---
             var eventSystem = new GameObject("EventSystem");
@@ -153,6 +219,9 @@ namespace HeadbangHeroes.Editor
             cam.allowMSAA = false;
             go.transform.position = new Vector3(0f, 0f, -10f);
 
+            // The scene needs exactly one AudioListener or no audio is heard at all.
+            go.AddComponent<AudioListener>();
+
             // URP requires additional per-camera data. Assembly-CSharp references the URP
             // runtime, so this compiles even without an asmdef.
             var urpData = go.AddComponent<UniversalAdditionalCameraData>();
@@ -185,9 +254,13 @@ namespace HeadbangHeroes.Editor
         /// </summary>
         static AudioClip GetOrCreateClickTrack(ChartJsonData chart)
         {
+            // Compile to the immutable runtime chart so the click-track uses the same validated,
+            // normalized events (and precomputed times/directions) that gameplay will consume.
+            var runtime = HeadbangHeroes.Charts.Runtime.ChartCompiler.Compile(chart);
+
             var lastEvent = 0.0;
-            foreach (var e in chart.events)
-                if (e.time > lastEvent) lastEvent = e.time;
+            foreach (var e in runtime.MotionEvents)
+                if (e.Time > lastEvent) lastEvent = e.Time;
 
             var totalSeconds = (float)(lastEvent + 2.0);
             var totalSamples = Mathf.CeilToInt(totalSeconds * ClickSampleRate);
@@ -196,10 +269,10 @@ namespace HeadbangHeroes.Editor
             // Short decaying sine "tick" per event.
             const float clickSeconds = 0.05f;
             var clickSamples = Mathf.CeilToInt(clickSeconds * ClickSampleRate);
-            foreach (var e in chart.events)
+            foreach (var e in runtime.MotionEvents)
             {
-                var start = Mathf.RoundToInt((float)e.time * ClickSampleRate);
-                var freq = e.direction == BangDirection.Left ? 660f : 880f; // L/R audibly different
+                var start = Mathf.RoundToInt((float)e.Time * ClickSampleRate);
+                var freq = e.Direction.Axis() == BangAxis.Horizontal ? 660f : 880f; // axis-differentiated tick
                 for (var i = 0; i < clickSamples && start + i < totalSamples; i++)
                 {
                     var t = (float)i / ClickSampleRate;
@@ -253,6 +326,30 @@ namespace HeadbangHeroes.Editor
             => System.IO.Path.Combine(
                 System.IO.Directory.GetParent(Application.dataPath).FullName, projectRelativePath);
 
+        /// <summary>
+        /// Finds the real (gitignored) song audio across the accepted candidate paths/formats.
+        /// If a file exists on disk but is not yet imported (just copied in), it force-imports it.
+        /// Returns null when no real audio is present (caller falls back to the click-track).
+        /// </summary>
+        static AudioClip FindRealAudio()
+        {
+            foreach (var path in AudioCandidatePaths)
+            {
+                var clip = AssetDatabase.LoadAssetAtPath<AudioClip>(path);
+                if (clip == null && System.IO.File.Exists(AbsoluteFromProject(path)))
+                {
+                    AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceSynchronousImport);
+                    clip = AssetDatabase.LoadAssetAtPath<AudioClip>(path);
+                }
+                if (clip != null)
+                {
+                    Debug.Log($"HH M0: using real audio at {path}");
+                    return clip;
+                }
+            }
+            return null;
+        }
+
         static Canvas CreateCanvas()
         {
             var go = new GameObject("Canvas", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
@@ -266,7 +363,7 @@ namespace HeadbangHeroes.Editor
             return canvas;
         }
 
-        static void CreateBackground(Transform parent)
+        static Image CreateBackground(Transform parent)
         {
             var bg = CreateRect("Background", parent, Vector2.zero, new Vector2(1080, 1920));
             var image = bg.gameObject.AddComponent<Image>();
@@ -276,9 +373,11 @@ namespace HeadbangHeroes.Editor
             bg.anchorMax = Vector2.one;
             bg.offsetMin = Vector2.zero;
             bg.offsetMax = Vector2.zero;
+            return image;
         }
 
-        static GameObject CreateAvatar(Transform parent, out HeadMotionModel motion)
+        static GameObject CreateAvatar(Transform parent, out NeckMotionModel motion,
+            out RectTransform head, out RectTransform torso, out RectTransform hair)
         {
             var avatar = new GameObject("Prototype_Avatar", typeof(RectTransform));
             var root = avatar.GetComponent<RectTransform>();
@@ -286,19 +385,26 @@ namespace HeadbangHeroes.Editor
             root.anchorMin = root.anchorMax = new Vector2(0.5f, 0.42f);
             root.sizeDelta = new Vector2(420, 620);
 
-            var torso = CreateRect("Torso", root, new Vector2(0, -105), new Vector2(310, 390));
+            torso = CreateRect("Torso", root, new Vector2(0, -105), new Vector2(310, 390));
             var torsoImage = torso.gameObject.AddComponent<Image>();
             torsoImage.color = new Color(0.18f, 0.18f, 0.2f, 1f);
             torsoImage.raycastTarget = false;
 
-            var head = CreateRect("Head", root, new Vector2(0, 170), new Vector2(185, 185));
+            head = CreateRect("Head", root, new Vector2(0, 170), new Vector2(185, 185));
             var headImage = head.gameObject.AddComponent<Image>();
             headImage.sprite = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/Knob.psd");
             headImage.color = new Color(0.62f, 0.52f, 0.43f, 1f);
             headImage.raycastTarget = false;
 
-            motion = avatar.AddComponent<HeadMotionModel>();
-            Assign(motion, "head", head);
+            // Placeholder hair strand as a child of the head (secondary motion surface).
+            hair = CreateRect("HairStrand", head, new Vector2(0, 95), new Vector2(70, 150));
+            var hairImage = hair.gameObject.AddComponent<Image>();
+            hairImage.color = new Color(0.12f, 0.10f, 0.14f, 1f);
+            hairImage.raycastTarget = false;
+            hair.pivot = new Vector2(0.5f, 0f); // pivot at the roots so it swings from the head
+
+            // The neck model is domain-only now: it does NOT hold the head transform.
+            motion = avatar.AddComponent<NeckMotionModel>();
             return avatar;
         }
 
@@ -326,14 +432,24 @@ namespace HeadbangHeroes.Editor
             approachRing.color = new Color(0.9f, 0.2f, 0.2f, 1f);
             approachRing.raycastTarget = false;
 
+            // Hit marker: a blue ring, same base size as the rings, drawn concentric to the target
+            // at the approach ring's scale at the moment of the tap (freezes "how big the cue was
+            // when I tapped"). Starts hidden.
+            var marker = CreateRect("HitMarker", rect, Vector2.zero, new Vector2(215, 215));
+            var markerRing = marker.gameObject.AddComponent<RingGraphic>();
+            markerRing.color = new Color(0.25f, 0.55f, 1f, 1f);
+            markerRing.raycastTarget = false;
+            marker.gameObject.SetActive(false);
+
             var cue = root.AddComponent<ClosingCircleCue>();
             Assign(cue, "clock", clock);
             Assign(cue, "approachRing", approach);
             Assign(cue, "canvasGroup", group);
+            Assign(cue, "hitMarker", marker);
             return cue;
         }
 
-        static PrototypeHud CreateHud(Transform parent, AudioClock clock, ChartScheduler scheduler, HeadMotionModel head)
+        static PrototypeHud CreateHud(Transform parent, AudioClock clock, ChartScheduler scheduler, NeckMotionModel head)
         {
             var root = new GameObject("PrototypeHUD", typeof(RectTransform));
             var rect = root.GetComponent<RectTransform>();
@@ -346,6 +462,9 @@ namespace HeadbangHeroes.Editor
             var combo = CreateText("Combo", rect, new Vector2(300, 790), new Vector2(300, 100), 54, TextAnchor.MiddleRight);
             var judgment = CreateText("Judgment", rect, new Vector2(0, 360), new Vector2(700, 180), 62, TextAnchor.MiddleCenter);
 
+            // Compact always-visible top bar (pause/score/progress/multiplier/HYPE), ~top of screen.
+            var topBar = CreateText("TopBar", rect, new Vector2(0, 900), new Vector2(1040, 70), 34, TextAnchor.MiddleCenter);
+
             // Debug telemetry block, anchored to the bottom-left corner.
             var debug = CreateCornerText("Debug", rect);
 
@@ -353,11 +472,34 @@ namespace HeadbangHeroes.Editor
             Assign(hud, "scoreText", score);
             Assign(hud, "comboText", combo);
             Assign(hud, "judgmentText", judgment);
+            Assign(hud, "topBarText", topBar);
             Assign(hud, "debugText", debug);
             Assign(hud, "clock", clock);
             Assign(hud, "scheduler", scheduler);
             Assign(hud, "head", head);
             return hud;
+        }
+
+        static Text CreatePanel(Transform parent, string name, out CanvasGroup group)
+        {
+            var go = new GameObject(name, typeof(RectTransform), typeof(CanvasGroup));
+            var rect = go.GetComponent<RectTransform>();
+            rect.SetParent(parent, false);
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = rect.offsetMax = Vector2.zero;
+
+            var dim = go.AddComponent<Image>();
+            dim.color = new Color(0.03f, 0.03f, 0.05f, 0.96f);
+            dim.raycastTarget = false;
+
+            var text = CreateText("Text", rect, new Vector2(0, 0), new Vector2(1000, 1400), 42, TextAnchor.MiddleCenter);
+
+            group = go.GetComponent<CanvasGroup>();
+            group.alpha = 0f;
+            group.interactable = false;
+            group.blocksRaycasts = false;
+            return text;
         }
 
         static Text CreateCornerText(string name, Transform parent)

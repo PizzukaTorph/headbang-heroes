@@ -1,50 +1,124 @@
 # Headbang Heroes — Agent Rules
 
+## Read this first
+
+Before changing gameplay architecture or design, read:
+
+1. `docs/FOUNDATION.md`
+2. the relevant canonical `*_V1.md` subsystem specification
+3. `docs/GDD.md` for high-level product context
+
+If documents disagree, follow the authority order defined in `docs/FOUNDATION.md`.
+
+Current prototype code is experimental evidence, not automatic specification.
+
+## Specialist agent routing
+
+Specialist briefs live in `agents/`.
+
+Use the smallest relevant specialist set for a task. Cross-cutting changes should include the Architecture Guardian and QA Guardian.
+
+- `agents/architecture-guardian.md` — ownership boundaries, dependency direction, naming, cross-cutting refactors.
+- `agents/gameplay-core.md` — NeckMotionModel, Motion Quality, event resolution, scoring, HYPE/THE BANG/Finisher, GameplayRun boundaries.
+- `agents/rhythm-audio.md` — AudioClock, DSP/song-time, scheduling, pause/resume/retry sync, calibration and timing diagnostics.
+- `agents/chart-content.md` — song/chart schemas, RuntimeChart compilation, candidate matching, Rest semantics, validation, packaging and remote-content compatibility.
+- `agents/hh-midi-validator.md` — strict `.hh.mid` format validation against `docs/HH_MIDI_STANDARD_V1.md`, including semantic tracks/notes, modifiers, Rest/Windmill intervals, timing metadata, ambiguity diagnostics and golden-sample regression.
+- `agents/presentation-avatar.md` — CURRENT/NEXT, avatar/body/hair/venue, haptics and presentation-only feedback.
+- `agents/meta-profile.md` — Results integration, progression, save/profile, migrations, rewards/economy metadata and future sync boundaries.
+- `agents/qa-guardian.md` — adversarial review for determinism, timing, chart semantics, device edge cases, persistence safety and documentation drift.
+
+Routing examples:
+
+- Refactor `AudioClock` + judgment timing → Rhythm Audio + Gameplay Core + QA Guardian.
+- Replace `HeadMotionModel` → Gameplay Core + Architecture Guardian + QA Guardian.
+- Implement THE BANG → Gameplay Core + Presentation Avatar + QA Guardian.
+- Add/change chart semantics → Chart Content + Gameplay Core + Rhythm Audio as relevant + Architecture Guardian.
+- Add/change `.hh.mid` encoding or importer validation → HH MIDI Validator + Chart Content + QA Guardian; add Rhythm Audio if tempo/offset semantics change.
+- Build remote song delivery → Chart Content + Architecture Guardian + QA Guardian.
+- Save/profile migration → Meta Profile + QA Guardian.
+
+Specialists do not override canonical docs. If a brief and a canonical spec disagree, the canonical spec wins and the brief must be updated.
+
 ## Product principle
 
 Headbang Heroes is a rhythm game about **headbanging**, not a generic note-tapping game with a metal skin.
 
-Every implementation decision must protect the core fantasy: the player controls the timing, direction, momentum and technique of the avatar's head.
+The player controls a continuous neck simulation. Timing, momentum, direction, technique, and movement quality matter.
 
 ## Current priority
 
-The only P0 goal is **Make The Headbang Fun**.
+P0 goal:
 
-Do not add accounts, monetization, elaborate progression, realtime networking, production backend infrastructure, procedural content systems or large art pipelines before the prototype validates the core interaction.
+> **Make The Headbang Fun.**
+
+Do not hide weak core interaction behind accounts, monetization, story, multiplayer, progression complexity, procedural systems, or large art pipelines.
+
+## Canonical gameplay constraints
+
+- Audio/DSP time is authoritative.
+- Input always affects neck motion, even when early/late/wrong/no-event.
+- A MISS never freezes/snaps/resets the neck.
+- Timing Quality and Motion Quality are separate.
+- Motion Quality uses physical neck state/history, not avatar animation.
+- The first bang from neutral is setup/unprepared, not a normal completed-motion sample.
+- Body, hair, venue, UI, and haptics are downstream presentation only.
+- Difficulty changes authored choreography, not neck physics.
+- Charts represent performable headbang rhythm, not every musical subdivision.
+- THE BANG is the enhanced state; Finisher is the payoff.
+- Progression unlocks expression/content, not power.
 
 ## Engineering principles
 
 - Prefer small, testable systems over large frameworks.
-- Keep song/chart data deterministic and data-driven.
-- Audio timing is authoritative; rendering must not be the timing clock.
-- Separate chart events from visual presentation.
-- Separate scoring from input presentation.
-- Keep gameplay framerate-independent.
+- Keep song/chart data deterministic, versioned, and data-driven.
+- Convert input to the authoritative song-time domain before judgment.
+- Separate authoring data from immutable/prevalidated runtime chart data.
+- Dense charts must use bounded candidate matching rather than assuming one active event forever.
+- Gameplay-critical neck simulation must not depend on render frame pacing.
+- Prefer an authoritative fixed simulation step or deterministic time-evaluated equivalent.
+- Motion Quality history must be event/gesture-local, not run-global maxima.
+- Separate domain outcomes from presentation events.
 - Mobile performance and touch latency matter from day one.
 - Build calibration/debug tooling early.
-- Avoid third-party dependencies unless they materially reduce risk.
-- Never commit licensed audio, fonts, art or other third-party assets without recording provenance and license.
-- No copyrighted commercial music may be added merely for development convenience if the repository is public.
+- Avoid third-party dependencies unless they materially reduce current risk.
+- Never commit licensed audio, fonts, art, or other third-party assets without provenance/license records.
+- No copyrighted commercial music may be added merely for development convenience if redistribution is not permitted.
 
-## Suggested Unity boundaries
+## Primary module ownership
 
-When the Unity project is introduced, keep clear modules for:
+Canonical concepts include:
 
 - AudioClock
-- Song/Chart
-- Input
-- HeadPhysics
-- Judgment
-- Combo/Score
-- Feedback
-- Avatar
-- Progression
-- Online
+- RuntimeChart / ChartRuntime
+- CueScheduler
+- InputRouter
+- NeckMotionModel
+- JudgmentSystem
+- MotionQualityEvaluator
+- RestEvaluator
+- ScoringSystem
+- HypeSystem
+- GameplayRun
+- RunResultBuilder
+- ResultsService
+- ProgressionService
+- SaveService
+- ContentCatalog / ContentProvider
+- presentation controllers (Body/Hair/Venue/Haptics/UI)
 
-Core rhythm logic should be testable without production visuals.
+Do not create a God `GameManager` that absorbs these responsibilities.
 
-## Definition of done for prototype
+## Prototype-code rule
 
-A new player can launch a test song, understand the closing-circle cue without explanation, headbang in rhythm, intentionally improve timing, perceive momentum, build/break a combo, receive reliable judgments, and want to retry for a better score.
+Existing M0 code may be refactored or replaced when it conflicts with canonical contracts.
 
-If that is not true, do not solve the problem by adding metagame.
+In particular, do not preserve merely for compatibility:
+- render-frame (`Time.deltaTime`) gameplay-critical simulation
+- run-global Motion Quality peaks
+- permanent single-active-event assumptions
+- hardcoded tuning constants
+- legacy naming such as `Special Bang`
+
+## Definition of done for POC
+
+A player can complete one song, understand CURRENT/NEXT cues, intentionally improve timing and movement quality, experience meaningful momentum, build HYPE, activate THE BANG, resolve a Finisher, receive coherent Results, and immediately want to retry because the **headbang itself** is fun.

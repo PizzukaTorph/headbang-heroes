@@ -14,6 +14,11 @@ Assets/AssetStoreTools*
 Assets/ThirdPartyLicensedLocal/
 Assets/_HeadbangHeroes/Content/Lab/LocalAudio/
 Assets/_HeadbangHeroes/Content/Lab/LocalSource/
+# Licensed audio placed directly in Content/Lab (either location is accepted by the builder)
+Assets/_HeadbangHeroes/Content/Lab/BeyondThePain.mp3
+Assets/_HeadbangHeroes/Content/Lab/BeyondThePain.mp3.meta
+Assets/_HeadbangHeroes/Content/Lab/BeyondThePain.wav
+Assets/_HeadbangHeroes/Content/Lab/BeyondThePain.ogg
 
 # Generated at build time by the M0 builder (regenerated on demand)
 Assets/_HeadbangHeroes/Content/Lab/Generated/M0_ClickTrack.wav

@@ -1,97 +1,136 @@
 using System;
+using System.Collections.Generic;
 using HeadbangHeroes.Audio;
-using HeadbangHeroes.Charts;
+using HeadbangHeroes.Charts.Runtime;
+using HeadbangHeroes.Gameplay.Timing;
 using UnityEngine;
 
 namespace HeadbangHeroes.Gameplay
 {
+    /// <summary>
+    /// Unity adapter that owns authored chronology at runtime by consuming an immutable
+    /// <see cref="RuntimeChart"/> and resolving bang inputs against a BOUNDED unresolved candidate
+    /// set via the pure <see cref="CandidateResolver"/>.
+    ///
+    /// Per-run resolution state lives in the resolver (flags), NEVER by mutating the RuntimeChart.
+    /// CURRENT/NEXT cue state is derived here for presentation but never defines judgment time.
+    /// </summary>
     public sealed class ChartScheduler : MonoBehaviour
     {
         [SerializeField] AudioClock clock;
-        [SerializeField] ChartDefinition chart;
-        [SerializeField, Min(0.25f)] double approachTime = 1.0;
 
-        int nextIndex;
-        int activeIndex = -1;
+        [Header("Timing windows (data-driven, seconds)")]
+        // Prototype windows kept generous but BELOW half the chart's min event gap (~500 ms) so
+        // adjacent events' windows do not overlap and steal each other's taps. Residual latency is
+        // handled by AudioClock output-latency compensation + manual [ ] calibration, NOT by making
+        // windows wider than the gap (which caused cascading MISS on dense charts).
+        [SerializeField, Min(0.001f)] double perfectWindow = 0.070;
+        [SerializeField, Min(0.001f)] double greatWindow = 0.130;
+        [SerializeField, Min(0.001f)] double goodWindow = 0.190;
+        [SerializeField, Min(0.001f)] double wellWindow = 0.240;   // sloppy-but-there hit; beyond this a consumed cue is a MISS
+        [SerializeField, Min(0.001f)] double lateExpiry = 0.240;   // matches wellWindow so late Wells still consume the cue
+        [Header("Presentation cue horizon (seconds)")]
+        [SerializeField, Min(0.05f)] double cueLead = 1.0;
 
-        public event Action<ChartEvent, double> CueActivated;
-        public event Action<ChartEvent> EventMissed;
+        RuntimeChart chart;
+        CandidateResolver resolver;
+        int cueIndex = -1;  // resolver slot whose cue is currently shown (CURRENT), or -1
+        bool chartExhaustedLogged;
+        readonly List<MotionCandidate> candidateBuffer = new(16);
 
-        public bool HasActiveEvent => activeIndex >= 0;
-        public ChartEvent ActiveEvent => chart.events[activeIndex];
-        public double ApproachTime => approachTime;
+        public event Action<RuntimeMotionEvent, double> CueActivated;   // presentation only
+        public event Action<RuntimeMotionEvent> EventMissed;            // an unresolved event expired
 
-        /// <summary>Song time (offset-corrected) of the next event that has not yet been activated, or -1.</summary>
-        public double NextEventTime
+        public TimingConfig Timing => new TimingConfig(perfectWindow, greatWindow, goodWindow, wellWindow, cueLead, lateExpiry);
+
+        public bool HasActiveEvent => cueIndex >= 0;
+        public RuntimeMotionEvent ActiveEvent => resolver.At(cueIndex);
+        public double ApproachTime => cueLead;
+        public double NextEventTime => resolver?.NextUnresolvedTime() ?? -1d;
+
+        /// <summary>True once every authored event has been resolved (hit or expired) — end of chart.</summary>
+        public bool AllResolved => resolver != null && resolver.Count > 0 && resolver.NextUnresolvedTime() < 0d;
+
+        /// <summary>Returns the authored runtime event for a resolved match id (slot), for outcome assembly.</summary>
+        public bool TryGetEvent(int matchedId, out RuntimeMotionEvent ev)
         {
-            get
+            if (resolver != null && matchedId >= 0 && matchedId < resolver.Count)
             {
-                if (chart == null) return -1;
-                if (activeIndex >= 0) return chart.events[activeIndex].time;
-                if (nextIndex < chart.events.Count) return chart.events[nextIndex].time;
-                return -1;
+                ev = resolver.At(matchedId);
+                return true;
             }
+            ev = default;
+            return false;
         }
 
-        public void Configure(ChartDefinition value) => chart = value;
+        /// <summary>Sets the immutable runtime chart for the run and resets per-run resolution state.</summary>
+        public void Configure(RuntimeChart runtimeChart)
+        {
+            chart = runtimeChart;
+            ResetScheduler();
+        }
 
-        public void ConfigureApproachTime(double value) => approachTime = Math.Max(0.25, value);
+        public void ConfigureApproachTime(double value) => cueLead = Math.Max(0.05, value);
 
         public void ResetScheduler()
         {
-            nextIndex = 0;
-            activeIndex = -1;
+            resolver = new CandidateResolver(chart != null ? chart.MotionEvents : null, Timing);
+            cueIndex = -1;
+            chartExhaustedLogged = false;
         }
 
         void Update()
         {
-            if (clock == null || chart == null || !clock.IsScheduled) return;
+            if (clock == null || chart == null || resolver == null || !clock.IsScheduled) return;
+            resolver.SetConfig(Timing);
             var now = clock.SongTime;
 
-            // Expire the active event once it is later than the Good window: auto-miss.
-            if (activeIndex >= 0 && now - ActiveEvent.time > JudgmentSystem.Good)
+            // Expire unresolved events past their late edge — exactly once each.
+            resolver.Expire(now, slot =>
             {
-                var missed = ActiveEvent;
-                activeIndex = -1;
-                EventMissed?.Invoke(missed);
-            }
+                if (cueIndex == slot) cueIndex = -1;
+                EventMissed?.Invoke(resolver.At(slot));
+            });
 
-            // Activate the next event once it enters the approach window.
-            if (activeIndex < 0 && nextIndex < chart.events.Count)
+            // CURRENT cue: the earliest unresolved event. Its approach time is bounded by the gap
+            // to the previous event so the ring always starts from full scale and closes at a rate
+            // proportional to the spacing — consistent within a tempo, instead of appearing
+            // mid-flight and snapping shut at dense tempos.
+            if (cueIndex < 0)
             {
-                var candidate = chart.events[nextIndex];
-                var until = candidate.time - now;
-                if (until <= approachTime)
+                var idx = resolver.EarliestUnresolvedWithin(now, cueLead);
+                if (idx >= 0)
                 {
-                    activeIndex = nextIndex++;
-                    CueActivated?.Invoke(candidate, approachTime);
+                    var approach = System.Math.Min(cueLead, resolver.TimeSincePrevious(idx));
+                    // Only start the cue once we are actually within its (bounded) approach window,
+                    // so it begins at full scale rather than partway closed.
+                    if (resolver.At(idx).Time - now <= approach)
+                    {
+                        cueIndex = idx;
+                        CueActivated?.Invoke(resolver.At(idx), approach);
+                    }
+                }
+                else if (resolver.NextUnresolvedTime() < 0d && !chartExhaustedLogged)
+                {
+                    chartExhaustedLogged = true;
+                    Debug.Log($"HH M0: chart exhausted (all {resolver.Count} events resolved) at songT {now:0.000}. No more cues by design.");
                 }
             }
         }
 
         /// <summary>
-        /// Attempts to judge the active event against an input.
-        /// <paramref name="calibrationOffset"/> (seconds) is added to the raw song time so
-        /// positive offset means "the player is treated as slightly later" — it never edits audio.
-        ///
-        /// Returns false (and leaves the event ACTIVE) when the input is earlier than the Good
-        /// window: an early panic-tap must not consume the note. Late-but-within-window and
-        /// wrong-direction inputs DO consume the event.
+        /// Resolves a semantic bang (already in song-time) against the unresolved candidate set.
+        /// Returns false only when nothing was consumed (too early / no chart).
         /// </summary>
-        public bool TryJudge(BangDirection inputDirection, float motionQuality, double calibrationOffset, out JudgmentResult result)
+        public bool Resolve(in BangInput input, out MatchResult result)
         {
-            result = default;
-            if (activeIndex < 0 || clock == null) return false;
+            result = MatchResult.NoneTooEarly;
+            if (resolver == null) return false;
 
-            var ev = ActiveEvent;
-            var error = (clock.SongTime + calibrationOffset) - ev.time;
-            var directionMatches = ev.direction == inputDirection;
+            resolver.SetConfig(Timing);
+            if (!resolver.Resolve(input, candidateBuffer, out result)) return false;
 
-            var outcome = JudgmentSystem.ResolveInput(error, directionMatches, motionQuality, out result);
-            if (outcome == JudgmentSystem.JudgeOutcome.TooEarlyKeep)
-                return false; // early panic-tap: event stays active.
-
-            activeIndex = -1;
+            if (cueIndex >= 0 && resolver.IsResolved(cueIndex)) cueIndex = -1;
             return true;
         }
     }
