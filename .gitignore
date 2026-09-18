@@ -20,6 +20,12 @@ Assets/_HeadbangHeroes/Content/Lab/BeyondThePain.mp3.meta
 Assets/_HeadbangHeroes/Content/Lab/BeyondThePain.wav
 Assets/_HeadbangHeroes/Content/Lab/BeyondThePain.ogg
 
+# WISH — licensed audio + source MIDI (local only; do not commit copyrighted material)
+Assets/_HeadbangHeroes/Content/Lab/wish.mp3
+Assets/_HeadbangHeroes/Content/Lab/wish.mp3.meta
+Assets/_HeadbangHeroes/Content/Lab/wish.mid
+Assets/_HeadbangHeroes/Content/Lab/wish.mid.meta
+
 # Generated at build time by the M0 builder (regenerated on demand)
 Assets/_HeadbangHeroes/Content/Lab/Generated/M0_ClickTrack.wav
 Assets/_HeadbangHeroes/Content/Lab/Generated/M0_ClickTrack.wav.meta

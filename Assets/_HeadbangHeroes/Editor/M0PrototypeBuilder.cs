@@ -28,6 +28,8 @@ namespace HeadbangHeroes.Editor
         const string LocalAudioPath = Root + "/Content/Lab/LocalAudio/BeyondThePain.mp3";
         const string TempoRampChartPath = Root + "/Content/Lab/lab-002-tempo-ramp.json";
         const string TempoRampAudioPath = Root + "/Content/Lab/TempoRamp.wav";
+        const string WishChartPath = Root + "/Content/Lab/lab-003-wish-classic-m0.json";
+        const string WishAudioPath = Root + "/Content/Lab/wish.mp3";
         const string GeneratedFolder = Root + "/Content/Lab/Generated";
         const string SongAssetPath = GeneratedFolder + "/Song_Lab001.asset";
         const string SceneFolder = Root + "/Scenes";
@@ -53,7 +55,12 @@ namespace HeadbangHeroes.Editor
         [MenuItem("Tools/Headbang Heroes/Build M0 Prototype (Tempo Ramp)")]
         public static void BuildTempoRamp() => BuildInternal(TempoRampChartPath, tempoRamp: true);
 
-        static void BuildInternal(string chartPath, bool tempoRamp)
+        [MenuItem("Tools/Headbang Heroes/Build M0 Prototype (WISH)")]
+        public static void BuildWish() => BuildInternal(WishChartPath, tempoRamp: false,
+            explicitAudioPath: WishAudioPath, explicitStart: 13.8);
+
+        static void BuildInternal(string chartPath, bool tempoRamp,
+            string explicitAudioPath = null, double explicitStart = double.NaN)
         {
             EnsureFolder(Root + "/Content/Lab", "Generated");
             EnsureFolder(Root, "Scenes");
@@ -92,12 +99,21 @@ namespace HeadbangHeroes.Editor
             }
             else
             {
-                var realAudio = FindRealAudio();
-                // Testability without the licensed MP3: if missing, generate a synthetic click-track.
+                AudioClip realAudio;
+                if (!string.IsNullOrEmpty(explicitAudioPath) && System.IO.File.Exists(AbsoluteFromProject(explicitAudioPath)))
+                {
+                    AssetDatabase.ImportAsset(explicitAudioPath, ImportAssetOptions.ForceSynchronousImport);
+                    realAudio = AssetDatabase.LoadAssetAtPath<AudioClip>(explicitAudioPath);
+                }
+                else
+                {
+                    realAudio = FindRealAudio();
+                }
+                // Testability without the licensed audio: if missing, generate a synthetic click-track.
                 usingClickTrack = realAudio == null;
                 audio = realAudio != null ? realAudio : GetOrCreateClickTrack(chartData);
-                // The MIDI-derived chart's first hit is ~12.8s; start ~1s before.
-                startSongTime = 11.8;
+                // Start ~1s before the chart's first hit (per-song); default is the beyond-the-pain 11.8s.
+                startSongTime = double.IsNaN(explicitStart) ? 11.8 : explicitStart;
             }
 
             var song = GetOrCreateSong(audio);

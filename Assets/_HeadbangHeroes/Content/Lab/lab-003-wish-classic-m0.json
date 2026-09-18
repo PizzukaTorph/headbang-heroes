@@ -1,0 +1,3932 @@
+{
+ "chartId": "wish-classic-m0",
+ "version": 1,
+ "songId": "lab-003",
+ "technique": "Classic",
+ "difficulty": "Prototype",
+ "approachTime": 0.9,
+ "schemaVersion": 1,
+ "rulesVersion": 1,
+ "events": [
+  {
+   "time": 14.786,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 15.429,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 16.286,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 17.143,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 18.0,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 18.857,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 19.714,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 20.571,
+   "direction": 3,
+   "directionName": "down",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 21.429,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 22.071,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 22.714,
+   "direction": 2,
+   "directionName": "up",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 23.571,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 24.429,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 25.286,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 26.143,
+   "direction": 2,
+   "directionName": "up",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 27.0,
+   "direction": 3,
+   "directionName": "down",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": true
+  },
+  {
+   "time": 27.643,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 28.286,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 28.929,
+   "direction": 2,
+   "directionName": "up",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 29.571,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 30.214,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 30.857,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 31.714,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 32.571,
+   "direction": 3,
+   "directionName": "down",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 33.429,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 34.286,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 35.143,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 36.0,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 36.857,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 37.714,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 38.571,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 39.429,
+   "direction": 3,
+   "directionName": "down",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": true
+  },
+  {
+   "time": 40.286,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 41.143,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 41.786,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 42.429,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 43.286,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 43.929,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 44.571,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 45.429,
+   "direction": 3,
+   "directionName": "down",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 46.286,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 47.143,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 48.0,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 48.857,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 49.714,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 50.571,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 51.429,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 52.286,
+   "direction": 3,
+   "directionName": "down",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": true
+  },
+  {
+   "time": 53.143,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 54.0,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 54.857,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 55.5,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 56.143,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 56.786,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 57.429,
+   "direction": 2,
+   "directionName": "up",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 58.286,
+   "direction": 3,
+   "directionName": "down",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 59.143,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 59.786,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 60.429,
+   "direction": 2,
+   "directionName": "up",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 61.071,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 62.143,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 62.786,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 63.429,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 64.286,
+   "direction": 3,
+   "directionName": "down",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": true
+  },
+  {
+   "time": 65.143,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 65.786,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 66.429,
+   "direction": 2,
+   "directionName": "up",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 67.071,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 67.714,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 68.357,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 69.0,
+   "direction": 2,
+   "directionName": "up",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 69.643,
+   "direction": 3,
+   "directionName": "down",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 70.286,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 70.929,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 71.571,
+   "direction": 2,
+   "directionName": "up",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 72.214,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 72.857,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 73.5,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 74.143,
+   "direction": 2,
+   "directionName": "up",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 75.0,
+   "direction": 3,
+   "directionName": "down",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": true
+  },
+  {
+   "time": 75.857,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 76.714,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 77.357,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 78.0,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 78.643,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 79.286,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 79.928,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 80.571,
+   "direction": 3,
+   "directionName": "down",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 81.214,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 81.857,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 82.5,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 83.143,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 83.786,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 84.428,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 85.071,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 85.714,
+   "direction": 3,
+   "directionName": "down",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": true
+  },
+  {
+   "time": 86.357,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 87.0,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 87.643,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 88.286,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 88.928,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 89.571,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 90.214,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 90.857,
+   "direction": 3,
+   "directionName": "down",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 91.714,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 92.357,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 93.0,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 93.643,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 94.286,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 95.143,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 96.0,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 96.857,
+   "direction": 3,
+   "directionName": "down",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": true
+  },
+  {
+   "time": 97.714,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 98.571,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 99.428,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 100.286,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 101.143,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 102.0,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 102.857,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 103.714,
+   "direction": 3,
+   "directionName": "down",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 104.571,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 105.428,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 106.286,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 107.143,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 107.786,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 108.428,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 109.071,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 109.714,
+   "direction": 3,
+   "directionName": "down",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": true
+  },
+  {
+   "time": 110.571,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 111.428,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 112.286,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 113.143,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 114.0,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 114.857,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 115.714,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 116.571,
+   "direction": 3,
+   "directionName": "down",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 117.428,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 118.286,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 119.143,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 120.0,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 120.857,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 121.714,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 122.357,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 123.0,
+   "direction": 3,
+   "directionName": "down",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": true
+  },
+  {
+   "time": 123.857,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 124.5,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 125.143,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 126.0,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 126.857,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 127.714,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 128.571,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 129.428,
+   "direction": 3,
+   "directionName": "down",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 130.286,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 131.143,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 132.0,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 132.857,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 133.714,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 134.571,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 135.428,
+   "direction": 2,
+   "directionName": "up",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 136.071,
+   "direction": 3,
+   "directionName": "down",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": true
+  },
+  {
+   "time": 136.714,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 137.357,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 138.0,
+   "direction": 2,
+   "directionName": "up",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 138.857,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 139.714,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 140.357,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 141.0,
+   "direction": 2,
+   "directionName": "up",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 141.643,
+   "direction": 3,
+   "directionName": "down",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 142.714,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 143.357,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 144.0,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 144.857,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 145.714,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 146.357,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 147.0,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 147.643,
+   "direction": 3,
+   "directionName": "down",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": true
+  },
+  {
+   "time": 148.286,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 149.143,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 149.786,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 150.428,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 151.071,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 151.714,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 152.357,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 153.0,
+   "direction": 3,
+   "directionName": "down",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 153.643,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 154.286,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 154.928,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 155.571,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 156.428,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 157.286,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 158.143,
+   "direction": 2,
+   "directionName": "up",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 159.0,
+   "direction": 3,
+   "directionName": "down",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": true
+  },
+  {
+   "time": 159.643,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 160.286,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 160.928,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 161.571,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 162.214,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 162.857,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 163.5,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 164.143,
+   "direction": 3,
+   "directionName": "down",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 164.786,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 165.428,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 166.071,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 166.714,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 167.357,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 168.0,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 168.643,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 169.286,
+   "direction": 3,
+   "directionName": "down",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": true
+  },
+  {
+   "time": 169.928,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 170.571,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 171.214,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 171.857,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 172.5,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 173.143,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 174.0,
+   "direction": 2,
+   "directionName": "up",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 174.643,
+   "direction": 3,
+   "directionName": "down",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 175.286,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 175.928,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 176.571,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 177.214,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 177.857,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 178.714,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 179.357,
+   "direction": 2,
+   "directionName": "up",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 180.0,
+   "direction": 3,
+   "directionName": "down",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": true
+  },
+  {
+   "time": 180.643,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 181.286,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 182.143,
+   "direction": 2,
+   "directionName": "up",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 182.786,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 183.321,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 183.857,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 184.5,
+   "direction": 2,
+   "directionName": "up",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 185.143,
+   "direction": 3,
+   "directionName": "down",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 185.786,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 186.857,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 187.5,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 188.143,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 190.286,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 197.143,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 202.286,
+   "direction": 2,
+   "directionName": "up",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 202.928,
+   "direction": 3,
+   "directionName": "down",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": true
+  },
+  {
+   "time": 203.571,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 204.857,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 205.714,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 206.357,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 207.0,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 208.286,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 209.143,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 210.0,
+   "direction": 3,
+   "directionName": "down",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 210.857,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 211.714,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 212.571,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 213.214,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 213.857,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 214.5,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 215.143,
+   "direction": 2,
+   "directionName": "up",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 216.0,
+   "direction": 3,
+   "directionName": "down",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": true
+  },
+  {
+   "time": 216.857,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 217.714,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 218.571,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 219.214,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 219.857,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 220.5,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 221.143,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 222.0,
+   "direction": 3,
+   "directionName": "down",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 222.857,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 223.714,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 224.571,
+   "direction": 2,
+   "directionName": "up",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 225.214,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 225.857,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 226.714,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 227.357,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 228.0,
+   "direction": 3,
+   "directionName": "down",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": true
+  },
+  {
+   "time": 228.857,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 229.714,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 230.357,
+   "direction": 2,
+   "directionName": "up",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 231.0,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 231.857,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 232.5,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 233.143,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 234.0,
+   "direction": 3,
+   "directionName": "down",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 234.857,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 235.714,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 236.571,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 237.428,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 238.285,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 239.143,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 239.714,
+   "direction": 2,
+   "directionName": "up",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 240.214,
+   "direction": 3,
+   "directionName": "down",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": true
+  },
+  {
+   "time": 240.857,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 241.5,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 242.143,
+   "direction": 2,
+   "directionName": "up",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 242.785,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 243.428,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 244.285,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 245.143,
+   "direction": 2,
+   "directionName": "up",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 245.785,
+   "direction": 3,
+   "directionName": "down",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 246.428,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 247.285,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 247.928,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 248.571,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 249.428,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 250.285,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 251.143,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 252.0,
+   "direction": 3,
+   "directionName": "down",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": true
+  },
+  {
+   "time": 252.857,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 253.714,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 254.357,
+   "direction": 2,
+   "directionName": "up",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 255.0,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 255.643,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 256.285,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 256.928,
+   "direction": 2,
+   "directionName": "up",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 258.857,
+   "direction": 3,
+   "directionName": "down",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 259.5,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 260.143,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 263.357,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 264.0,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 264.643,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 265.285,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 265.928,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 266.571,
+   "direction": 3,
+   "directionName": "down",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": true
+  },
+  {
+   "time": 267.214,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 267.857,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 268.5,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 269.143,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 269.785,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 270.428,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 271.285,
+   "direction": 2,
+   "directionName": "up",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 272.143,
+   "direction": 3,
+   "directionName": "down",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 273.0,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 273.857,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 274.5,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 275.143,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 275.785,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 276.428,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 277.071,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 277.714,
+   "direction": 3,
+   "directionName": "down",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": true
+  },
+  {
+   "time": 278.357,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 279.0,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 279.643,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 280.285,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 280.928,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 281.571,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 282.214,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 282.857,
+   "direction": 3,
+   "directionName": "down",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 283.5,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 284.143,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 284.785,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 285.428,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 286.071,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 286.714,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 287.357,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 288.0,
+   "direction": 3,
+   "directionName": "down",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": true
+  },
+  {
+   "time": 288.643,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 289.285,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 290.143,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 290.785,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 291.428,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 292.285,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 293.143,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 294.0,
+   "direction": 3,
+   "directionName": "down",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 294.857,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 295.5,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 296.143,
+   "direction": 2,
+   "directionName": "up",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 297.0,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 297.857,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 298.714,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 299.571,
+   "direction": 2,
+   "directionName": "up",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 300.428,
+   "direction": 3,
+   "directionName": "down",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": true
+  },
+  {
+   "time": 301.285,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 302.143,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 303.0,
+   "direction": 2,
+   "directionName": "up",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 303.857,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 304.5,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 305.143,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 306.0,
+   "direction": 2,
+   "directionName": "up",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 306.857,
+   "direction": 3,
+   "directionName": "down",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 307.5,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 308.143,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 309.0,
+   "direction": 2,
+   "directionName": "up",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 309.857,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 310.714,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 311.357,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 312.0,
+   "direction": 2,
+   "directionName": "up",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 312.857,
+   "direction": 3,
+   "directionName": "down",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": true
+  },
+  {
+   "time": 313.714,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 314.357,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 315.0,
+   "direction": 2,
+   "directionName": "up",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 316.071,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 316.714,
+   "direction": -1,
+   "directionName": "left",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 317.571,
+   "direction": 1,
+   "directionName": "right",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 318.214,
+   "direction": 2,
+   "directionName": "up",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  },
+  {
+   "time": 318.857,
+   "direction": 3,
+   "directionName": "down",
+   "intensity": 1.0,
+   "technique": "Classic",
+   "trajectory": "Horizontal",
+   "modifier": "None",
+   "finisherCandidate": false
+  }
+ ]
+}
