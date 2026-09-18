@@ -537,7 +537,7 @@ namespace HeadbangHeroes.Editor
             rect.SetParent(canvas, false);
             rect.anchorMin = Vector2.zero; rect.anchorMax = Vector2.one;
             rect.offsetMin = rect.offsetMax = Vector2.zero;
-            rect.SetAsFirstSibling();   // behind avatar/cue, above background
+            rect.SetSiblingIndex(1);   // just above the opaque background (index 0), behind avatar/UI
 
             var col = new Color(0.95f, 0.55f, 0.2f, 1f);   // alpha via CanvasGroup; recolored at runtime
             var left = MakeFlagHalf(rect, "PulseLeft", new Vector2(0f, 0f), new Vector2(0.5f, 1f), col);
@@ -561,8 +561,8 @@ namespace HeadbangHeroes.Editor
             rect.SetParent(canvas, false);
             rect.anchorMin = Vector2.zero; rect.anchorMax = Vector2.one;
             rect.offsetMin = rect.offsetMax = Vector2.zero;
-            // Sit behind the avatar/cue but above the background; created early in the hierarchy.
-            rect.SetAsFirstSibling();
+            // Sit above the opaque background (index 0) but behind avatar/UI.
+            rect.SetSiblingIndex(1);
 
             var col = new Color(0.9f, 0.9f, 1f, 1f);   // alpha driven by the CanvasGroup
             var left = MakeFlagHalf(rect, "FlashLeft", new Vector2(0f, 0f), new Vector2(0.5f, 1f), col);
