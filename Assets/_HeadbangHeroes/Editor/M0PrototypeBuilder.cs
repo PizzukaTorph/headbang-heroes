@@ -187,6 +187,10 @@ namespace HeadbangHeroes.Editor
             // --- P08: on-screen touch controls (Option A UX) ---
             CreateTouchControls(canvas.transform, flow, controller, resultsPanel);
 
+            // --- P08 affordance: brief bang-zone hint at run start ---
+            var zoneHint = CreateBangZoneHint(canvas.transform);
+            Assign(controller, "zoneHint", zoneHint);
+
             // --- Input event system ---
             var eventSystem = new GameObject("EventSystem");
             eventSystem.AddComponent<EventSystem>();
@@ -547,6 +551,47 @@ namespace HeadbangHeroes.Editor
         /// Builds the P08 on-screen touch controls (Option A). Buttons are edge/overlay only and never
         /// cover the protected region (head/neck/CURRENT around screen centre, anchor y ~0.42).
         /// </summary>
+        /// <summary>
+        /// Builds the bang-zone affordance hint: 4 large directional arrows in the real ResolveZone
+        /// quadrants (screen split from centre into L/R/U/D). Non-raycast (never eats a bang), inside
+        /// a CanvasGroup that BangZoneHint fades out shortly after run start.
+        /// </summary>
+        static BangZoneHint CreateBangZoneHint(Transform canvas)
+        {
+            var go = new GameObject("HH_BangZoneHint", typeof(RectTransform), typeof(CanvasGroup));
+            var rect = go.GetComponent<RectTransform>();
+            rect.SetParent(canvas, false);
+            rect.anchorMin = Vector2.zero; rect.anchorMax = Vector2.one;
+            rect.offsetMin = rect.offsetMax = Vector2.zero;
+            var group = go.GetComponent<CanvasGroup>();
+            group.alpha = 0f;
+            group.interactable = false;
+            group.blocksRaycasts = false;      // must NOT intercept taps — zones stay tappable
+
+            var hintCol = new Color(0.85f, 0.85f, 0.95f, 0.55f);
+            // Arrows near each edge centre, sized so it's clear the whole quadrant is tappable.
+            MakeArrow(rect, "HintUp", "\u25B2\nUP", new Vector2(0.5f, 1f), new Vector2(0, -230), hintCol);
+            MakeArrow(rect, "HintDown", "DOWN\n\u25BC", new Vector2(0.5f, 0f), new Vector2(0, 470), hintCol);
+            MakeArrow(rect, "HintLeft", "\u25C0 LEFT", new Vector2(0f, 0.5f), new Vector2(230, 0), hintCol);
+            MakeArrow(rect, "HintRight", "RIGHT \u25B6", new Vector2(1f, 0.5f), new Vector2(-230, 0), hintCol);
+
+            var hint = go.AddComponent<BangZoneHint>();
+            Assign(hint, "group", group);
+            return hint;
+        }
+
+        static void MakeArrow(Transform parent, string name, string label, Vector2 anchor, Vector2 pos, Color col)
+        {
+            var t = CreateText(name, parent, Vector2.zero, new Vector2(360, 200), 56, TextAnchor.MiddleCenter);
+            t.text = label;
+            t.color = col;
+            t.fontStyle = FontStyle.Bold;
+            var r = t.rectTransform;
+            r.anchorMin = r.anchorMax = anchor;
+            r.pivot = new Vector2(0.5f, 0.5f);
+            r.anchoredPosition = pos;
+        }
+
         static void CreateTouchControls(Transform canvas, GameFlowController flow,
             PrototypeController gameplay, CanvasGroup resultsPanel)
         {

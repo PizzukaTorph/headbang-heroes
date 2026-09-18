@@ -23,6 +23,7 @@ namespace HeadbangHeroes.Core
         [SerializeField] NeckMotionModel head;
         [SerializeField] ClosingCircleCue cue;
         [SerializeField] PrototypeHud hud;
+        [SerializeField] BangZoneHint zoneHint;   // onboarding: reveal the 4 bang zones at run start
 
         [Header("Presentation (downstream only)")]
         [SerializeField] NeckPresenter neckPresenter;
@@ -201,6 +202,7 @@ namespace HeadbangHeroes.Core
             venuePresenter?.ApplySettings(access);
             haptics?.ApplySettings(access);
             cue?.ResetCue();
+            zoneHint?.Show();
             scheduler.Configure(runtimeChart);
             clock.Play(song.audio, startSongTime);
             running = true;
