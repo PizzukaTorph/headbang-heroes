@@ -184,6 +184,9 @@ namespace HeadbangHeroes.Editor
             Assign(flow, "preSongText", preText);
             Assign(flow, "resultsText", resultsText);
 
+            // --- P08: on-screen touch controls (Option A UX) ---
+            CreateTouchControls(canvas.transform, flow, controller, resultsPanel);
+
             // --- Input event system ---
             var eventSystem = new GameObject("EventSystem");
             eventSystem.AddComponent<EventSystem>();
@@ -540,6 +543,85 @@ namespace HeadbangHeroes.Editor
             return text;
         }
 
+        /// <summary>
+        /// Builds the P08 on-screen touch controls (Option A). Buttons are edge/overlay only and never
+        /// cover the protected region (head/neck/CURRENT around screen centre, anchor y ~0.42).
+        /// </summary>
+        static void CreateTouchControls(Transform canvas, GameFlowController flow,
+            PrototypeController gameplay, CanvasGroup resultsPanel)
+        {
+            var accent = new Color(0.75f, 0.18f, 0.20f, 0.92f);   // THE BANG / primary
+            var neutral = new Color(0.16f, 0.16f, 0.20f, 0.92f);  // secondary
+            var quitCol = new Color(0.30f, 0.10f, 0.12f, 0.95f);
+
+            var tcGo = new GameObject("HH_TouchControls", typeof(RectTransform));
+            var tcRect = tcGo.GetComponent<RectTransform>();
+            tcRect.SetParent(canvas, false);
+            tcRect.anchorMin = Vector2.zero; tcRect.anchorMax = Vector2.one;
+            tcRect.offsetMin = tcRect.offsetMax = Vector2.zero;
+            var tc = tcGo.AddComponent<TouchControls>();
+
+            // PAUSE — top-left corner (top bar area), well away from the thumb bang zones.
+            var pause = CreateButton(tcRect, "PauseButton", "II",
+                anchor: new Vector2(0f, 1f), anchoredPos: new Vector2(90, -90),
+                size: new Vector2(120, 120), bg: neutral, fontSize: 48);
+
+            // THE BANG — bottom-centre, reachable by either thumb; shown only on HYPE READY.
+            var bangGroupGo = new GameObject("TheBangGroup", typeof(RectTransform), typeof(CanvasGroup));
+            var bangRect = bangGroupGo.GetComponent<RectTransform>();
+            bangRect.SetParent(tcRect, false);
+            bangRect.anchorMin = bangRect.anchorMax = new Vector2(0.5f, 0f);
+            bangRect.pivot = new Vector2(0.5f, 0f);
+            bangRect.anchoredPosition = new Vector2(0, 150);
+            bangRect.sizeDelta = new Vector2(560, 200);
+            var bangGroup = bangGroupGo.GetComponent<CanvasGroup>();
+            bangGroup.alpha = 0f; bangGroup.interactable = false; bangGroup.blocksRaycasts = false;
+            var theBang = CreateButton(bangRect, "TheBangButton", "THE BANG",
+                anchor: new Vector2(0.5f, 0.5f), anchoredPos: Vector2.zero,
+                size: new Vector2(560, 200), bg: accent, fontSize: 64);
+
+            // PAUSE overlay: dim full-screen CanvasGroup with RESUME/RETRY/QUIT + calibration +/-.
+            var overlayGo = new GameObject("PauseOverlay", typeof(RectTransform), typeof(CanvasGroup), typeof(Image));
+            var overlayRect = overlayGo.GetComponent<RectTransform>();
+            overlayRect.SetParent(tcRect, false);
+            overlayRect.anchorMin = Vector2.zero; overlayRect.anchorMax = Vector2.one;
+            overlayRect.offsetMin = overlayRect.offsetMax = Vector2.zero;
+            overlayGo.GetComponent<Image>().color = new Color(0.02f, 0.02f, 0.04f, 0.85f);
+            var overlay = overlayGo.GetComponent<CanvasGroup>();
+            overlay.alpha = 0f; overlay.interactable = false; overlay.blocksRaycasts = false;
+
+            var title = CreateText("PauseTitle", overlayRect, new Vector2(0, 560), new Vector2(900, 140), 72, TextAnchor.MiddleCenter);
+            title.text = "PAUSED";
+            var resume = CreateButton(overlayRect, "ResumeButton", "RESUME", new Vector2(0.5f, 0.5f), new Vector2(0, 220), new Vector2(560, 150), accent, 52);
+            var pRetry = CreateButton(overlayRect, "PauseRetryButton", "RETRY", new Vector2(0.5f, 0.5f), new Vector2(0, 40), new Vector2(560, 150), neutral, 52);
+            var quit = CreateButton(overlayRect, "QuitButton", "QUIT", new Vector2(0.5f, 0.5f), new Vector2(0, -140), new Vector2(560, 150), quitCol, 52);
+            var calText = CreateText("CalibrationText", overlayRect, new Vector2(0, -360), new Vector2(700, 180), 40, TextAnchor.MiddleCenter);
+            calText.text = "CALIBRATION";
+            var calMinus = CreateButton(overlayRect, "CalMinusButton", "-", new Vector2(0.5f, 0.5f), new Vector2(-200, -520), new Vector2(150, 150), neutral, 64);
+            var calPlus = CreateButton(overlayRect, "CalPlusButton", "+", new Vector2(0.5f, 0.5f), new Vector2(200, -520), new Vector2(150, 150), neutral, 64);
+
+            // RESULTS actions — large one-tap RETRY / CONTINUE, parented to the results panel so they
+            // show/hide with it.
+            var rRetry = CreateButton(resultsPanel.transform, "ResultsRetryButton", "RETRY", new Vector2(0.5f, 0f), new Vector2(-300, 220), new Vector2(500, 160), accent, 56);
+            var rCont = CreateButton(resultsPanel.transform, "ResultsContinueButton", "CONTINUE", new Vector2(0.5f, 0f), new Vector2(300, 220), new Vector2(500, 160), neutral, 52);
+
+            // --- Wire TouchControls ---
+            Assign(tc, "flow", flow);
+            Assign(tc, "gameplay", gameplay);
+            Assign(tc, "pauseButton", pause);
+            Assign(tc, "theBangButton", theBang);
+            Assign(tc, "theBangGroup", bangGroup);
+            Assign(tc, "pauseOverlay", overlay);
+            Assign(tc, "resumeButton", resume);
+            Assign(tc, "pauseRetryButton", pRetry);
+            Assign(tc, "quitButton", quit);
+            Assign(tc, "calMinusButton", calMinus);
+            Assign(tc, "calPlusButton", calPlus);
+            Assign(tc, "calibrationText", calText);
+            Assign(tc, "resultsRetryButton", rRetry);
+            Assign(tc, "resultsContinueButton", rCont);
+        }
+
         static RectTransform CreateRect(string name, Transform parent, Vector2 position, Vector2 size)
         {
             var go = new GameObject(name, typeof(RectTransform));
@@ -550,6 +632,35 @@ namespace HeadbangHeroes.Editor
             rect.anchoredPosition = position;
             rect.sizeDelta = size;
             return rect;
+        }
+
+        /// <summary>
+        /// A touch button: an Image (raycast target, so HeadbangInput suppresses a bang on it) with a
+        /// centered label. Anchored to the given normalized anchor so portrait layout is stable.
+        /// </summary>
+        static Button CreateButton(Transform parent, string name, string label, Vector2 anchor,
+            Vector2 anchoredPos, Vector2 size, Color bg, int fontSize = 40)
+        {
+            var go = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button));
+            var rect = go.GetComponent<RectTransform>();
+            rect.SetParent(parent, false);
+            rect.anchorMin = rect.anchorMax = anchor;
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = anchoredPos;
+            rect.sizeDelta = size;
+
+            var image = go.GetComponent<Image>();
+            image.color = bg;                 // raycastTarget defaults true -> eats the tap
+
+            var button = go.GetComponent<Button>();
+            button.targetGraphic = image;
+
+            var text = CreateText(name + "Label", rect, Vector2.zero, size, fontSize, TextAnchor.MiddleCenter);
+            text.text = label;
+            var t = text.rectTransform;
+            t.anchorMin = Vector2.zero; t.anchorMax = Vector2.one; t.offsetMin = t.offsetMax = Vector2.zero;
+
+            return button;
         }
 
         static void RegisterSceneInBuildSettings()

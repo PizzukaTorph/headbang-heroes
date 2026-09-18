@@ -32,16 +32,31 @@ namespace HeadbangHeroes.Input
             if (Touchscreen.current != null)
             {
                 var touch = Touchscreen.current.primaryTouch;
-                if (touch.press.wasPressedThisFrame)
+                if (touch.press.wasPressedThisFrame && !IsPointerOverUi(touch.touchId.ReadValue()))
                     Emit(touch.position.ReadValue());
             }
 
 #if UNITY_EDITOR
-            if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
+            if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame && !IsPointerOverUi(-1))
                 Emit(Mouse.current.position.ReadValue());
 #endif
 
             if (enableKeyboard) ReadKeyboard();
+        }
+
+        /// <summary>
+        /// True when the press landed on an interactive UI element (a button, THE BANG, an overlay).
+        /// Such taps must NOT also emit a bang — the UI "eats" them. This keeps the whole screen a
+        /// bang zone while making on-screen controls safe (Option A UX).
+        /// </summary>
+        static bool IsPointerOverUi(int pointerOrTouchId)
+        {
+            var es = UnityEngine.EventSystems.EventSystem.current;
+            if (es == null) return false;
+#if UNITY_EDITOR
+            if (pointerOrTouchId < 0) return es.IsPointerOverGameObject();   // mouse
+#endif
+            return es.IsPointerOverGameObject(pointerOrTouchId);
         }
 
         void ReadKeyboard()

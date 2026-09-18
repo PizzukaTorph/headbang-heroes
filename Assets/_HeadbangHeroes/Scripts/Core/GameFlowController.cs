@@ -144,6 +144,17 @@ namespace HeadbangHeroes.Core
 
         public void ContinueToSelect() => GoSongSelect();
 
+        /// <summary>
+        /// Abandon the current run (QUIT from the pause overlay): stop gameplay without finalizing a
+        /// RunResult and return to Song Select. Guarded to the Gameplay state so it can't fire twice.
+        /// </summary>
+        public void AbortToSongSelect()
+        {
+            if (state != FlowState.Gameplay) return;
+            if (gameplay != null) gameplay.AbortRun();
+            GoSongSelect();
+        }
+
         // ---- Run completion -> meta pipeline ----
 
         void OnRunCompleted(RunResult run)

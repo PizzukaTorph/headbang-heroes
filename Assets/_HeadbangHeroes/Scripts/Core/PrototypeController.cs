@@ -54,6 +54,62 @@ namespace HeadbangHeroes.Core
         /// <summary>Fired exactly once when a run finishes, carrying the authoritative RunResult.</summary>
         public event System.Action<RunResult> RunCompleted;
 
+        // ---- Public entry points shared by keyboard playtest controls AND on-screen touch UI ----
+        // These are the single source of truth for each action so touch and keyboard never diverge.
+
+        /// <summary>True while a run is active and the clock is scheduled (gameplay in progress).</summary>
+        public bool IsRunning => running && clock != null && clock.IsScheduled;
+
+        /// <summary>True when the clock is currently paused.</summary>
+        public bool IsPaused => clock != null && clock.IsPaused;
+
+        /// <summary>True when HYPE is READY and THE BANG can be activated (drives the THE BANG button).</summary>
+        public bool IsHypeReady => scorer.Hype.IsReady && clock != null && clock.IsScheduled && !clock.IsPaused;
+
+        /// <summary>Current calibration offset (seconds) — for on-screen readout.</summary>
+        public double CalibrationSeconds => clock != null ? clock.Calibration : 0d;
+
+        /// <summary>Current compensated output latency (seconds) — for on-screen readout.</summary>
+        public double OutputLatencySeconds => clock != null ? clock.OutputLatency : 0d;
+
+        /// <summary>Toggle pause/resume (keyboard Space and the on-screen PAUSE button).</summary>
+        public void TogglePause()
+        {
+            if (clock == null || !clock.IsScheduled) return;
+            if (clock.IsPaused) clock.Resume();
+            else clock.Pause();
+        }
+
+        public void Pause() { if (clock != null && clock.IsScheduled && !clock.IsPaused) clock.Pause(); }
+        public void Resume() { if (clock != null && clock.IsScheduled && clock.IsPaused) clock.Resume(); }
+
+        /// <summary>
+        /// Abandon the current run without finalizing a RunResult (QUIT). Stops the clock and clears
+        /// the running flag; no RunCompleted is fired, so the meta pipeline does not record it.
+        /// </summary>
+        public void AbortRun()
+        {
+            running = false;
+            if (clock != null) clock.Stop();
+        }
+
+        /// <summary>Manually activate THE BANG (only succeeds when HYPE is READY). Keyboard B + touch button.</summary>
+        public bool TryActivateTheBang()
+        {
+            if (clock == null || !clock.IsScheduled) return false;
+            if (scorer.TryActivateTheBang(clock.SongTime))
+            {
+                haptics?.Play(HapticEvent.TheBangActivated);
+                RefreshHypeHud();
+                Debug.Log("THE BANG activated!");
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>Nudge calibration by one step (+/-). Used by keyboard [ ] and the on-screen +/- buttons.</summary>
+        public void NudgeCalibration(int steps) => AdjustCalibration(steps * calibrationStepMs / 1000.0);
+
         /// <summary>Applies persisted profile settings/calibration to the run (called by the flow before start).</summary>
         public void ApplyProfileSettings(double calibrationSeconds, bool rFlash, bool rShake, bool hEnabled, float hIntensity)
         {
@@ -208,27 +264,13 @@ namespace HeadbangHeroes.Core
                 return;
             }
 
-            if (kb.spaceKey.wasPressedThisFrame && clock != null)
-            {
-                if (clock.IsPaused) clock.Resume();
-                else clock.Pause();
-            }
+            if (kb.spaceKey.wasPressedThisFrame) TogglePause();
 
             // Manual THE BANG activation (only succeeds when HYPE is READY).
-            if (kb.bKey.wasPressedThisFrame && clock != null && clock.IsScheduled)
-            {
-                if (scorer.TryActivateTheBang(clock.SongTime))
-                {
-                    haptics?.Play(HapticEvent.TheBangActivated);
-                    Debug.Log("THE BANG activated!");
-                }
-            }
+            if (kb.bKey.wasPressedThisFrame) TryActivateTheBang();
 
-            if (kb.leftBracketKey.wasPressedThisFrame)
-                AdjustCalibration(-calibrationStepMs / 1000.0);
-
-            if (kb.rightBracketKey.wasPressedThisFrame)
-                AdjustCalibration(calibrationStepMs / 1000.0);
+            if (kb.leftBracketKey.wasPressedThisFrame) NudgeCalibration(-1);
+            if (kb.rightBracketKey.wasPressedThisFrame) NudgeCalibration(+1);
         }
 
         void AdjustCalibration(double deltaSeconds)
