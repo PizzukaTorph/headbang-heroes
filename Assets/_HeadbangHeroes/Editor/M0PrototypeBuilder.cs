@@ -198,6 +198,21 @@ namespace HeadbangHeroes.Editor
             Assign(flow, "preSongText", preText);
             Assign(flow, "resultsText", resultsText);
 
+            // --- P10: Results emotion-first act texts (grade dominant -> score -> comment -> report -> rewards) ---
+            var rp = resultsPanel.transform;
+            var gradeText = CreateText("ResGrade", rp, new Vector2(0, 620), new Vector2(700, 300), 220, TextAnchor.MiddleCenter);
+            var scoreText = CreateText("ResScore", rp, new Vector2(0, 420), new Vector2(800, 110), 72, TextAnchor.MiddleCenter);
+            var commentText = CreateText("ResComment", rp, new Vector2(0, 300), new Vector2(940, 120), 40, TextAnchor.MiddleCenter);
+            var reportText = CreateText("ResReport", rp, new Vector2(0, 20), new Vector2(900, 400), 40, TextAnchor.MiddleCenter);
+            var rewardsText = CreateText("ResRewards", rp, new Vector2(0, -280), new Vector2(900, 160), 44, TextAnchor.MiddleCenter);
+            commentText.color = new Color(0.9f, 0.9f, 0.95f, 1f);
+            rewardsText.color = new Color(0.7f, 0.95f, 0.7f, 1f);
+            Assign(flow, "resultsGradeText", gradeText);
+            Assign(flow, "resultsScoreText", scoreText);
+            Assign(flow, "resultsCommentText", commentText);
+            Assign(flow, "resultsReportText", reportText);
+            Assign(flow, "resultsRewardsText", rewardsText);
+
             // --- P08: on-screen touch controls (Option A UX) ---
             CreateTouchControls(canvas.transform, flow, controller, resultsPanel);
 

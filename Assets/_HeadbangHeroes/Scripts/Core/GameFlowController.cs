@@ -35,6 +35,13 @@ namespace HeadbangHeroes.Core
         [SerializeField] Text preSongText;
         [SerializeField] Text resultsText;
 
+        [Header("Results — emotion-first acts (P10)")]
+        [SerializeField] Text resultsGradeText;    // Act 1: dominant grade
+        [SerializeField] Text resultsScoreText;     // Act 1: score
+        [SerializeField] Text resultsCommentText;   // Act 1: themed contextual line
+        [SerializeField] Text resultsReportText;    // Act 2: performance card
+        [SerializeField] Text resultsRewardsText;   // Act 3: rewards/progression
+
         [Header("Content identity (POC single song)")]
         [SerializeField] string songTitle = "Beyond the Pain";
         [SerializeField] string songArtist = "Asidie";
@@ -179,12 +186,58 @@ namespace HeadbangHeroes.Core
         {
             state = FlowState.Results;
             Hide(homePanel); Hide(songSelectPanel); Hide(preSongPanel); Show(resultsPanel);
-            if (resultsText == null) return;
 
+            // Emotion-first layout (RESULTS_SCREEN_V1 / ADR-aligned): grade dominant, then score,
+            // then a themed contextual line, then the report, then rewards. Renders the authoritative
+            // result only — never recomputes score/grade.
+            var comment = ResultCommentSelector.SelectLine(grade.Grade, tags);
+
+            if (resultsGradeText != null)
+            {
+                // Act 1 — Impact. Grade dominates; scale emphasis by grade (S biggest .. D smallest).
+                resultsGradeText.text = grade.Grade.ToString();
+                resultsGradeText.fontSize = GradeFontSize(grade.Grade);
+                resultsGradeText.color = GradeColor(grade.Grade);
+                if (resultsScoreText != null) resultsScoreText.text = run.Score.ToString("N0");
+                if (resultsCommentText != null) resultsCommentText.text = comment;
+
+                // Act 2 — Performance report (card).
+                if (resultsReportText != null)
+                {
+                    sb.Clear();
+                    sb.Append("HEADBANG REPORT\n\n");
+                    sb.Append("LONGEST COMBO   ").Append(run.LongestCombo).Append('\n');
+                    sb.Append("COMBOS          ").Append(run.CompletedCombos).Append('\n');
+                    sb.Append("TOTAL HYPE      ").Append(run.TotalHypeEarned).Append('\n');
+                    sb.Append("FINISHERS       ").Append(run.FinishersExecuted).Append("\n\n");
+                    sb.Append("PERFECT ").Append(run.PerfectCount)
+                      .Append("   GREAT ").Append(run.GreatCount)
+                      .Append("   GOOD ").Append(run.GoodCount)
+                      .Append("   WELL ").Append(run.WellCount)
+                      .Append("   MISS ").Append(run.MissCount);
+                    resultsReportText.text = sb.ToString();
+                }
+
+                // Act 3 — Rewards / progression.
+                if (resultsRewardsText != null)
+                {
+                    sb.Clear();
+                    sb.Append("XP +").Append(outcome.XpEarned).Append("    HH +").Append(outcome.HhEarned);
+                    if (outcome.LeveledUp) sb.Append("\nLEVEL UP -> ").Append(outcome.LevelAfter);
+                    if (outcome.FirstClear) sb.Append("\nFIRST CLEAR");
+                    if (outcome.FirstS) sb.Append("\nFIRST S!");
+                    resultsRewardsText.text = sb.ToString();
+                }
+                return;
+            }
+
+            // Fallback: single-text block (if the act fields are not wired).
+            if (resultsText == null) return;
             sb.Clear();
             sb.Append("HEADBANG REPORT\n\n");
             sb.Append("GRADE   ").Append(grade.Grade).Append('\n');
             sb.Append("SCORE   ").Append(run.Score.ToString("N0")).Append('\n');
+            if (!string.IsNullOrEmpty(comment)) sb.Append(comment).Append('\n');
             sb.Append("MAX COMBO   ").Append(run.LongestCombo).Append('\n');
             sb.Append("TOTAL HYPE  ").Append(run.TotalHypeEarned).Append('\n');
             sb.Append("FINISHERS   ").Append(run.FinishersExecuted).Append('\n');
@@ -197,16 +250,23 @@ namespace HeadbangHeroes.Core
             if (outcome.LeveledUp) sb.Append("   LEVEL UP -> ").Append(outcome.LevelAfter);
             if (outcome.FirstClear) sb.Append("   FIRST CLEAR");
             if (outcome.FirstS) sb.Append("   FIRST S!");
-            sb.Append('\n');
-            if (tags.Count > 0)
-            {
-                sb.Append("tags: ");
-                for (var i = 0; i < tags.Count; i++) { if (i > 0) sb.Append(", "); sb.Append(tags[i]); }
-                sb.Append('\n');
-            }
-            sb.Append("\n[Enter] RETRY   [Esc] CONTINUE");
             resultsText.text = sb.ToString();
         }
+
+        // Grade-scaled emphasis (RESULTS_SCREEN_V1: S oversized .. D underwhelming). Presentation only.
+        static int GradeFontSize(Grade g) => g switch
+        {
+            Grade.S => 220, Grade.A => 190, Grade.B => 160, Grade.C => 140, _ => 120
+        };
+
+        static Color GradeColor(Grade g) => g switch
+        {
+            Grade.S => new Color(1f, 0.85f, 0.2f, 1f),   // gold
+            Grade.A => new Color(0.6f, 1f, 0.4f, 1f),    // green
+            Grade.B => new Color(0.5f, 0.8f, 1f, 1f),    // blue
+            Grade.C => new Color(0.8f, 0.8f, 0.8f, 1f),  // grey
+            _ => new Color(1f, 0.4f, 0.4f, 1f),          // red-ish for D
+        };
 
         string FindBestRecordText()
         {
