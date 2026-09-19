@@ -21,14 +21,18 @@ namespace HeadbangHeroes.Core
         [SerializeField] ChartScheduler scheduler;
         [SerializeField] HeadbangInput input;
         [SerializeField] NeckMotionModel head;
-        [SerializeField] ClosingCircleCue cue;
         [SerializeField] PrototypeHud hud;
+        [SerializeField] BangZoneHint zoneHint;   // onboarding: reveal the 4 bang zones at run start
+        [SerializeField] ZoneTapFlash zoneFlash;  // per-tap: flash the tapped section
+        [SerializeField] SectorPulseCue sectorPulse;  // ADR-0001 timing cue: pulse-in-sector
+        [SerializeField] ZoneDebugOverlay zoneDebug;  // dev-only ResolveZone visualization
 
         [Header("Presentation (downstream only)")]
         [SerializeField] NeckPresenter neckPresenter;
         [SerializeField] BodyReactionPresenter bodyPresenter;
         [SerializeField] HairReactionPresenter hairPresenter;
         [SerializeField] VenueReactionPresenter venuePresenter;
+        [SerializeField] FeedbackFxPresenter feedbackFx;   // P12 polish: shake + motion trail
         [SerializeField] HapticsService haptics;
 
         [SerializeField] bool startOnPlay = true;
@@ -37,6 +41,8 @@ namespace HeadbangHeroes.Core
         [Header("Playtest controls (Editor / Development builds)")]
         [SerializeField] bool enablePlaytestControls = true;
         [SerializeField] double calibrationStepMs = 20.0;
+        [Tooltip("Dev-only per-bang diagnostics (failure taxonomy, timing bias, direction confusion). Editor/Dev builds only; never a gameplay dependency.")]
+        [SerializeField] bool enableDiagnostics = true;
 
         [Header("Accessibility (presentation only; never changes scoring)")]
         [SerializeField] bool reducedFlash = false;
@@ -46,6 +52,21 @@ namespace HeadbangHeroes.Core
 
         readonly RunScorer scorer = new(ScoringConfig.Default, HypeConfig.Default);
         readonly MotionQualityConfig motionConfig = MotionQualityConfig.Default;
+        readonly Diagnostics.PlaytestDiagnostics diagnostics = new();
+
+        // Diagnostics only run in the Editor or a Development build, and only when the flag is on.
+        // They never affect scoring/timing and gameplay works if the whole block is compiled out.
+        bool DiagActive
+        {
+            get
+            {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                return enableDiagnostics;
+#else
+                return false;
+#endif
+            }
+        }
         RuntimeChart runtimeChart;
         bool wasReady;
         bool running;                 // true from run start until the RunResult is finalized
@@ -53,6 +74,62 @@ namespace HeadbangHeroes.Core
 
         /// <summary>Fired exactly once when a run finishes, carrying the authoritative RunResult.</summary>
         public event System.Action<RunResult> RunCompleted;
+
+        // ---- Public entry points shared by keyboard playtest controls AND on-screen touch UI ----
+        // These are the single source of truth for each action so touch and keyboard never diverge.
+
+        /// <summary>True while a run is active and the clock is scheduled (gameplay in progress).</summary>
+        public bool IsRunning => running && clock != null && clock.IsScheduled;
+
+        /// <summary>True when the clock is currently paused.</summary>
+        public bool IsPaused => clock != null && clock.IsPaused;
+
+        /// <summary>True when HYPE is READY and THE BANG can be activated (drives the THE BANG button).</summary>
+        public bool IsHypeReady => scorer.Hype.IsReady && clock != null && clock.IsScheduled && !clock.IsPaused;
+
+        /// <summary>Current calibration offset (seconds) — for on-screen readout.</summary>
+        public double CalibrationSeconds => clock != null ? clock.Calibration : 0d;
+
+        /// <summary>Current compensated output latency (seconds) — for on-screen readout.</summary>
+        public double OutputLatencySeconds => clock != null ? clock.OutputLatency : 0d;
+
+        /// <summary>Toggle pause/resume (keyboard Space and the on-screen PAUSE button).</summary>
+        public void TogglePause()
+        {
+            if (clock == null || !clock.IsScheduled) return;
+            if (clock.IsPaused) clock.Resume();
+            else clock.Pause();
+        }
+
+        public void Pause() { if (clock != null && clock.IsScheduled && !clock.IsPaused) clock.Pause(); }
+        public void Resume() { if (clock != null && clock.IsScheduled && clock.IsPaused) clock.Resume(); }
+
+        /// <summary>
+        /// Abandon the current run without finalizing a RunResult (QUIT). Stops the clock and clears
+        /// the running flag; no RunCompleted is fired, so the meta pipeline does not record it.
+        /// </summary>
+        public void AbortRun()
+        {
+            running = false;
+            if (clock != null) clock.Stop();
+        }
+
+        /// <summary>Manually activate THE BANG (only succeeds when HYPE is READY). Keyboard B + touch button.</summary>
+        public bool TryActivateTheBang()
+        {
+            if (clock == null || !clock.IsScheduled) return false;
+            if (scorer.TryActivateTheBang(clock.SongTime))
+            {
+                haptics?.Play(HapticEvent.TheBangActivated);
+                RefreshHypeHud();
+                Debug.Log("THE BANG activated!");
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>Nudge calibration by one step (+/-). Used by keyboard [ ] and the on-screen +/- buttons.</summary>
+        public void NudgeCalibration(int steps) => AdjustCalibration(steps * calibrationStepMs / 1000.0);
 
         /// <summary>Applies persisted profile settings/calibration to the run (called by the flow before start).</summary>
         public void ApplyProfileSettings(double calibrationSeconds, bool rFlash, bool rShake, bool hEnabled, float hIntensity)
@@ -125,6 +202,7 @@ namespace HeadbangHeroes.Core
 
             scorer.Reset();
             wasReady = false;
+            if (DiagActive) diagnostics.Reset();
             var access = new AccessibilitySettings
             {
                 ReducedFlash = reducedFlash,
@@ -143,8 +221,12 @@ namespace HeadbangHeroes.Core
             hairPresenter?.ResetPresentation();
             venuePresenter?.ResetPresentation();
             venuePresenter?.ApplySettings(access);
+            feedbackFx?.ResetPresentation();
+            feedbackFx?.ApplySettings(access);
             haptics?.ApplySettings(access);
-            cue?.ResetCue();
+            sectorPulse?.ResetCue();
+            zoneHint?.Show();
+            zoneFlash?.ResetAll();
             scheduler.Configure(runtimeChart);
             clock.Play(song.audio, startSongTime);
             running = true;
@@ -161,7 +243,9 @@ namespace HeadbangHeroes.Core
             PushPresentationSignals();
             CheckRunCompletion();
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
             if (enablePlaytestControls) HandlePlaytestControls();
+#endif
         }
 
         void CheckRunCompletion()
@@ -182,6 +266,7 @@ namespace HeadbangHeroes.Core
                 runtimeChart.SongId, runtimeChart.ChartId, runtimeChart.ChartVersion, runtimeChart.RulesVersion);
             clock.Stop();
             RunCompleted?.Invoke(result);   // fired exactly once per run
+            if (DiagActive) DiagPrintReport();
         }
 
         void PushPresentationSignals()
@@ -189,6 +274,7 @@ namespace HeadbangHeroes.Core
             var h = scorer.Hype;
             var hypeFraction = h.MaxHype > 0 ? (float)h.Hype / h.MaxHype : 0f;
             venuePresenter?.SetPerformanceSignals(hypeFraction, h.TheBangActive);
+            hairPresenter?.SetHype(hypeFraction);   // modest presentation exaggeration only
 
             if (clock != null && clock.IsScheduled)
             {
@@ -197,6 +283,7 @@ namespace HeadbangHeroes.Core
             }
         }
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
         void HandlePlaytestControls()
         {
             var kb = Keyboard.current;
@@ -208,28 +295,28 @@ namespace HeadbangHeroes.Core
                 return;
             }
 
-            if (kb.spaceKey.wasPressedThisFrame && clock != null)
-            {
-                if (clock.IsPaused) clock.Resume();
-                else clock.Pause();
-            }
+            if (kb.spaceKey.wasPressedThisFrame) TogglePause();
 
             // Manual THE BANG activation (only succeeds when HYPE is READY).
-            if (kb.bKey.wasPressedThisFrame && clock != null && clock.IsScheduled)
+            if (kb.bKey.wasPressedThisFrame) TryActivateTheBang();
+
+            if (kb.leftBracketKey.wasPressedThisFrame) NudgeCalibration(-1);
+            if (kb.rightBracketKey.wasPressedThisFrame) NudgeCalibration(+1);
+
+            // P = print diagnostics on demand (report + clock latency components + cue timing profile).
+            if (kb.pKey.wasPressedThisFrame && DiagActive)
             {
-                if (scorer.TryActivateTheBang(clock.SongTime))
-                {
-                    haptics?.Play(HapticEvent.TheBangActivated);
-                    Debug.Log("THE BANG activated!");
-                }
+                DiagPrintReport();
+                Debug.Log($"CLOCK: dspBuffer {clock.DiagDspBufferLength} x{clock.DiagDspBufferCount} @ {clock.DiagOutputSampleRate}Hz " +
+                          $"| outputLatency {clock.OutputLatency * 1000.0:0}ms | calibration {clock.Calibration * 1000.0:+0;-0;0}ms " +
+                          $"| effective {clock.DiagEffectiveOffset * 1000.0:+0;-0;0}ms");
+                if (sectorPulse != null) Debug.Log(sectorPulse.DiagTimingProfile());
             }
 
-            if (kb.leftBracketKey.wasPressedThisFrame)
-                AdjustCalibration(-calibrationStepMs / 1000.0);
-
-            if (kb.rightBracketKey.wasPressedThisFrame)
-                AdjustCalibration(calibrationStepMs / 1000.0);
+            // Z = toggle the ResolveZone visualization (dev only).
+            if (kb.zKey.wasPressedThisFrame && DiagActive) zoneDebug?.Toggle();
         }
+#endif
 
         void AdjustCalibration(double deltaSeconds)
         {
@@ -246,10 +333,17 @@ namespace HeadbangHeroes.Core
         }
 
         void OnCue(RuntimeMotionEvent ev, double approachTime)
-            => cue?.Show(ev.Time, approachTime, ev.Direction, scheduler != null ? scheduler.Timing.GoodWindow : 0.12);
+        {
+            var hitWindow = scheduler != null ? scheduler.Timing.GoodWindow : 0.12;
+            // ADR-0001: timing cue is the pulse-in-sector (closing-circle-on-head retired).
+            sectorPulse?.Show(ev.Direction, ev.Time, approachTime, hitWindow);
+        }
 
         void OnBang(BangInput bang)
         {
+            // Section tap feedback: flash the whole quadrant the player tapped (presentation only).
+            zoneFlash?.Flash(bang.Direction);
+
             // Physical input is always accepted. Tapping early, late, on the wrong zone, or with no
             // active chart event still changes the neck state; chart judgment is separate.
             var intensity = scheduler != null && scheduler.HasActiveEvent
@@ -274,6 +368,7 @@ namespace HeadbangHeroes.Core
                 // Neck moved, but no authored candidate was consumed (too early / none active).
                 var nextT = scheduler != null ? scheduler.NextEventTime : -1d;
                 Debug.Log($"(no consume) bang {bang.Direction} @songT {bang.SongTime:0.000} | next ev {nextT:0.000} | activeCue {(scheduler != null && scheduler.HasActiveEvent)}");
+                if (DiagActive) DiagRecordNoConsume(bang, nextT);
                 return;
             }
 
@@ -291,6 +386,7 @@ namespace HeadbangHeroes.Core
 
             // Semantic presentation feedback (downstream only; never affects the outcome above).
             PlayJudgmentHaptic(outcome.Judgment);
+            if (outcome.Judgment != Judgment.Miss) feedbackFx?.OnBang(intensity);
             if (outcome.WasFinisher)
             {
                 haptics?.Play(HapticEvent.Finisher);
@@ -301,14 +397,12 @@ namespace HeadbangHeroes.Core
             if (ready && !wasReady) haptics?.Play(HapticEvent.HypeReady);
             wasReady = ready;
 
-            // Snapshot the cue on the tap: a blue ring concentric to the target at the size the
-            // closing ring had at that instant — dead-on coincides with the target, early is a
-            // larger ring, late a smaller one. Lets the player build a mental map to self-calibrate.
-            cue?.ShowHitMarker(outcome.SignedTimingError);
-            cue?.Hide();
+            sectorPulse?.Hide();
             hud?.Show(new JudgmentResult(outcome.Judgment, outcome.SignedTimingError, outcome.MotionQuality),
                       outcome.ComboAfter, scorer.Scoring.Score);
             RefreshHypeHud();
+
+            if (DiagActive) DiagRecordConsumed(bang, match, ev, outcome.Judgment);
 
             // Diagnostic: pressed vs expected direction and why a MISS happened (timing vs wrong-dir).
             var reason = match.Kind == MatchKind.WrongConsumedMiss
@@ -333,10 +427,77 @@ namespace HeadbangHeroes.Core
             // HYPE preserved) through the same authoritative path.
             var resolved = new ResolvedEvent(ev.Id, Judgment.Miss, 0d, 0f, false, ev.FinisherCandidate);
             var outcome = scorer.Resolve(resolved);
-            cue?.Hide();
+            sectorPulse?.Hide();
             hud?.Show(new JudgmentResult(Judgment.Miss, 0d, 0f), outcome.ComboAfter, scorer.Scoring.Score);
             RefreshHypeHud();
             Debug.Log($"MISS (expired) at {ev.Time:0.000}s | combo {outcome.ComboAfter} | hype {scorer.Hype.Hype}");
+            if (DiagActive) DiagRecordExpired(ev);
+        }
+
+        // ---- Diagnostics helpers (dev-only; derived OUTSIDE the authoritative scoring path) ----
+
+        static Diagnostics.InputSource DiagSource(int code) => code switch
+        {
+            0 => Diagnostics.InputSource.Keyboard,
+            1 => Diagnostics.InputSource.Mouse,
+            2 => Diagnostics.InputSource.Touch,
+            _ => Diagnostics.InputSource.Unknown,
+        };
+
+        void DiagNorm(in BangInput bang, out bool hasPos, out float sx, out float sy, out float nx, out float ny)
+        {
+            hasPos = bang.HasScreenPosition;
+            sx = hasPos ? bang.ScreenPosition.x : float.NaN;
+            sy = hasPos ? bang.ScreenPosition.y : float.NaN;
+            var w = Mathf.Max(1f, Screen.width * 0.5f);
+            var h = Mathf.Max(1f, Screen.height * 0.5f);
+            nx = hasPos ? (sx - w) / w : float.NaN;
+            ny = hasPos ? (sy - h) / h : float.NaN;
+        }
+
+        void DiagRecordNoConsume(in BangInput bang, double nextT)
+        {
+            DiagNorm(bang, out var hasPos, out var sx, out var sy, out var nx, out var ny);
+            // No candidate consumed: split "there was a candidate but I was too early" from
+            // "there was no active candidate at all". HasActiveEvent + next-event distance decide.
+            var active = scheduler != null && scheduler.HasActiveEvent;
+            var failure = active ? Diagnostics.BangFailure.TooEarly : Diagnostics.BangFailure.NoActiveCandidate;
+            diagnostics.Add(new Diagnostics.BangRecord(
+                diagnostics.NextSequence(), DiagSource(bang.SourceCode), hasPos, sx, sy, nx, ny,
+                bang.Direction, bang.RawDeviceTime, bang.SongTime,
+                -1, active, active ? scheduler.ActiveEvent.Direction : bang.Direction,
+                nextT, 0d, false, Judgment.Miss, failure));
+        }
+
+        void DiagRecordConsumed(in BangInput bang, in MatchResult match, in RuntimeMotionEvent ev, Judgment judgment)
+        {
+            DiagNorm(bang, out var hasPos, out var sx, out var sy, out var nx, out var ny);
+            var failure = match.Kind == MatchKind.WrongConsumedMiss
+                ? Diagnostics.BangFailure.WrongDirection
+                : judgment == Judgment.Miss ? Diagnostics.BangFailure.TooLateOrExpired
+                : Diagnostics.BangFailure.Hit;
+            diagnostics.Add(new Diagnostics.BangRecord(
+                diagnostics.NextSequence(), DiagSource(bang.SourceCode), hasPos, sx, sy, nx, ny,
+                bang.Direction, bang.RawDeviceTime, bang.SongTime,
+                match.MatchedId, true, ev.Direction, ev.Time,
+                match.SignedError * 1000.0, true, judgment, failure));
+        }
+
+        void DiagRecordExpired(in RuntimeMotionEvent ev)
+        {
+            diagnostics.Add(new Diagnostics.BangRecord(
+                diagnostics.NextSequence(), Diagnostics.InputSource.Unknown, false, 0, 0, 0, 0,
+                ev.Direction, 0d, 0d, -1, true, ev.Direction, ev.Time,
+                0d, false, Judgment.Miss, Diagnostics.BangFailure.EventExpiredWithoutInput));
+        }
+
+        /// <summary>Print the diagnostic report (called at run end and on demand via the P key).</summary>
+        public void DiagPrintReport()
+        {
+            if (!DiagActive || clock == null) return;
+            var latMs = clock.OutputLatency * 1000.0;
+            var calMs = clock.Calibration * 1000.0;
+            Debug.Log(diagnostics.BuildReport(latMs, calMs));
         }
     }
 }

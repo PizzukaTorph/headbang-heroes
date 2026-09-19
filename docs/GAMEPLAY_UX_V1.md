@@ -6,6 +6,12 @@ Canonical active-gameplay UX direction for Headbang Heroes.
 
 Touch ergonomics still require real-device validation.
 
+> **v0.0.2 amendment — see [ADR 0001](DECISIONS/0001-pulse-in-sector-cue.md).** The primary timing
+> cue moves from a closing circle on the head to a **pulse-in-sector with build-up** (in the
+> direction's screen quadrant, culminating on the event). The head stays the expressive focus but no
+> longer carries the primary timing signal. "Play by watching the avatar" is relaxed: WHEN+WHERE are
+> unified in the tap sector. Still not a note-highway (one sector pulses at a time, transient).
+
 ## North-star rule
 
 > **The player should be able to play by watching the avatar, not by staring at a detached interface.**

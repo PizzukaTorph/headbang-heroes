@@ -32,41 +32,66 @@ namespace HeadbangHeroes.Input
             if (Touchscreen.current != null)
             {
                 var touch = Touchscreen.current.primaryTouch;
-                if (touch.press.wasPressedThisFrame)
-                    Emit(touch.position.ReadValue());
+                if (touch.press.wasPressedThisFrame && !IsPointerOverUi(touch.touchId.ReadValue()))
+                    Emit(touch.position.ReadValue(), SourceTouch);
             }
 
 #if UNITY_EDITOR
-            if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
-                Emit(Mouse.current.position.ReadValue());
+            if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame && !IsPointerOverUi(-1))
+                Emit(Mouse.current.position.ReadValue(), SourceMouse);
 #endif
 
-            if (enableKeyboard) ReadKeyboard();
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            if (enableKeyboard) ReadKeyboard();   // dev convenience only; not in shipping builds
+#endif
         }
 
+        // Diagnostic source codes mirrored in HeadbangHeroes.Diagnostics.InputSource.
+        const int SourceKeyboard = 0, SourceMouse = 1, SourceTouch = 2;
+
+        /// <summary>
+        /// True when the press landed on an interactive UI element (a button, THE BANG, an overlay).
+        /// Such taps must NOT also emit a bang — the UI "eats" them. This keeps the whole screen a
+        /// bang zone while making on-screen controls safe (Option A UX).
+        /// </summary>
+        static bool IsPointerOverUi(int pointerOrTouchId)
+        {
+            var es = UnityEngine.EventSystems.EventSystem.current;
+            if (es == null) return false;
+#if UNITY_EDITOR
+            if (pointerOrTouchId < 0) return es.IsPointerOverGameObject();   // mouse
+#endif
+            return es.IsPointerOverGameObject(pointerOrTouchId);
+        }
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
         void ReadKeyboard()
         {
             var kb = Keyboard.current;
             if (kb == null) return;
 
             // A/D = horizontal inversion, W/S = vertical. Same semantics as the tap wedges.
-            if (kb.aKey.wasPressedThisFrame) EmitDirection(BangDirection.Left);
-            if (kb.dKey.wasPressedThisFrame) EmitDirection(BangDirection.Right);
-            if (kb.wKey.wasPressedThisFrame) EmitDirection(BangDirection.Up);
-            if (kb.sKey.wasPressedThisFrame) EmitDirection(BangDirection.Down);
+            if (kb.aKey.wasPressedThisFrame) EmitDirection(BangDirection.Left, SourceKeyboard, NoPos);
+            if (kb.dKey.wasPressedThisFrame) EmitDirection(BangDirection.Right, SourceKeyboard, NoPos);
+            if (kb.wKey.wasPressedThisFrame) EmitDirection(BangDirection.Up, SourceKeyboard, NoPos);
+            if (kb.sKey.wasPressedThisFrame) EmitDirection(BangDirection.Down, SourceKeyboard, NoPos);
         }
+#endif
 
-        void Emit(Vector2 screenPosition)
-            => EmitDirection(ResolveZone(screenPosition, Screen.width, Screen.height));
+        static readonly Vector2 NoPos = new Vector2(float.NaN, float.NaN);
 
-        void EmitDirection(BangDirection direction)
+        void Emit(Vector2 screenPosition, int source)
+            => EmitDirection(ResolveZone(screenPosition, Screen.width, Screen.height), source, screenPosition);
+
+        void EmitDirection(BangDirection direction, int source, Vector2 screenPosition)
         {
             // Best available timestamp for a press this frame is the current DSP time; convert it
-            // once into song-time so judgment compares like-for-like clocks.
+            // once into song-time so judgment compares like-for-like clocks. Source + screen position
+            // are carried for diagnostics only (never used by matching/judgment).
             var dspNow = clock != null ? clock.DspNow : 0d;
             var songTime = clock != null ? clock.ToSongTime(dspNow) : 0d;
 
-            Bang?.Invoke(new BangInput(direction, songTime, dspNow));
+            Bang?.Invoke(new BangInput(direction, songTime, dspNow, source, screenPosition));
         }
 
         /// <summary>

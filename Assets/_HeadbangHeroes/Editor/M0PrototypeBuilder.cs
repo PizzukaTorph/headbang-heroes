@@ -28,6 +28,8 @@ namespace HeadbangHeroes.Editor
         const string LocalAudioPath = Root + "/Content/Lab/LocalAudio/BeyondThePain.mp3";
         const string TempoRampChartPath = Root + "/Content/Lab/lab-002-tempo-ramp.json";
         const string TempoRampAudioPath = Root + "/Content/Lab/TempoRamp.wav";
+        const string WishChartPath = Root + "/Content/Lab/lab-003-wish-classic-m0.json";
+        const string WishAudioPath = Root + "/Content/Lab/wish.mp3";
         const string GeneratedFolder = Root + "/Content/Lab/Generated";
         const string SongAssetPath = GeneratedFolder + "/Song_Lab001.asset";
         const string SceneFolder = Root + "/Scenes";
@@ -53,7 +55,12 @@ namespace HeadbangHeroes.Editor
         [MenuItem("Tools/Headbang Heroes/Build M0 Prototype (Tempo Ramp)")]
         public static void BuildTempoRamp() => BuildInternal(TempoRampChartPath, tempoRamp: true);
 
-        static void BuildInternal(string chartPath, bool tempoRamp)
+        [MenuItem("Tools/Headbang Heroes/Build M0 Prototype (WISH)")]
+        public static void BuildWish() => BuildInternal(WishChartPath, tempoRamp: false,
+            explicitAudioPath: WishAudioPath, explicitStart: 13.8);
+
+        static void BuildInternal(string chartPath, bool tempoRamp,
+            string explicitAudioPath = null, double explicitStart = double.NaN)
         {
             EnsureFolder(Root + "/Content/Lab", "Generated");
             EnsureFolder(Root, "Scenes");
@@ -92,12 +99,21 @@ namespace HeadbangHeroes.Editor
             }
             else
             {
-                var realAudio = FindRealAudio();
-                // Testability without the licensed MP3: if missing, generate a synthetic click-track.
+                AudioClip realAudio;
+                if (!string.IsNullOrEmpty(explicitAudioPath) && System.IO.File.Exists(AbsoluteFromProject(explicitAudioPath)))
+                {
+                    AssetDatabase.ImportAsset(explicitAudioPath, ImportAssetOptions.ForceSynchronousImport);
+                    realAudio = AssetDatabase.LoadAssetAtPath<AudioClip>(explicitAudioPath);
+                }
+                else
+                {
+                    realAudio = FindRealAudio();
+                }
+                // Testability without the licensed audio: if missing, generate a synthetic click-track.
                 usingClickTrack = realAudio == null;
                 audio = realAudio != null ? realAudio : GetOrCreateClickTrack(chartData);
-                // The MIDI-derived chart's first hit is ~12.8s; start ~1s before.
-                startSongTime = 11.8;
+                // Start ~1s before the chart's first hit (per-song); default is the beyond-the-pain 11.8s.
+                startSongTime = double.IsNaN(explicitStart) ? 11.8 : explicitStart;
             }
 
             var song = GetOrCreateSong(audio);
@@ -126,7 +142,6 @@ namespace HeadbangHeroes.Editor
             var canvas = CreateCanvas();
             var backgroundImage = CreateBackground(canvas.transform);
             var avatar = CreateAvatar(canvas.transform, out var headMotion, out var head, out var torso, out var hair);
-            var cue = CreateTimingCue(canvas.transform, clock);
             var hud = CreateHud(canvas.transform, clock, scheduler, headMotion);
 
             // --- Presentation (downstream only) ---
@@ -141,10 +156,23 @@ namespace HeadbangHeroes.Editor
 
             var hairPresenter = presentation.AddComponent<HairReactionPresenter>();
             Assign(hairPresenter, "neck", headMotion);
-            Assign(hairPresenter, "strand", hair);
+            var hairSegments = CreateHairChain(hair);      // Long-tier hero chain (4 segments)
+            AssignArray(hairPresenter, "segments", hairSegments);
 
             var venuePresenter = presentation.AddComponent<VenueReactionPresenter>();
             Assign(venuePresenter, "background", backgroundImage);
+
+            // --- P12 feel polish: micro screen-shake + high-speed motion trail ---
+            var trailParent = CreateRect("HH_TrailLayer", canvas.transform, Vector2.zero, Vector2.zero);
+            trailParent.anchorMin = Vector2.zero; trailParent.anchorMax = Vector2.one;
+            trailParent.offsetMin = trailParent.offsetMax = Vector2.zero;
+            trailParent.SetSiblingIndex(1);   // behind the avatar, above the background
+            var feedbackFx = presentation.AddComponent<FeedbackFxPresenter>();
+            Assign(feedbackFx, "neck", headMotion);
+            Assign(feedbackFx, "shakeRoot", avatar.GetComponent<RectTransform>());  // jitter the avatar only
+            Assign(feedbackFx, "head", head);
+            Assign(feedbackFx, "trailParent", trailParent);
+            Assign(controller, "feedbackFx", feedbackFx);
 
             var haptics = presentation.AddComponent<HapticsService>();
 
@@ -155,7 +183,6 @@ namespace HeadbangHeroes.Editor
             Assign(controller, "scheduler", scheduler);
             Assign(controller, "input", input);
             Assign(controller, "head", headMotion);
-            Assign(controller, "cue", cue);
             Assign(controller, "hud", hud);
             Assign(controller, "neckPresenter", neckPresenter);
             Assign(controller, "bodyPresenter", bodyPresenter);
@@ -183,6 +210,40 @@ namespace HeadbangHeroes.Editor
             Assign(flow, "songSelectText", songText);
             Assign(flow, "preSongText", preText);
             Assign(flow, "resultsText", resultsText);
+
+            // --- P10: Results emotion-first act texts (grade dominant -> score -> comment -> report -> rewards) ---
+            var rp = resultsPanel.transform;
+            var gradeText = CreateText("ResGrade", rp, new Vector2(0, 620), new Vector2(700, 300), 220, TextAnchor.MiddleCenter);
+            var scoreText = CreateText("ResScore", rp, new Vector2(0, 420), new Vector2(800, 110), 72, TextAnchor.MiddleCenter);
+            var commentText = CreateText("ResComment", rp, new Vector2(0, 300), new Vector2(940, 120), 40, TextAnchor.MiddleCenter);
+            var reportText = CreateText("ResReport", rp, new Vector2(0, 20), new Vector2(900, 400), 40, TextAnchor.MiddleCenter);
+            var rewardsText = CreateText("ResRewards", rp, new Vector2(0, -280), new Vector2(900, 160), 44, TextAnchor.MiddleCenter);
+            commentText.color = new Color(0.9f, 0.9f, 0.95f, 1f);
+            rewardsText.color = new Color(0.7f, 0.95f, 0.7f, 1f);
+            Assign(flow, "resultsGradeText", gradeText);
+            Assign(flow, "resultsScoreText", scoreText);
+            Assign(flow, "resultsCommentText", commentText);
+            Assign(flow, "resultsReportText", reportText);
+            Assign(flow, "resultsRewardsText", rewardsText);
+
+            // --- P08: on-screen touch controls (Option A UX) ---
+            CreateTouchControls(canvas.transform, flow, controller, resultsPanel);
+
+            // --- P08 affordance: brief bang-zone hint at run start ---
+            var zoneHint = CreateBangZoneHint(canvas.transform);
+            Assign(controller, "zoneHint", zoneHint);
+
+            // --- P08 affordance: per-tap section flash ---
+            var zoneFlash = CreateZoneTapFlash(canvas.transform);
+            Assign(controller, "zoneFlash", zoneFlash);
+
+            // --- ADR-0001: pulse-in-sector timing cue ---
+            var sectorPulse = CreateSectorPulseCue(canvas.transform, clock);
+            Assign(controller, "sectorPulse", sectorPulse);
+
+            // --- Dev-only ResolveZone visualization ---
+            var zoneDebug = CreateZoneDebugOverlay(canvas.transform);
+            Assign(controller, "zoneDebug", zoneDebug);
 
             // --- Input event system ---
             var eventSystem = new GameObject("EventSystem");
@@ -408,47 +469,6 @@ namespace HeadbangHeroes.Editor
             return avatar;
         }
 
-        static ClosingCircleCue CreateTimingCue(Transform parent, AudioClock clock)
-        {
-            var root = new GameObject("TimingCue", typeof(RectTransform), typeof(CanvasGroup));
-            var rect = root.GetComponent<RectTransform>();
-            rect.SetParent(parent, false);
-            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.42f);
-            rect.anchoredPosition = new Vector2(0, 170);
-            rect.sizeDelta = new Vector2(260, 260);
-
-            var group = root.GetComponent<CanvasGroup>();
-            group.alpha = 0f;
-            group.interactable = false;
-            group.blocksRaycasts = false;
-
-            var target = CreateRect("TargetRing", rect, Vector2.zero, new Vector2(215, 215));
-            var targetRing = target.gameObject.AddComponent<RingGraphic>();
-            targetRing.color = new Color(1f, 1f, 1f, 0.9f);
-            targetRing.raycastTarget = false;
-
-            var approach = CreateRect("ApproachRing", rect, Vector2.zero, new Vector2(215, 215));
-            var approachRing = approach.gameObject.AddComponent<RingGraphic>();
-            approachRing.color = new Color(0.9f, 0.2f, 0.2f, 1f);
-            approachRing.raycastTarget = false;
-
-            // Hit marker: a blue ring, same base size as the rings, drawn concentric to the target
-            // at the approach ring's scale at the moment of the tap (freezes "how big the cue was
-            // when I tapped"). Starts hidden.
-            var marker = CreateRect("HitMarker", rect, Vector2.zero, new Vector2(215, 215));
-            var markerRing = marker.gameObject.AddComponent<RingGraphic>();
-            markerRing.color = new Color(0.25f, 0.55f, 1f, 1f);
-            markerRing.raycastTarget = false;
-            marker.gameObject.SetActive(false);
-
-            var cue = root.AddComponent<ClosingCircleCue>();
-            Assign(cue, "clock", clock);
-            Assign(cue, "approachRing", approach);
-            Assign(cue, "canvasGroup", group);
-            Assign(cue, "hitMarker", marker);
-            return cue;
-        }
-
         static PrototypeHud CreateHud(Transform parent, AudioClock clock, ChartScheduler scheduler, NeckMotionModel head)
         {
             var root = new GameObject("PrototypeHUD", typeof(RectTransform));
@@ -540,6 +560,247 @@ namespace HeadbangHeroes.Editor
             return text;
         }
 
+        /// <summary>
+        /// Builds the P08 on-screen touch controls (Option A). Buttons are edge/overlay only and never
+        /// cover the protected region (head/neck/CURRENT around screen centre, anchor y ~0.42).
+        /// </summary>
+        /// <summary>
+        /// Builds the bang-zone affordance hint: 4 large directional arrows in the real ResolveZone
+        /// quadrants (screen split from centre into L/R/U/D). Non-raycast (never eats a bang), inside
+        /// a CanvasGroup that BangZoneHint fades out shortly after run start.
+        /// </summary>
+        /// <summary>
+        /// Builds the per-tap section flash: 4 half-screen overlays (Left/Right/Up/Down) each in its
+        /// own CanvasGroup, faint, non-raycast. ZoneTapFlash briefly lights the tapped section so the
+        /// player sees the whole half was a valid tap area.
+        /// </summary>
+        /// <summary>
+        /// Builds the ADR-0001 pulse cue: 4 small pills positioned next to the avatar head in each
+        /// direction (Left/Right/Up/Down). Each pill grows + brightens toward the event (build-up)
+        /// then relaxes. Non-raycast; above the background, below the avatar.
+        /// </summary>
+        /// <summary>
+        /// Dev-only overlay that samples HeadbangInput.ResolveZone on a grid to visualize the real
+        /// touch-zone partition + live pointer. Hidden by default (toggled at runtime).
+        /// </summary>
+        static ZoneDebugOverlay CreateZoneDebugOverlay(Transform canvas)
+        {
+            var go = new GameObject("HH_ZoneDebugOverlay", typeof(RectTransform), typeof(CanvasGroup));
+            var rect = go.GetComponent<RectTransform>();
+            rect.SetParent(canvas, false);
+            rect.anchorMin = Vector2.zero; rect.anchorMax = Vector2.one; rect.offsetMin = rect.offsetMax = Vector2.zero;
+            rect.SetSiblingIndex(1);   // above background, behind gameplay
+            var group = go.GetComponent<CanvasGroup>();
+            group.alpha = 0f; group.interactable = false; group.blocksRaycasts = false;
+
+            var gridRoot = CreateRect("Grid", rect, Vector2.zero, Vector2.zero);
+            gridRoot.anchorMin = Vector2.zero; gridRoot.anchorMax = Vector2.one; gridRoot.offsetMin = gridRoot.offsetMax = Vector2.zero;
+
+            var pointer = CreateRect("Pointer", rect, Vector2.zero, new Vector2(36, 36));
+            var pimg = pointer.gameObject.AddComponent<Image>();
+            pimg.color = new Color(1f, 1f, 1f, 0.9f); pimg.raycastTarget = false;
+
+            var readout = CreateText("ZoneReadout", rect, new Vector2(0, 820), new Vector2(700, 120), 40, TextAnchor.MiddleCenter);
+            readout.color = Color.white;
+
+            var overlay = go.AddComponent<ZoneDebugOverlay>();
+            Assign(overlay, "group", group);
+            Assign(overlay, "gridRoot", gridRoot);
+            Assign(overlay, "pointer", pointer);
+            Assign(overlay, "readout", readout);
+            return overlay;
+        }
+
+        static SectorPulseCue CreateSectorPulseCue(Transform canvas, AudioClock clock)
+        {
+            var go = new GameObject("HH_SectorPulseCue", typeof(RectTransform));
+            var rect = go.GetComponent<RectTransform>();
+            rect.SetParent(canvas, false);
+            // Anchor to the avatar band (same reference as the old head cue) so pills sit around it.
+            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.42f);
+            rect.anchoredPosition = new Vector2(0, 170);   // head height
+            rect.sizeDelta = new Vector2(10, 10);
+            rect.SetSiblingIndex(1);   // above the opaque background, behind the avatar/UI
+
+            var pillCol = new Color(0.95f, 0.55f, 0.2f, 0.55f);
+            var reach = 300f;   // distance from the head to each direction's pill
+            var left = MakePill(rect, "PulseLeft", new Vector2(-reach, 0), pillCol);
+            var right = MakePill(rect, "PulseRight", new Vector2(reach, 0), pillCol);
+            var up = MakePill(rect, "PulseUp", new Vector2(0, reach), pillCol);
+            var down = MakePill(rect, "PulseDown", new Vector2(0, -reach), pillCol);
+
+            var pulse = go.AddComponent<SectorPulseCue>();
+            Assign(pulse, "clock", clock);
+            Assign(pulse, "left", left);
+            Assign(pulse, "right", right);
+            Assign(pulse, "up", up);
+            Assign(pulse, "down", down);
+            return pulse;
+        }
+
+        static RectTransform MakePill(Transform parent, string name, Vector2 pos, Color col)
+        {
+            var rect = CreateRect(name, parent, pos, new Vector2(160, 160));
+            var img = rect.gameObject.AddComponent<Image>();
+            img.sprite = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/Knob.psd");  // round pill
+            img.color = col;
+            img.raycastTarget = false;      // never intercept a tap; tap-area is the whole sector
+            rect.gameObject.SetActive(false);
+            return rect;
+        }
+
+        static ZoneTapFlash CreateZoneTapFlash(Transform canvas)
+        {
+            var go = new GameObject("HH_ZoneTapFlash", typeof(RectTransform));
+            var rect = go.GetComponent<RectTransform>();
+            rect.SetParent(canvas, false);
+            rect.anchorMin = Vector2.zero; rect.anchorMax = Vector2.one;
+            rect.offsetMin = rect.offsetMax = Vector2.zero;
+            // Sit above the opaque background (index 0) but behind avatar/UI.
+            rect.SetSiblingIndex(1);
+
+            var col = new Color(0.9f, 0.9f, 1f, 1f);   // alpha driven by the CanvasGroup
+            var left = MakeFlagHalf(rect, "FlashLeft", new Vector2(0f, 0f), new Vector2(0.5f, 1f), col);
+            var right = MakeFlagHalf(rect, "FlashRight", new Vector2(0.5f, 0f), new Vector2(1f, 1f), col);
+            var up = MakeFlagHalf(rect, "FlashUp", new Vector2(0f, 0.5f), new Vector2(1f, 1f), col);
+            var down = MakeFlagHalf(rect, "FlashDown", new Vector2(0f, 0f), new Vector2(1f, 0.5f), col);
+
+            var flash = go.AddComponent<ZoneTapFlash>();
+            Assign(flash, "left", left);
+            Assign(flash, "right", right);
+            Assign(flash, "up", up);
+            Assign(flash, "down", down);
+            return flash;
+        }
+
+        static CanvasGroup MakeFlagHalf(Transform parent, string name, Vector2 anchorMin, Vector2 anchorMax, Color col)
+        {
+            var go = new GameObject(name, typeof(RectTransform), typeof(CanvasGroup), typeof(Image));
+            var rect = go.GetComponent<RectTransform>();
+            rect.SetParent(parent, false);
+            rect.anchorMin = anchorMin; rect.anchorMax = anchorMax;
+            rect.offsetMin = rect.offsetMax = Vector2.zero;
+            var img = go.GetComponent<Image>();
+            img.color = col;
+            img.raycastTarget = false;             // must never intercept a tap
+            var group = go.GetComponent<CanvasGroup>();
+            group.alpha = 0f;
+            group.interactable = false;
+            group.blocksRaycasts = false;
+            return group;
+        }
+
+        static BangZoneHint CreateBangZoneHint(Transform canvas)
+        {
+            var go = new GameObject("HH_BangZoneHint", typeof(RectTransform), typeof(CanvasGroup));
+            var rect = go.GetComponent<RectTransform>();
+            rect.SetParent(canvas, false);
+            rect.anchorMin = Vector2.zero; rect.anchorMax = Vector2.one;
+            rect.offsetMin = rect.offsetMax = Vector2.zero;
+            var group = go.GetComponent<CanvasGroup>();
+            group.alpha = 0f;
+            group.interactable = false;
+            group.blocksRaycasts = false;      // must NOT intercept taps — zones stay tappable
+
+            var hintCol = new Color(0.85f, 0.85f, 0.95f, 0.55f);
+            // Arrows near each edge centre, sized so it's clear the whole quadrant is tappable.
+            MakeArrow(rect, "HintUp", "\u25B2\nUP", new Vector2(0.5f, 1f), new Vector2(0, -230), hintCol);
+            MakeArrow(rect, "HintDown", "DOWN\n\u25BC", new Vector2(0.5f, 0f), new Vector2(0, 470), hintCol);
+            MakeArrow(rect, "HintLeft", "\u25C0 LEFT", new Vector2(0f, 0.5f), new Vector2(230, 0), hintCol);
+            MakeArrow(rect, "HintRight", "RIGHT \u25B6", new Vector2(1f, 0.5f), new Vector2(-230, 0), hintCol);
+
+            var hint = go.AddComponent<BangZoneHint>();
+            Assign(hint, "group", group);
+            return hint;
+        }
+
+        static void MakeArrow(Transform parent, string name, string label, Vector2 anchor, Vector2 pos, Color col)
+        {
+            var t = CreateText(name, parent, Vector2.zero, new Vector2(360, 200), 56, TextAnchor.MiddleCenter);
+            t.text = label;
+            t.color = col;
+            t.fontStyle = FontStyle.Bold;
+            var r = t.rectTransform;
+            r.anchorMin = r.anchorMax = anchor;
+            r.pivot = new Vector2(0.5f, 0.5f);
+            r.anchoredPosition = pos;
+        }
+
+        static void CreateTouchControls(Transform canvas, GameFlowController flow,
+            PrototypeController gameplay, CanvasGroup resultsPanel)
+        {
+            var accent = new Color(0.75f, 0.18f, 0.20f, 0.92f);   // THE BANG / primary
+            var neutral = new Color(0.16f, 0.16f, 0.20f, 0.92f);  // secondary
+            var quitCol = new Color(0.30f, 0.10f, 0.12f, 0.95f);
+
+            var tcGo = new GameObject("HH_TouchControls", typeof(RectTransform));
+            var tcRect = tcGo.GetComponent<RectTransform>();
+            tcRect.SetParent(canvas, false);
+            tcRect.anchorMin = Vector2.zero; tcRect.anchorMax = Vector2.one;
+            tcRect.offsetMin = tcRect.offsetMax = Vector2.zero;
+            var tc = tcGo.AddComponent<TouchControls>();
+
+            // PAUSE — top-left corner (top bar area), well away from the thumb bang zones.
+            var pause = CreateButton(tcRect, "PauseButton", "II",
+                anchor: new Vector2(0f, 1f), anchoredPos: new Vector2(90, -90),
+                size: new Vector2(120, 120), bg: neutral, fontSize: 48);
+
+            // THE BANG — bottom-centre, reachable by either thumb; shown only on HYPE READY.
+            var bangGroupGo = new GameObject("TheBangGroup", typeof(RectTransform), typeof(CanvasGroup));
+            var bangRect = bangGroupGo.GetComponent<RectTransform>();
+            bangRect.SetParent(tcRect, false);
+            bangRect.anchorMin = bangRect.anchorMax = new Vector2(0.5f, 0f);
+            bangRect.pivot = new Vector2(0.5f, 0f);
+            bangRect.anchoredPosition = new Vector2(0, 150);
+            bangRect.sizeDelta = new Vector2(560, 200);
+            var bangGroup = bangGroupGo.GetComponent<CanvasGroup>();
+            bangGroup.alpha = 0f; bangGroup.interactable = false; bangGroup.blocksRaycasts = false;
+            var theBang = CreateButton(bangRect, "TheBangButton", "THE BANG",
+                anchor: new Vector2(0.5f, 0.5f), anchoredPos: Vector2.zero,
+                size: new Vector2(560, 200), bg: accent, fontSize: 64);
+
+            // PAUSE overlay: dim full-screen CanvasGroup with RESUME/RETRY/QUIT + calibration +/-.
+            var overlayGo = new GameObject("PauseOverlay", typeof(RectTransform), typeof(CanvasGroup), typeof(Image));
+            var overlayRect = overlayGo.GetComponent<RectTransform>();
+            overlayRect.SetParent(tcRect, false);
+            overlayRect.anchorMin = Vector2.zero; overlayRect.anchorMax = Vector2.one;
+            overlayRect.offsetMin = overlayRect.offsetMax = Vector2.zero;
+            overlayGo.GetComponent<Image>().color = new Color(0.02f, 0.02f, 0.04f, 0.85f);
+            var overlay = overlayGo.GetComponent<CanvasGroup>();
+            overlay.alpha = 0f; overlay.interactable = false; overlay.blocksRaycasts = false;
+
+            var title = CreateText("PauseTitle", overlayRect, new Vector2(0, 560), new Vector2(900, 140), 72, TextAnchor.MiddleCenter);
+            title.text = "PAUSED";
+            var resume = CreateButton(overlayRect, "ResumeButton", "RESUME", new Vector2(0.5f, 0.5f), new Vector2(0, 220), new Vector2(560, 150), accent, 52);
+            var pRetry = CreateButton(overlayRect, "PauseRetryButton", "RETRY", new Vector2(0.5f, 0.5f), new Vector2(0, 40), new Vector2(560, 150), neutral, 52);
+            var quit = CreateButton(overlayRect, "QuitButton", "QUIT", new Vector2(0.5f, 0.5f), new Vector2(0, -140), new Vector2(560, 150), quitCol, 52);
+            var calText = CreateText("CalibrationText", overlayRect, new Vector2(0, -360), new Vector2(700, 180), 40, TextAnchor.MiddleCenter);
+            calText.text = "CALIBRATION";
+            var calMinus = CreateButton(overlayRect, "CalMinusButton", "-", new Vector2(0.5f, 0.5f), new Vector2(-200, -520), new Vector2(150, 150), neutral, 64);
+            var calPlus = CreateButton(overlayRect, "CalPlusButton", "+", new Vector2(0.5f, 0.5f), new Vector2(200, -520), new Vector2(150, 150), neutral, 64);
+
+            // RESULTS actions — large one-tap RETRY / CONTINUE, parented to the results panel so they
+            // show/hide with it.
+            var rRetry = CreateButton(resultsPanel.transform, "ResultsRetryButton", "RETRY", new Vector2(0.5f, 0f), new Vector2(-300, 220), new Vector2(500, 160), accent, 56);
+            var rCont = CreateButton(resultsPanel.transform, "ResultsContinueButton", "CONTINUE", new Vector2(0.5f, 0f), new Vector2(300, 220), new Vector2(500, 160), neutral, 52);
+
+            // --- Wire TouchControls ---
+            Assign(tc, "flow", flow);
+            Assign(tc, "gameplay", gameplay);
+            Assign(tc, "pauseButton", pause);
+            Assign(tc, "theBangButton", theBang);
+            Assign(tc, "theBangGroup", bangGroup);
+            Assign(tc, "pauseOverlay", overlay);
+            Assign(tc, "resumeButton", resume);
+            Assign(tc, "pauseRetryButton", pRetry);
+            Assign(tc, "quitButton", quit);
+            Assign(tc, "calMinusButton", calMinus);
+            Assign(tc, "calPlusButton", calPlus);
+            Assign(tc, "calibrationText", calText);
+            Assign(tc, "resultsRetryButton", rRetry);
+            Assign(tc, "resultsContinueButton", rCont);
+        }
+
         static RectTransform CreateRect(string name, Transform parent, Vector2 position, Vector2 size)
         {
             var go = new GameObject(name, typeof(RectTransform));
@@ -550,6 +811,35 @@ namespace HeadbangHeroes.Editor
             rect.anchoredPosition = position;
             rect.sizeDelta = size;
             return rect;
+        }
+
+        /// <summary>
+        /// A touch button: an Image (raycast target, so HeadbangInput suppresses a bang on it) with a
+        /// centered label. Anchored to the given normalized anchor so portrait layout is stable.
+        /// </summary>
+        static Button CreateButton(Transform parent, string name, string label, Vector2 anchor,
+            Vector2 anchoredPos, Vector2 size, Color bg, int fontSize = 40)
+        {
+            var go = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button));
+            var rect = go.GetComponent<RectTransform>();
+            rect.SetParent(parent, false);
+            rect.anchorMin = rect.anchorMax = anchor;
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = anchoredPos;
+            rect.sizeDelta = size;
+
+            var image = go.GetComponent<Image>();
+            image.color = bg;                 // raycastTarget defaults true -> eats the tap
+
+            var button = go.GetComponent<Button>();
+            button.targetGraphic = image;
+
+            var text = CreateText(name + "Label", rect, Vector2.zero, size, fontSize, TextAnchor.MiddleCenter);
+            text.text = label;
+            var t = text.rectTransform;
+            t.anchorMin = Vector2.zero; t.anchorMax = Vector2.one; t.offsetMin = t.offsetMax = Vector2.zero;
+
+            return button;
         }
 
         static void RegisterSceneInBuildSettings()
@@ -580,6 +870,54 @@ namespace HeadbangHeroes.Editor
         {
             var full = parent + "/" + child;
             if (!AssetDatabase.IsValidFolder(full)) AssetDatabase.CreateFolder(parent, child);
+        }
+
+        /// <summary>Wire a Transform[] serialized field (e.g. the hair chain segments).</summary>
+        static void AssignArray(Object target, string property, Transform[] values)
+        {
+            var so = new SerializedObject(target);
+            var prop = so.FindProperty(property);
+            if (prop == null)
+            {
+                Debug.LogError($"HH M0 builder: '{target.GetType().Name}' has no serialized field '{property}'. Wiring skipped.");
+                return;
+            }
+            prop.arraySize = values.Length;
+            for (var i = 0; i < values.Length; i++)
+                prop.GetArrayElementAtIndex(i).objectReferenceValue = values[i];
+            so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        /// <summary>
+        /// Builds a 4-segment hero (Long-tier) hair chain from the existing hair root: each segment is
+        /// a child of the previous, pivoted at its top so it swings from the joint. Returns the
+        /// segments root-to-tip for the HairReactionPresenter chain.
+        /// </summary>
+        static Transform[] CreateHairChain(RectTransform root)
+        {
+            var col = new Color(0.12f, 0.10f, 0.14f, 1f);
+            var segs = new Transform[4];
+
+            // Segment 0 = the existing hair root quad; ensure pivot at top so it hinges from the head.
+            root.pivot = new Vector2(0.5f, 1f);
+            var rootImg = root.GetComponent<Image>();
+            if (rootImg == null) rootImg = root.gameObject.AddComponent<Image>();
+            rootImg.color = col; rootImg.raycastTarget = false;
+            root.sizeDelta = new Vector2(64, 70);
+            segs[0] = root;
+
+            var parent = root;
+            for (var i = 1; i < 4; i++)
+            {
+                var seg = CreateRect($"HairSeg{i}", parent, new Vector2(0, -70), new Vector2(58 - i * 6, 70));
+                seg.pivot = new Vector2(0.5f, 1f);            // hinge at the top (the joint)
+                seg.anchoredPosition = new Vector2(0, -70);   // hang below the parent
+                var img = seg.gameObject.AddComponent<Image>();
+                img.color = col; img.raycastTarget = false;
+                segs[i] = seg;
+                parent = seg;
+            }
+            return segs;
         }
 
         static void Assign(Object target, string property, Object value)

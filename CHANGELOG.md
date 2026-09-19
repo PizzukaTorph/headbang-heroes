@@ -2,6 +2,60 @@
 
 All notable changes to Headbang Heroes are documented here.
 
+## [0.0.2] — 2026-09-19 — "From validated toy to playable prototype"
+
+Builds on the frozen `v0.0.1` core (feel validated). No changes to neck physics / timing windows /
+scoring math — all gameplay-affecting numbers are unchanged; this milestone is UI, presentation,
+content, hardening, and diagnostics.
+
+### Input & UI (P08)
+- On-screen **touch controls** (Option A UX): PAUSE, THE BANG (shown only on HYPE READY), pause
+  overlay (RESUME/RETRY/QUIT + calibration ±), one-tap RETRY/CONTINUE on Results. A tap over a UI
+  control no longer emits a bang.
+- **Affordance**: a one-shot bang-zone hint (4 direction arrows) at run start, and a per-tap
+  section flash so the whole tap quadrant reads as valid.
+
+### Timing cue (ADR-0001)
+- Replaced the closing-circle-on-head with a **pulse-in-sector**: a pill next to the avatar in the
+  expected direction grows/brightens with a build-up that peaks on the event, then relaxes. Unifies
+  WHEN + WHERE and matches the "feel the beat" philosophy. Decision recorded in
+  `docs/DECISIONS/0001-pulse-in-sector-cue.md`; UX/Screen specs annotated.
+
+### Results (P10)
+- **Emotion-first** results: dominant grade (scaled S..D), score, a data-driven themed
+  **ResultComment** line (rule set + text keys, English placeholder), performance card, and rewards.
+  Renders the authoritative `RunResult` — no scoring recompute.
+
+### Hair (P11)
+- **Multi-segment hair chain** (HAIR_SYSTEM_V1): lag → snap → overshoot → settle, driven by neck
+  motion + inversion whip + modest HYPE. Data-driven motion tiers (Bald/Short/Medium/MediumLong/
+  Long, hero Long default) with a dev-only Inspector override for live tuning. Presentation-only.
+
+### Feel polish (P12)
+- **Micro screen-shake** on bang intensity and a **high-speed motion trail** behind the head. Both
+  presentation-only, capped, and suppressed by the reduced-shake / reduced-effects accessibility
+  toggles.
+
+### Hardening (P13)
+- **Atomic save**: `FileSaveStore` promotes via `File.Replace` so a mid-write crash keeps the
+  last-known-good backup.
+- Playtest/debug controls (R/Space/B/`[`/`]`/P/Z and keyboard A/D/W/S bangs) are compiled out of
+  non-development builds (`UNITY_EDITOR || DEVELOPMENT_BUILD`).
+
+### Diagnostics
+- Dev-only **PlaytestDiagnostics** (failure taxonomy, timing-bias, direction-confusion matrix),
+  a `ResolveZone` visualizer, input-source tagging, and AudioClock/SectorPulseCue diagnostics for
+  the MISS investigation. Report in `docs/DECISIONS/0002-miss-investigation-report.md`.
+
+### Content
+- WISH added as a playable lab track (chart from `wish.mid`; audio/MIDI kept local, gitignored) with
+  a dedicated build menu variant; Beyond the Pain chart regenerated at playable density.
+
+### Known limitations / deferred
+- iOS on-device validation (Package 07) still deferred (Apple signing). Hair/avatar art is
+  placeholder (cube/quad segments); hair-style selection belongs to the future Avatar Customization
+  flow, not in-game settings. Real HH-MIDI importer still future work. See `errors to be fix.md`.
+
 ## [0.0.1] — 2026-09-18 — POC: "Make The Headbang Fun" (core validated)
 
 First frozen milestone. The prototype answers its one question — **controlling the head/neck to
