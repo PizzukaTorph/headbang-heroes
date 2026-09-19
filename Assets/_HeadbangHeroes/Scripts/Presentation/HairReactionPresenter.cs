@@ -17,6 +17,14 @@ namespace HeadbangHeroes.Presentation
         [SerializeField] Transform[] segments;         // chain segments, root-to-tip (root nearest head)
         [SerializeField] HairTier tier = HairTier.Long;
 
+        [Header("Live tuning (override the tier — editable at runtime)")]
+        [Tooltip("When on, the values below override the tier so you can dial in the feel during Play.")]
+        [SerializeField] bool overrideTier = false;
+        [SerializeField, Min(0f)] float stiffness = 70f;
+        [SerializeField, Min(0f)] float damping = 4f;
+        [SerializeField, Min(1f)] float maxBend = 85f;
+        [SerializeField, Min(0f)] float inversionKick = 200f;
+
         HairChainModel model;
         float hype01;   // pushed by the controller (presentation signal); default 0
 
@@ -30,8 +38,14 @@ namespace HeadbangHeroes.Presentation
 
         void Rebuild()
         {
-            var cfg = HairMotionTier.For(tier);
-            model = new HairChainModel(cfg);
+            // Keep the segment count from the tier (rig complexity), but let the live values override
+            // the motion character so it can be tuned in the Inspector without rebuilding.
+            var baseCfg = HairMotionTier.For(tier);
+            var cfg = overrideTier
+                ? new HairMotionTier(baseCfg.Segments, stiffness, damping, maxBend, inversionKick)
+                : baseCfg;
+            if (model == null || model.SegmentCount != cfg.Segments) model = new HairChainModel(cfg);
+            else model.SetTier(cfg);
         }
 
         public void ResetPresentation()

@@ -36,7 +36,7 @@ namespace HeadbangHeroes.Presentation
         public static HairMotionTier Short      => new HairMotionTier(1, 140f, 12f, 25f, 30f);
         public static HairMotionTier Medium     => new HairMotionTier(2, 110f, 9f, 40f, 60f);
         public static HairMotionTier MediumLong => new HairMotionTier(3, 90f, 7f, 55f, 90f);
-        public static HairMotionTier Long       => new HairMotionTier(4, 70f, 5.5f, 70f, 130f);
+        public static HairMotionTier Long       => new HairMotionTier(4, 70f, 4f, 85f, 200f);
 
         public static HairMotionTier For(HairTier tier) => tier switch
         {
