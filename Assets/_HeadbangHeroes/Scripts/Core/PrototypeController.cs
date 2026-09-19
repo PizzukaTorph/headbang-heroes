@@ -269,6 +269,7 @@ namespace HeadbangHeroes.Core
             var h = scorer.Hype;
             var hypeFraction = h.MaxHype > 0 ? (float)h.Hype / h.MaxHype : 0f;
             venuePresenter?.SetPerformanceSignals(hypeFraction, h.TheBangActive);
+            hairPresenter?.SetHype(hypeFraction);   // modest presentation exaggeration only
 
             if (clock != null && clock.IsScheduled)
             {

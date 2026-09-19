@@ -156,7 +156,8 @@ namespace HeadbangHeroes.Editor
 
             var hairPresenter = presentation.AddComponent<HairReactionPresenter>();
             Assign(hairPresenter, "neck", headMotion);
-            Assign(hairPresenter, "strand", hair);
+            var hairSegments = CreateHairChain(hair);      // Long-tier hero chain (4 segments)
+            AssignArray(hairPresenter, "segments", hairSegments);
 
             var venuePresenter = presentation.AddComponent<VenueReactionPresenter>();
             Assign(venuePresenter, "background", backgroundImage);
@@ -857,6 +858,54 @@ namespace HeadbangHeroes.Editor
         {
             var full = parent + "/" + child;
             if (!AssetDatabase.IsValidFolder(full)) AssetDatabase.CreateFolder(parent, child);
+        }
+
+        /// <summary>Wire a Transform[] serialized field (e.g. the hair chain segments).</summary>
+        static void AssignArray(Object target, string property, Transform[] values)
+        {
+            var so = new SerializedObject(target);
+            var prop = so.FindProperty(property);
+            if (prop == null)
+            {
+                Debug.LogError($"HH M0 builder: '{target.GetType().Name}' has no serialized field '{property}'. Wiring skipped.");
+                return;
+            }
+            prop.arraySize = values.Length;
+            for (var i = 0; i < values.Length; i++)
+                prop.GetArrayElementAtIndex(i).objectReferenceValue = values[i];
+            so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        /// <summary>
+        /// Builds a 4-segment hero (Long-tier) hair chain from the existing hair root: each segment is
+        /// a child of the previous, pivoted at its top so it swings from the joint. Returns the
+        /// segments root-to-tip for the HairReactionPresenter chain.
+        /// </summary>
+        static Transform[] CreateHairChain(RectTransform root)
+        {
+            var col = new Color(0.12f, 0.10f, 0.14f, 1f);
+            var segs = new Transform[4];
+
+            // Segment 0 = the existing hair root quad; ensure pivot at top so it hinges from the head.
+            root.pivot = new Vector2(0.5f, 1f);
+            var rootImg = root.GetComponent<Image>();
+            if (rootImg == null) rootImg = root.gameObject.AddComponent<Image>();
+            rootImg.color = col; rootImg.raycastTarget = false;
+            root.sizeDelta = new Vector2(64, 70);
+            segs[0] = root;
+
+            var parent = root;
+            for (var i = 1; i < 4; i++)
+            {
+                var seg = CreateRect($"HairSeg{i}", parent, new Vector2(0, -70), new Vector2(58 - i * 6, 70));
+                seg.pivot = new Vector2(0.5f, 1f);            // hinge at the top (the joint)
+                seg.anchoredPosition = new Vector2(0, -70);   // hang below the parent
+                var img = seg.gameObject.AddComponent<Image>();
+                img.color = col; img.raycastTarget = false;
+                segs[i] = seg;
+                parent = seg;
+            }
+            return segs;
         }
 
         static void Assign(Object target, string property, Object value)
