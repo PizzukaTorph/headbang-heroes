@@ -114,6 +114,41 @@ namespace HeadbangHeroes.UI
             }
         }
 
+        // ---- Diagnostics (pure, no side effects): verify the strongest visual moment is at t=0. ----
+
+        /// <summary>
+        /// The pill's visual state (scale, whether it's in the hit appearance, and the tone 0..1
+        /// where 1 = full hit colour) for a given <paramref name="remainingSeconds"/> to the event.
+        /// Mirrors <see cref="Apply"/> exactly WITHOUT touching the transform. Uses the last Show()'s
+        /// approach/hitWindow. Positive remaining = before the event.
+        /// </summary>
+        public void DiagSampleAt(double remainingSeconds, out float scale, out bool inHit, out float hitTone)
+        {
+            var t = 1.0 - remainingSeconds / approachSeconds;
+            var shaped = buildup.Evaluate(Mathf.Clamp01((float)t));
+            inHit = System.Math.Abs(remainingSeconds) <= hitWindowSeconds;
+            scale = Mathf.Lerp(startScale, peakScale, inHit ? 1f : shaped);
+            hitTone = inHit ? 1f : 0f;   // color is binary approach/hit in the current design
+        }
+
+        /// <summary>Editor/dev: log the visual profile across the required offsets to expose any plateau.</summary>
+        public string DiagTimingProfile()
+        {
+            var offsets = new double[] { approachSeconds, 0.240, 0.190, 0.130, 0.070, 0.0, -0.070, -0.130, -0.190, -0.240 };
+            var sb = new System.Text.StringBuilder(256);
+            sb.Append("SECTOR PULSE PROFILE (approach=").Append(approachSeconds.ToString("0.00"))
+              .Append("s, hitWindow=").Append((hitWindowSeconds * 1000).ToString("0")).Append("ms)\n");
+            sb.Append("  remaining |  scale | inHit | tone\n");
+            foreach (var rem in offsets)
+            {
+                DiagSampleAt(rem, out var sc, out var ih, out var tone);
+                sb.Append("  ").Append((rem * 1000).ToString("+0;-0;0").PadLeft(7)).Append(" ms | ")
+                  .Append(sc.ToString("0.00")).Append("  |  ").Append(ih ? "Y" : "n").Append("   | ")
+                  .Append(tone.ToString("0.0")).Append('\n');
+            }
+            return sb.ToString();
+        }
+
         RectTransform PillFor(BangDirection d)
         {
             switch (d)

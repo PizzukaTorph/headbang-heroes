@@ -33,16 +33,19 @@ namespace HeadbangHeroes.Input
             {
                 var touch = Touchscreen.current.primaryTouch;
                 if (touch.press.wasPressedThisFrame && !IsPointerOverUi(touch.touchId.ReadValue()))
-                    Emit(touch.position.ReadValue());
+                    Emit(touch.position.ReadValue(), SourceTouch);
             }
 
 #if UNITY_EDITOR
             if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame && !IsPointerOverUi(-1))
-                Emit(Mouse.current.position.ReadValue());
+                Emit(Mouse.current.position.ReadValue(), SourceMouse);
 #endif
 
             if (enableKeyboard) ReadKeyboard();
         }
+
+        // Diagnostic source codes mirrored in HeadbangHeroes.Diagnostics.InputSource.
+        const int SourceKeyboard = 0, SourceMouse = 1, SourceTouch = 2;
 
         /// <summary>
         /// True when the press landed on an interactive UI element (a button, THE BANG, an overlay).
@@ -65,23 +68,26 @@ namespace HeadbangHeroes.Input
             if (kb == null) return;
 
             // A/D = horizontal inversion, W/S = vertical. Same semantics as the tap wedges.
-            if (kb.aKey.wasPressedThisFrame) EmitDirection(BangDirection.Left);
-            if (kb.dKey.wasPressedThisFrame) EmitDirection(BangDirection.Right);
-            if (kb.wKey.wasPressedThisFrame) EmitDirection(BangDirection.Up);
-            if (kb.sKey.wasPressedThisFrame) EmitDirection(BangDirection.Down);
+            if (kb.aKey.wasPressedThisFrame) EmitDirection(BangDirection.Left, SourceKeyboard, NoPos);
+            if (kb.dKey.wasPressedThisFrame) EmitDirection(BangDirection.Right, SourceKeyboard, NoPos);
+            if (kb.wKey.wasPressedThisFrame) EmitDirection(BangDirection.Up, SourceKeyboard, NoPos);
+            if (kb.sKey.wasPressedThisFrame) EmitDirection(BangDirection.Down, SourceKeyboard, NoPos);
         }
 
-        void Emit(Vector2 screenPosition)
-            => EmitDirection(ResolveZone(screenPosition, Screen.width, Screen.height));
+        static readonly Vector2 NoPos = new Vector2(float.NaN, float.NaN);
 
-        void EmitDirection(BangDirection direction)
+        void Emit(Vector2 screenPosition, int source)
+            => EmitDirection(ResolveZone(screenPosition, Screen.width, Screen.height), source, screenPosition);
+
+        void EmitDirection(BangDirection direction, int source, Vector2 screenPosition)
         {
             // Best available timestamp for a press this frame is the current DSP time; convert it
-            // once into song-time so judgment compares like-for-like clocks.
+            // once into song-time so judgment compares like-for-like clocks. Source + screen position
+            // are carried for diagnostics only (never used by matching/judgment).
             var dspNow = clock != null ? clock.DspNow : 0d;
             var songTime = clock != null ? clock.ToSongTime(dspNow) : 0d;
 
-            Bang?.Invoke(new BangInput(direction, songTime, dspNow));
+            Bang?.Invoke(new BangInput(direction, songTime, dspNow, source, screenPosition));
         }
 
         /// <summary>

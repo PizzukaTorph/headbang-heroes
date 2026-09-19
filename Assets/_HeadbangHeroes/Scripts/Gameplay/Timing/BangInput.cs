@@ -1,4 +1,5 @@
 using HeadbangHeroes.Charts;
+using UnityEngine;
 
 namespace HeadbangHeroes.Gameplay.Timing
 {
@@ -18,11 +19,22 @@ namespace HeadbangHeroes.Gameplay.Timing
         /// <summary>Optional raw device timestamp kept for diagnostics only; never used for judgment.</summary>
         public readonly double RawDeviceTime;
 
-        public BangInput(BangDirection direction, double songTime, double rawDeviceTime = 0d)
+        // ---- Diagnostic-only metadata (like RawDeviceTime): NEVER used by matching/judgment. ----
+        /// <summary>0 = keyboard, 1 = mouse, 2 = touch, 3 = unknown (diagnostics/A-B only).</summary>
+        public readonly int SourceCode;
+        /// <summary>Screen position of the tap in pixels, when spatial (mouse/touch). NaN when N/A (keyboard).</summary>
+        public readonly Vector2 ScreenPosition;
+        public bool HasScreenPosition => !float.IsNaN(ScreenPosition.x);
+
+        public BangInput(BangDirection direction, double songTime, double rawDeviceTime = 0d,
+            int sourceCode = 3, Vector2 screenPosition = default)
         {
             Direction = direction;
             SongTime = songTime;
             RawDeviceTime = rawDeviceTime;
+            SourceCode = sourceCode;
+            // default(Vector2) is (0,0) which is a valid screen coord; use NaN sentinel for "no position".
+            ScreenPosition = screenPosition == default ? new Vector2(float.NaN, float.NaN) : screenPosition;
         }
     }
 }

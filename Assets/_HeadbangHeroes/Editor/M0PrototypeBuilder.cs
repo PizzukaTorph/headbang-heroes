@@ -213,6 +213,10 @@ namespace HeadbangHeroes.Editor
             var sectorPulse = CreateSectorPulseCue(canvas.transform, clock);
             Assign(controller, "sectorPulse", sectorPulse);
 
+            // --- Dev-only ResolveZone visualization ---
+            var zoneDebug = CreateZoneDebugOverlay(canvas.transform);
+            Assign(controller, "zoneDebug", zoneDebug);
+
             // --- Input event system ---
             var eventSystem = new GameObject("EventSystem");
             eventSystem.AddComponent<EventSystem>();
@@ -547,6 +551,38 @@ namespace HeadbangHeroes.Editor
         /// direction (Left/Right/Up/Down). Each pill grows + brightens toward the event (build-up)
         /// then relaxes. Non-raycast; above the background, below the avatar.
         /// </summary>
+        /// <summary>
+        /// Dev-only overlay that samples HeadbangInput.ResolveZone on a grid to visualize the real
+        /// touch-zone partition + live pointer. Hidden by default (toggled at runtime).
+        /// </summary>
+        static ZoneDebugOverlay CreateZoneDebugOverlay(Transform canvas)
+        {
+            var go = new GameObject("HH_ZoneDebugOverlay", typeof(RectTransform), typeof(CanvasGroup));
+            var rect = go.GetComponent<RectTransform>();
+            rect.SetParent(canvas, false);
+            rect.anchorMin = Vector2.zero; rect.anchorMax = Vector2.one; rect.offsetMin = rect.offsetMax = Vector2.zero;
+            rect.SetSiblingIndex(1);   // above background, behind gameplay
+            var group = go.GetComponent<CanvasGroup>();
+            group.alpha = 0f; group.interactable = false; group.blocksRaycasts = false;
+
+            var gridRoot = CreateRect("Grid", rect, Vector2.zero, Vector2.zero);
+            gridRoot.anchorMin = Vector2.zero; gridRoot.anchorMax = Vector2.one; gridRoot.offsetMin = gridRoot.offsetMax = Vector2.zero;
+
+            var pointer = CreateRect("Pointer", rect, Vector2.zero, new Vector2(36, 36));
+            var pimg = pointer.gameObject.AddComponent<Image>();
+            pimg.color = new Color(1f, 1f, 1f, 0.9f); pimg.raycastTarget = false;
+
+            var readout = CreateText("ZoneReadout", rect, new Vector2(0, 820), new Vector2(700, 120), 40, TextAnchor.MiddleCenter);
+            readout.color = Color.white;
+
+            var overlay = go.AddComponent<ZoneDebugOverlay>();
+            Assign(overlay, "group", group);
+            Assign(overlay, "gridRoot", gridRoot);
+            Assign(overlay, "pointer", pointer);
+            Assign(overlay, "readout", readout);
+            return overlay;
+        }
+
         static SectorPulseCue CreateSectorPulseCue(Transform canvas, AudioClock clock)
         {
             var go = new GameObject("HH_SectorPulseCue", typeof(RectTransform));

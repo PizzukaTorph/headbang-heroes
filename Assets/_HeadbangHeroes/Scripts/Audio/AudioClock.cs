@@ -38,6 +38,16 @@ namespace HeadbangHeroes.Audio
         /// <summary>Measured audio-output latency currently compensated (seconds).</summary>
         public double OutputLatency => map.OutputLatency;
 
+        // ---- Diagnostics (read-only): expose the raw components of the latency estimate. ----
+        /// <summary>DSP buffer length (samples) as reported by Unity, for diagnostics.</summary>
+        public int DiagDspBufferLength { get { AudioSettings.GetDSPBufferSize(out var len, out _); return len; } }
+        /// <summary>DSP buffer count as reported by Unity, for diagnostics.</summary>
+        public int DiagDspBufferCount { get { AudioSettings.GetDSPBufferSize(out _, out var num); return num; } }
+        /// <summary>Output sample rate (Hz), for diagnostics.</summary>
+        public int DiagOutputSampleRate => AudioSettings.outputSampleRate;
+        /// <summary>Combined effective offset applied to song-time = calibration + output latency (seconds).</summary>
+        public double DiagEffectiveOffset => map.Calibration + map.OutputLatency;
+
         /// <summary>
         /// Estimates the device audio-output latency from Unity's DSP buffer configuration
         /// (bufferLength * numBuffers / sampleRate). This is the dominant, measurable component of

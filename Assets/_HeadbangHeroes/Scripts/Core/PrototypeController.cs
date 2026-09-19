@@ -25,6 +25,7 @@ namespace HeadbangHeroes.Core
         [SerializeField] BangZoneHint zoneHint;   // onboarding: reveal the 4 bang zones at run start
         [SerializeField] ZoneTapFlash zoneFlash;  // per-tap: flash the tapped section
         [SerializeField] SectorPulseCue sectorPulse;  // ADR-0001 timing cue: pulse-in-sector
+        [SerializeField] ZoneDebugOverlay zoneDebug;  // dev-only ResolveZone visualization
 
         [Header("Presentation (downstream only)")]
         [SerializeField] NeckPresenter neckPresenter;
@@ -39,6 +40,8 @@ namespace HeadbangHeroes.Core
         [Header("Playtest controls (Editor / Development builds)")]
         [SerializeField] bool enablePlaytestControls = true;
         [SerializeField] double calibrationStepMs = 20.0;
+        [Tooltip("Dev-only per-bang diagnostics (failure taxonomy, timing bias, direction confusion). Editor/Dev builds only; never a gameplay dependency.")]
+        [SerializeField] bool enableDiagnostics = true;
 
         [Header("Accessibility (presentation only; never changes scoring)")]
         [SerializeField] bool reducedFlash = false;
@@ -48,6 +51,21 @@ namespace HeadbangHeroes.Core
 
         readonly RunScorer scorer = new(ScoringConfig.Default, HypeConfig.Default);
         readonly MotionQualityConfig motionConfig = MotionQualityConfig.Default;
+        readonly Diagnostics.PlaytestDiagnostics diagnostics = new();
+
+        // Diagnostics only run in the Editor or a Development build, and only when the flag is on.
+        // They never affect scoring/timing and gameplay works if the whole block is compiled out.
+        bool DiagActive
+        {
+            get
+            {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                return enableDiagnostics;
+#else
+                return false;
+#endif
+            }
+        }
         RuntimeChart runtimeChart;
         bool wasReady;
         bool running;                 // true from run start until the RunResult is finalized
@@ -183,6 +201,7 @@ namespace HeadbangHeroes.Core
 
             scorer.Reset();
             wasReady = false;
+            if (DiagActive) diagnostics.Reset();
             var access = new AccessibilitySettings
             {
                 ReducedFlash = reducedFlash,
@@ -242,6 +261,7 @@ namespace HeadbangHeroes.Core
                 runtimeChart.SongId, runtimeChart.ChartId, runtimeChart.ChartVersion, runtimeChart.RulesVersion);
             clock.Stop();
             RunCompleted?.Invoke(result);   // fired exactly once per run
+            if (DiagActive) DiagPrintReport();
         }
 
         void PushPresentationSignals()
@@ -275,6 +295,19 @@ namespace HeadbangHeroes.Core
 
             if (kb.leftBracketKey.wasPressedThisFrame) NudgeCalibration(-1);
             if (kb.rightBracketKey.wasPressedThisFrame) NudgeCalibration(+1);
+
+            // P = print diagnostics on demand (report + clock latency components + cue timing profile).
+            if (kb.pKey.wasPressedThisFrame && DiagActive)
+            {
+                DiagPrintReport();
+                Debug.Log($"CLOCK: dspBuffer {clock.DiagDspBufferLength} x{clock.DiagDspBufferCount} @ {clock.DiagOutputSampleRate}Hz " +
+                          $"| outputLatency {clock.OutputLatency * 1000.0:0}ms | calibration {clock.Calibration * 1000.0:+0;-0;0}ms " +
+                          $"| effective {clock.DiagEffectiveOffset * 1000.0:+0;-0;0}ms");
+                if (sectorPulse != null) Debug.Log(sectorPulse.DiagTimingProfile());
+            }
+
+            // Z = toggle the ResolveZone visualization (dev only).
+            if (kb.zKey.wasPressedThisFrame && DiagActive) zoneDebug?.Toggle();
         }
 
         void AdjustCalibration(double deltaSeconds)
@@ -327,6 +360,7 @@ namespace HeadbangHeroes.Core
                 // Neck moved, but no authored candidate was consumed (too early / none active).
                 var nextT = scheduler != null ? scheduler.NextEventTime : -1d;
                 Debug.Log($"(no consume) bang {bang.Direction} @songT {bang.SongTime:0.000} | next ev {nextT:0.000} | activeCue {(scheduler != null && scheduler.HasActiveEvent)}");
+                if (DiagActive) DiagRecordNoConsume(bang, nextT);
                 return;
             }
 
@@ -359,6 +393,8 @@ namespace HeadbangHeroes.Core
                       outcome.ComboAfter, scorer.Scoring.Score);
             RefreshHypeHud();
 
+            if (DiagActive) DiagRecordConsumed(bang, match, ev, outcome.Judgment);
+
             // Diagnostic: pressed vs expected direction and why a MISS happened (timing vs wrong-dir).
             var reason = match.Kind == MatchKind.WrongConsumedMiss
                 ? $" WRONG-DIR (pressed {bang.Direction}, expected {ev.Direction})"
@@ -386,6 +422,73 @@ namespace HeadbangHeroes.Core
             hud?.Show(new JudgmentResult(Judgment.Miss, 0d, 0f), outcome.ComboAfter, scorer.Scoring.Score);
             RefreshHypeHud();
             Debug.Log($"MISS (expired) at {ev.Time:0.000}s | combo {outcome.ComboAfter} | hype {scorer.Hype.Hype}");
+            if (DiagActive) DiagRecordExpired(ev);
+        }
+
+        // ---- Diagnostics helpers (dev-only; derived OUTSIDE the authoritative scoring path) ----
+
+        static Diagnostics.InputSource DiagSource(int code) => code switch
+        {
+            0 => Diagnostics.InputSource.Keyboard,
+            1 => Diagnostics.InputSource.Mouse,
+            2 => Diagnostics.InputSource.Touch,
+            _ => Diagnostics.InputSource.Unknown,
+        };
+
+        void DiagNorm(in BangInput bang, out bool hasPos, out float sx, out float sy, out float nx, out float ny)
+        {
+            hasPos = bang.HasScreenPosition;
+            sx = hasPos ? bang.ScreenPosition.x : float.NaN;
+            sy = hasPos ? bang.ScreenPosition.y : float.NaN;
+            var w = Mathf.Max(1f, Screen.width * 0.5f);
+            var h = Mathf.Max(1f, Screen.height * 0.5f);
+            nx = hasPos ? (sx - w) / w : float.NaN;
+            ny = hasPos ? (sy - h) / h : float.NaN;
+        }
+
+        void DiagRecordNoConsume(in BangInput bang, double nextT)
+        {
+            DiagNorm(bang, out var hasPos, out var sx, out var sy, out var nx, out var ny);
+            // No candidate consumed: split "there was a candidate but I was too early" from
+            // "there was no active candidate at all". HasActiveEvent + next-event distance decide.
+            var active = scheduler != null && scheduler.HasActiveEvent;
+            var failure = active ? Diagnostics.BangFailure.TooEarly : Diagnostics.BangFailure.NoActiveCandidate;
+            diagnostics.Add(new Diagnostics.BangRecord(
+                diagnostics.NextSequence(), DiagSource(bang.SourceCode), hasPos, sx, sy, nx, ny,
+                bang.Direction, bang.RawDeviceTime, bang.SongTime,
+                -1, active, active ? scheduler.ActiveEvent.Direction : bang.Direction,
+                nextT, 0d, false, Judgment.Miss, failure));
+        }
+
+        void DiagRecordConsumed(in BangInput bang, in MatchResult match, in RuntimeMotionEvent ev, Judgment judgment)
+        {
+            DiagNorm(bang, out var hasPos, out var sx, out var sy, out var nx, out var ny);
+            var failure = match.Kind == MatchKind.WrongConsumedMiss
+                ? Diagnostics.BangFailure.WrongDirection
+                : judgment == Judgment.Miss ? Diagnostics.BangFailure.TooLateOrExpired
+                : Diagnostics.BangFailure.Hit;
+            diagnostics.Add(new Diagnostics.BangRecord(
+                diagnostics.NextSequence(), DiagSource(bang.SourceCode), hasPos, sx, sy, nx, ny,
+                bang.Direction, bang.RawDeviceTime, bang.SongTime,
+                match.MatchedId, true, ev.Direction, ev.Time,
+                match.SignedError * 1000.0, true, judgment, failure));
+        }
+
+        void DiagRecordExpired(in RuntimeMotionEvent ev)
+        {
+            diagnostics.Add(new Diagnostics.BangRecord(
+                diagnostics.NextSequence(), Diagnostics.InputSource.Unknown, false, 0, 0, 0, 0,
+                ev.Direction, 0d, 0d, -1, true, ev.Direction, ev.Time,
+                0d, false, Judgment.Miss, Diagnostics.BangFailure.EventExpiredWithoutInput));
+        }
+
+        /// <summary>Print the diagnostic report (called at run end and on demand via the P key).</summary>
+        public void DiagPrintReport()
+        {
+            if (!DiagActive || clock == null) return;
+            var latMs = clock.OutputLatency * 1000.0;
+            var calMs = clock.Calibration * 1000.0;
+            Debug.Log(diagnostics.BuildReport(latMs, calMs));
         }
     }
 }
