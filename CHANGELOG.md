@@ -2,6 +2,17 @@
 
 All notable changes to Headbang Heroes are documented here.
 
+## [0.0.3] — Unreleased — "Fix what we measured, and let the game grow"
+
+In progress on `develop`. Plan: `docs/implementation/09_V0_0_3_PLAN.md`. Two tracks:
+- **B — Evidence-driven playability fixes** (the deliberate fix the v0.0.2 MISS diagnostics point to;
+  touch geometry / pulse peak / calibration — no window widening).
+- **C — HH-MIDI authoring pipeline** (offline importer/validator per `HH_MIDI_STANDARD_V1`, then one
+  real authored song end-to-end).
+
+Planned packages: P14 MISS root-cause fix · P15 SectorPulseCue peak · P16 HH-MIDI importer/validator ·
+P17 first authored song · P18 consolidate + tag. iOS device validation (Package 07) remains deferred.
+
 ## [0.0.2] — 2026-09-19 — "From validated toy to playable prototype"
 
 Builds on the frozen `v0.0.1` core (feel validated). No changes to neck physics / timing windows /
