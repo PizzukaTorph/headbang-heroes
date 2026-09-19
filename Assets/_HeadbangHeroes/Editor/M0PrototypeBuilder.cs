@@ -162,6 +162,18 @@ namespace HeadbangHeroes.Editor
             var venuePresenter = presentation.AddComponent<VenueReactionPresenter>();
             Assign(venuePresenter, "background", backgroundImage);
 
+            // --- P12 feel polish: micro screen-shake + high-speed motion trail ---
+            var trailParent = CreateRect("HH_TrailLayer", canvas.transform, Vector2.zero, Vector2.zero);
+            trailParent.anchorMin = Vector2.zero; trailParent.anchorMax = Vector2.one;
+            trailParent.offsetMin = trailParent.offsetMax = Vector2.zero;
+            trailParent.SetSiblingIndex(1);   // behind the avatar, above the background
+            var feedbackFx = presentation.AddComponent<FeedbackFxPresenter>();
+            Assign(feedbackFx, "neck", headMotion);
+            Assign(feedbackFx, "shakeRoot", avatar.GetComponent<RectTransform>());  // jitter the avatar only
+            Assign(feedbackFx, "head", head);
+            Assign(feedbackFx, "trailParent", trailParent);
+            Assign(controller, "feedbackFx", feedbackFx);
+
             var haptics = presentation.AddComponent<HapticsService>();
 
             // --- Controller wiring ---

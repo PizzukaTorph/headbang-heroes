@@ -41,7 +41,9 @@ namespace HeadbangHeroes.Input
                 Emit(Mouse.current.position.ReadValue(), SourceMouse);
 #endif
 
-            if (enableKeyboard) ReadKeyboard();
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            if (enableKeyboard) ReadKeyboard();   // dev convenience only; not in shipping builds
+#endif
         }
 
         // Diagnostic source codes mirrored in HeadbangHeroes.Diagnostics.InputSource.
@@ -62,6 +64,7 @@ namespace HeadbangHeroes.Input
             return es.IsPointerOverGameObject(pointerOrTouchId);
         }
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
         void ReadKeyboard()
         {
             var kb = Keyboard.current;
@@ -73,6 +76,7 @@ namespace HeadbangHeroes.Input
             if (kb.wKey.wasPressedThisFrame) EmitDirection(BangDirection.Up, SourceKeyboard, NoPos);
             if (kb.sKey.wasPressedThisFrame) EmitDirection(BangDirection.Down, SourceKeyboard, NoPos);
         }
+#endif
 
         static readonly Vector2 NoPos = new Vector2(float.NaN, float.NaN);
 

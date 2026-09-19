@@ -32,6 +32,7 @@ namespace HeadbangHeroes.Core
         [SerializeField] BodyReactionPresenter bodyPresenter;
         [SerializeField] HairReactionPresenter hairPresenter;
         [SerializeField] VenueReactionPresenter venuePresenter;
+        [SerializeField] FeedbackFxPresenter feedbackFx;   // P12 polish: shake + motion trail
         [SerializeField] HapticsService haptics;
 
         [SerializeField] bool startOnPlay = true;
@@ -220,6 +221,8 @@ namespace HeadbangHeroes.Core
             hairPresenter?.ResetPresentation();
             venuePresenter?.ResetPresentation();
             venuePresenter?.ApplySettings(access);
+            feedbackFx?.ResetPresentation();
+            feedbackFx?.ApplySettings(access);
             haptics?.ApplySettings(access);
             sectorPulse?.ResetCue();
             zoneHint?.Show();
@@ -240,7 +243,9 @@ namespace HeadbangHeroes.Core
             PushPresentationSignals();
             CheckRunCompletion();
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
             if (enablePlaytestControls) HandlePlaytestControls();
+#endif
         }
 
         void CheckRunCompletion()
@@ -278,6 +283,7 @@ namespace HeadbangHeroes.Core
             }
         }
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
         void HandlePlaytestControls()
         {
             var kb = Keyboard.current;
@@ -310,6 +316,7 @@ namespace HeadbangHeroes.Core
             // Z = toggle the ResolveZone visualization (dev only).
             if (kb.zKey.wasPressedThisFrame && DiagActive) zoneDebug?.Toggle();
         }
+#endif
 
         void AdjustCalibration(double deltaSeconds)
         {
@@ -379,6 +386,7 @@ namespace HeadbangHeroes.Core
 
             // Semantic presentation feedback (downstream only; never affects the outcome above).
             PlayJudgmentHaptic(outcome.Judgment);
+            if (outcome.Judgment != Judgment.Miss) feedbackFx?.OnBang(intensity);
             if (outcome.WasFinisher)
             {
                 haptics?.Play(HapticEvent.Finisher);

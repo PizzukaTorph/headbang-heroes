@@ -121,8 +121,29 @@ namespace HeadbangHeroes.Meta
             {
                 var tmp = primaryPath + ".tmp";
                 System.IO.File.WriteAllText(tmp, json);
-                if (System.IO.File.Exists(primaryPath)) System.IO.File.Delete(primaryPath);
-                System.IO.File.Move(tmp, primaryPath);   // atomic-ish replace
+
+                if (System.IO.File.Exists(primaryPath))
+                {
+                    // Atomic promote: File.Replace swaps tmp -> primary in one OS operation and keeps
+                    // the previous primary as .bak, so a crash mid-write never loses the last-known-good.
+                    try
+                    {
+                        System.IO.File.Replace(tmp, primaryPath, backupPath);
+                    }
+                    catch (System.PlatformNotSupportedException)
+                    {
+                        // Rare platforms without atomic replace: fall back to a best-effort swap.
+                        if (System.IO.File.Exists(backupPath)) System.IO.File.Delete(backupPath);
+                        System.IO.File.Copy(primaryPath, backupPath, overwrite: true);
+                        System.IO.File.Delete(primaryPath);
+                        System.IO.File.Move(tmp, primaryPath);
+                    }
+                }
+                else
+                {
+                    // No primary yet: a plain move is already atomic on the same volume.
+                    System.IO.File.Move(tmp, primaryPath);
+                }
             }
             catch (Exception e) { Debug.LogError($"HH save write failed: {e.Message}"); }
         }

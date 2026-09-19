@@ -16,6 +16,49 @@ namespace HeadbangHeroes.Tests
             public void PromotePrimaryToBackup() { if (primary != null) backup = primary; }
         }
 
+        // Simulates a crash DURING the primary write (after the backup was promoted): the primary is
+        // left corrupt/empty, but the last-known-good backup must survive and be recoverable. This is
+        // exactly the invariant the atomic File.Replace write guarantees on disk.
+        sealed class CrashOnWriteStore : ISaveStore
+        {
+            public string primary;
+            public string backup;
+            public bool crash = true;
+            public bool TryReadPrimary(out string json) { json = primary; return primary != null; }
+            public bool TryReadBackup(out string json) { json = backup; return backup != null; }
+            public void PromotePrimaryToBackup() { if (primary != null) backup = primary; }
+            public void WritePrimary(string json)
+            {
+                if (crash) { primary = "{corrupt"; return; }  // half-written garbage, no exception path
+                primary = json;
+            }
+        }
+
+        [Test]
+        public void CrashDuringWrite_RecoversLastKnownGoodFromBackup()
+        {
+            var store = new CrashOnWriteStore();
+            var svc = new SaveService(store);
+
+            // First good save establishes a valid primary.
+            store.crash = false;
+            var good = UserProfile.CreateDefault();
+            good.level = 7; good.xp = 999;
+            svc.Save(good);
+            Assert.IsTrue(store.primary.Contains("\"level\":7") || store.primary.Contains("level"));
+
+            // Next save crashes mid-write: primary is corrupted, but backup holds the good copy.
+            store.crash = true;
+            var next = UserProfile.CreateDefault();
+            next.level = 8;
+            svc.Save(next);   // promotes the good primary to backup, then "crashes" writing primary
+
+            // Load must fall through the corrupt primary to the good backup (level 7 survives).
+            var loaded = svc.Load();
+            Assert.IsNotNull(loaded);
+            Assert.AreEqual(7, loaded.level, "last-known-good recovered from backup after a mid-write crash");
+        }
+
         [Test]
         public void NoSave_LoadReturnsValidDefaultProfile()
         {
