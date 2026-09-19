@@ -142,3 +142,19 @@ Editor. Multi-touch / simultaneous L+R is not handled.
   scorer resets, xp/hh only once per completion, no event-handler accumulation). Not EditMode-coverable.
 - **Playtest controls in shipping builds (gameplay-core F4):** gate enablePlaytestControls behind
   UNITY_EDITOR/DEVELOPMENT_BUILD so the R hard-reset can't desync GameFlowController state.
+
+
+---
+
+## 7. v0.0.2 future improvements (deferred, non-blocking)
+
+- **Hair style selection belongs to Avatar Customization, not in-game settings.** The hair motion
+  tiers (Bald/Short/Medium/MediumLong/Long in `HairMotionTier`) map to hairstyles, but choosing them
+  is a player-facing feature that lives in the (future) Avatar Customization flow
+  (`AVATAR_CUSTOMIZATION_UX_V1`), NOT in the pause menu. For now the tier is fixed (Long) with a
+  dev-only Inspector override on `HairReactionPresenter` for tuning. When avatar customization is
+  built, wire the selected hairstyle → motion tier and persist it in the profile. Do not expose raw
+  hair physics (stiffness/damping/bend/kick) to the player.
+- **Hair with real art:** current placeholder is a chain of cube/quad segments, which understates the
+  motion. The chain solver is ready; the feel will read much stronger once real hair art replaces the
+  segments (front/back mass separation per `HAIR_SYSTEM_V1` still to do).
