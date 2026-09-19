@@ -93,14 +93,39 @@ namespace HeadbangHeroes.UI
         void Apply()
         {
             if (activePill == null || clock == null) return;   // destroyed/unset -> Unity == null
+            var remaining = eventTime - clock.SongTime;         // >0 before event
+            ComputeShape(remaining, out var scale, out var hitTone);
+            var color = Color.Lerp(approachColor, hitColor, hitTone);
+            SetPill(scale, color, 1f);
+        }
 
-            var remaining = eventTime - clock.SongTime;                 // >0 before event
-            var t = 1.0 - remaining / approachSeconds;                  // 0 at appearance, 1 at event
-            var shaped = buildup.Evaluate(Mathf.Clamp01((float)t));
-            var inHit = System.Math.Abs(remaining) <= hitWindowSeconds;
+        void ComputeShape(double remaining, out float scale, out float hitTone)
+            => PeakShape(remaining, approachSeconds, hitWindowSeconds, startScale, peakScale, buildup,
+                         out scale, out hitTone);
 
-            var scale = Mathf.Lerp(startScale, peakScale, inHit ? 1f : shaped);
-            SetPill(scale, inHit ? hitColor : approachColor, 1f);
+        /// <summary>
+        /// Pure, static, testable pulse shape (P15). PEAK at remaining==0, NO plateau: build-up
+        /// before the event, symmetric falloff after; hitTone is a triangular peak (1 at 0, 0 at
+        /// +/- hitWindow). No Unity object state — safe to unit-test.
+        /// </summary>
+        public static void PeakShape(double remaining, double approachSeconds, double hitWindowSeconds,
+            float startScale, float peakScale, AnimationCurve buildup, out float scale, out float hitTone)
+        {
+            var absRem = System.Math.Abs(remaining);
+            hitTone = 1f - (float)(absRem / System.Math.Max(0.0001, hitWindowSeconds));
+            if (hitTone < 0f) hitTone = 0f;
+
+            if (remaining > 0d)
+            {
+                var t = 1.0 - remaining / System.Math.Max(0.0001, approachSeconds);
+                var shaped = buildup != null ? buildup.Evaluate(Mathf.Clamp01((float)t)) : Mathf.Clamp01((float)t);
+                scale = Mathf.Lerp(startScale, peakScale, shaped);
+            }
+            else
+            {
+                var fall = Mathf.Clamp01((float)(absRem / System.Math.Max(0.0001, hitWindowSeconds)));
+                scale = Mathf.Lerp(peakScale, startScale, fall);
+            }
         }
 
         void SetPill(float scale, Color color, float alphaMul)
@@ -124,11 +149,8 @@ namespace HeadbangHeroes.UI
         /// </summary>
         public void DiagSampleAt(double remainingSeconds, out float scale, out bool inHit, out float hitTone)
         {
-            var t = 1.0 - remainingSeconds / approachSeconds;
-            var shaped = buildup.Evaluate(Mathf.Clamp01((float)t));
-            inHit = System.Math.Abs(remainingSeconds) <= hitWindowSeconds;
-            scale = Mathf.Lerp(startScale, peakScale, inHit ? 1f : shaped);
-            hitTone = inHit ? 1f : 0f;   // color is binary approach/hit in the current design
+            ComputeShape(remainingSeconds, out scale, out hitTone);
+            inHit = hitTone > 0f;   // "in hit appearance" = anywhere the pulse is toned toward hit
         }
 
         /// <summary>Editor/dev: log the visual profile across the required offsets to expose any plateau.</summary>
