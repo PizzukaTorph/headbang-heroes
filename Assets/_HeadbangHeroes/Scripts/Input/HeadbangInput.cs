@@ -95,20 +95,22 @@ namespace HeadbangHeroes.Input
         }
 
         /// <summary>
-        /// Resolves the nearest cardinal zone without requiring visible buttons.
-        /// Normalizing by half-screen extents keeps the four wedges useful on portrait devices.
+        /// Resolves the nearest cardinal zone from a screen position, using EQUAL-PIXEL geometry:
+        /// the L/R vs U/D split is the true 45° diagonal in pixels from screen centre (|dx| vs |dy|).
+        /// v0.0.3 fix (diagnostics): the old version normalized x and y by half-width/half-height
+        /// INDEPENDENTLY, which on a tall portrait screen skewed the diagonal toward Left/Right and
+        /// made taps high-but-slightly-sideways resolve L/R instead of Up/Down (a WRONG_DIRECTION
+        /// source). Comparing raw pixel offsets makes the four wedges symmetric on any aspect ratio.
         /// </summary>
         public static BangDirection ResolveZone(Vector2 position, float width, float height)
         {
-            var halfWidth = Mathf.Max(1f, width * 0.5f);
-            var halfHeight = Mathf.Max(1f, height * 0.5f);
-            var x = (position.x - halfWidth) / halfWidth;
-            var y = (position.y - halfHeight) / halfHeight;
+            var dx = position.x - width * 0.5f;
+            var dy = position.y - height * 0.5f;
 
-            if (Mathf.Abs(x) > Mathf.Abs(y))
-                return x < 0f ? BangDirection.Left : BangDirection.Right;
+            if (Mathf.Abs(dx) > Mathf.Abs(dy))
+                return dx < 0f ? BangDirection.Left : BangDirection.Right;
 
-            return y < 0f ? BangDirection.Down : BangDirection.Up;
+            return dy < 0f ? BangDirection.Down : BangDirection.Up;
         }
     }
 }
