@@ -1,0 +1,34 @@
+Unity Editor version:    6000.6.0f1 (f7f8ed4d1e24)
+Branch:                  6000.6/respin/6000.6.0f1-fa21a270ab12
+Build type:              Release
+Batch mode:              YES
+macOS version:           Version 26.6.2 (Build 25G83)
+Darwin version:          25.6.0
+Architecture:            arm64
+Running under Rosetta:   NO
+Available memory:        32768 MB
+Date:                    2026-09-17T15:02:51Z
+Launching external process: /Applications/Unity/Hub/Editor/6000.6.0f1/Unity.app/Contents/Resources/Scripting/NetCoreRuntime/dotnet
+VBCSCompilerPreWarmer: pre-warm launched (dotnet PID 26740)
+VBCSCompiler prewarm took 12.18 ms
+[Licensing::Module] Trying to connect to existing licensing client channel...
+[Licensing::IpcConnector] Successfully connected to: "LicenseClient-pizzu" at "2026-09-17T15:02:51.129708Z"
+Launching external process: /Applications/Unity/Hub/Editor/6000.6.0f1/Unity.app/Contents/Helpers/PackageManager/Server/UnityPackageManager
+
+COMMAND LINE ARGUMENTS:
+/Applications/Unity/Hub/Editor/6000.6.0f1/Unity.app/Contents/MacOS/Unity
+-batchmode
+-projectPath
+/Users/pizzu/DEV Projects/headbang-heroes
+-runTests
+-testPlatform
+EditMode
+-testResults
+/Users/pizzu/DEV Projects/headbang-heroes/hh_editmode_results.xml
+-logFile
+/Users/pizzu/DEV Projects/headbang-heroes/hh_editmode_run.log
+-quit
+Successfully changed project path to: /Users/pizzu/DEV Projects/headbang-heroes
+/Users/pizzu/DEV Projects/headbang-heroes
+[ExitDontLaunchBugReporter] Exiting without the bug reporter. Application will exit with return code 1
+[Package Manager] Server process was shutdown
