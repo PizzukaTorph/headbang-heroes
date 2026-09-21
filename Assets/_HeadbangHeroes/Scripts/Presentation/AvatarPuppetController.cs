@@ -16,6 +16,7 @@ namespace HeadbangHeroes.Presentation
         public Sprite torso;
         public Sprite armLeft;
         public Sprite armRight;
+        public Sprite neck;
         public Sprite head;
         public Sprite hairBack;
         public Sprite hairFront;
@@ -42,16 +43,21 @@ namespace HeadbangHeroes.Presentation
         [SerializeField] SpriteRenderer torso;
         [SerializeField] SpriteRenderer armLeft;
         [SerializeField] SpriteRenderer armRight;
+        [SerializeField] SpriteRenderer neckSprite;
         [SerializeField] SpriteRenderer head;
         [SerializeField] SpriteRenderer hairBack;
         [SerializeField] SpriteRenderer hairFront;
         [SerializeField] Transform headPivot;
+        [SerializeField] Transform neckPivot;
+        [SerializeField] Transform hairBackPivot;
 
         [Header("Head presentation spring")]
         [SerializeField, Min(1f)] float headSpring = 140f;
         [SerializeField, Range(0.2f, 1.2f)] float headDamping = 0.62f;
         [SerializeField, Min(1f)] float visualMaxAngle = 42f;
         [SerializeField, Min(0f)] float verticalFollow = 1f;
+        [SerializeField, Range(0.15f, 0.25f)] float neckFollow = 0.2f;
+        [SerializeField, Range(0.05f, 0.15f)] float hairBackFollow = 0.1f;
 
         [Header("Editor alignment test")]
         [SerializeField] bool restPoseDebug;
@@ -67,6 +73,8 @@ namespace HeadbangHeroes.Presentation
         float headPitch;
         float rollVelocity;
         float pitchVelocity;
+        float backHairAngle;
+        float backHairVelocity;
         HairChainModel hairModel;
 
         public AvatarArtSet CurrentArtSet => artSet;
@@ -91,8 +99,9 @@ namespace HeadbangHeroes.Presentation
 
         public void Configure(NeckMotionModel source, AvatarSpriteSet cleanSet, AvatarSpriteSet modularSet,
             SpriteRenderer torsoRenderer, SpriteRenderer leftRenderer, SpriteRenderer rightRenderer,
-            SpriteRenderer headRenderer, SpriteRenderer backHairRenderer,
-            SpriteRenderer frontHairRenderer, Transform headPivotTransform)
+            SpriteRenderer neckRenderer, SpriteRenderer headRenderer, SpriteRenderer backHairRenderer,
+            SpriteRenderer frontHairRenderer, Transform neckPivotTransform,
+            Transform headPivotTransform, Transform hairBackPivotTransform)
         {
             neck = source;
             clean = cleanSet;
@@ -100,10 +109,13 @@ namespace HeadbangHeroes.Presentation
             torso = torsoRenderer;
             armLeft = leftRenderer;
             armRight = rightRenderer;
+            neckSprite = neckRenderer;
             head = headRenderer;
             hairBack = backHairRenderer;
             hairFront = frontHairRenderer;
+            neckPivot = neckPivotTransform;
             headPivot = headPivotTransform;
+            hairBackPivot = hairBackPivotTransform;
             ApplyArtSet();
         }
 
@@ -118,8 +130,11 @@ namespace HeadbangHeroes.Presentation
         {
             headRoll = headPitch = 0f;
             rollVelocity = pitchVelocity = 0f;
+            backHairAngle = backHairVelocity = 0f;
             hairModel?.Reset();
             if (headPivot != null) headPivot.localRotation = Quaternion.identity;
+            if (neckPivot != null) neckPivot.localRotation = Quaternion.identity;
+            if (hairBackPivot != null) hairBackPivot.localRotation = Quaternion.identity;
             if (hairBack != null) hairBack.transform.localRotation = Quaternion.identity;
             if (hairFront != null) hairFront.transform.localRotation = Quaternion.identity;
         }
@@ -130,8 +145,11 @@ namespace HeadbangHeroes.Presentation
             {
                 headRoll = headPitch = 0f;
                 rollVelocity = pitchVelocity = 0f;
+                backHairAngle = backHairVelocity = 0f;
                 hairModel?.Reset();
                 if (headPivot != null) headPivot.localRotation = Quaternion.identity;
+                if (neckPivot != null) neckPivot.localRotation = Quaternion.identity;
+                if (hairBackPivot != null) hairBackPivot.localRotation = Quaternion.identity;
                 if (hairBack != null) hairBack.transform.localRotation = Quaternion.identity;
                 if (hairFront != null) hairFront.transform.localRotation = Quaternion.identity;
                 return;
@@ -157,6 +175,11 @@ namespace HeadbangHeroes.Presentation
             headRoll = StepAxis(headRoll, ref rollVelocity, targetRoll, dt);
             headPitch = StepAxis(headPitch, ref pitchVelocity, targetPitch, dt);
             if (headPivot != null) headPivot.localRotation = Quaternion.Euler(headPitch, 0f, headRoll);
+            if (neckPivot != null) neckPivot.localRotation = Quaternion.Euler(headPitch * neckFollow, 0f, headRoll * neckFollow);
+
+            var hairBackTarget = headRoll * hairBackFollow;
+            backHairAngle = StepAxis(backHairAngle, ref backHairVelocity, hairBackTarget, dt);
+            if (hairBackPivot != null) hairBackPivot.localRotation = Quaternion.Euler(0f, 0f, backHairAngle);
 
             if (hairModel == null) hairModel = new HairChainModel(HairMotionTier.For(hairTier));
             hairModel.Update(targetRoll, targetAngularVelocity, hairHype, dt);
@@ -184,10 +207,11 @@ namespace HeadbangHeroes.Presentation
         void ApplyHairAngles()
         {
             if (hairModel == null) return;
-            if (hairBack != null && hairModel.SegmentCount > 0)
+            if (hairBack != null)
             {
-                var absolute = hairModel.SegmentAngle(0);
-                hairBack.transform.localRotation = Quaternion.Euler(0f, 0f, absolute - headRoll);
+                // Hair_Back is attached to its own low-follow pivot. Keep its local rotation
+                // neutral so it cannot inherit the full HeadPivot rotation.
+                hairBack.transform.localRotation = Quaternion.identity;
             }
             if (hairFront != null && hairModel.SegmentCount > 1)
             {
@@ -202,6 +226,7 @@ namespace HeadbangHeroes.Presentation
             if (torso != null) torso.sprite = set.torso;
             if (armLeft != null) armLeft.sprite = set.armLeft;
             if (armRight != null) armRight.sprite = set.armRight;
+            if (neckSprite != null) neckSprite.sprite = set.neck;
             if (head != null) head.sprite = set.head;
             if (hairBack != null) hairBack.sprite = set.hairBack;
             if (hairFront != null) hairFront.sprite = set.hairFront;

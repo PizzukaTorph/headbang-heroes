@@ -52,7 +52,7 @@ namespace HeadbangHeroes.Editor
             }
         }
 
-        static readonly string[] Parts = { "Torso", "Arm_L", "Arm_R", "Head", "Hair_Back", "Hair_Front" };
+        static readonly string[] Parts = { "Torso", "Arm_L", "Arm_R", "Neck", "Head", "Hair_Back", "Hair_Front" };
 
         static GameObject BuildPrefab()
         {
@@ -62,15 +62,16 @@ namespace HeadbangHeroes.Editor
             var armLeft = Sprite(root, "Arm_L", "Arm_L", new Vector3(-2.05f, 0.55f, 0f), 1);
             var armRight = Sprite(root, "Arm_R", "Arm_R", new Vector3(2.05f, 0.55f, 0f), 1);
 
-            // Torso already contains the visible neck/collar. HeadPivot sits directly at its top.
-            // The torso artwork includes the upper neck and collar; this is the visual head/neck join.
-            var headPivot = Child(root.transform, "HeadPivot", new Vector3(0f, 1.55f, 0f));
-            var hairBack = Sprite(headPivot.gameObject, "Hair_Back", "Hair_Back", new Vector3(0f, 1.45f, 0f), 4);
-            var head = Sprite(headPivot.gameObject, "Head", "Head", new Vector3(0f, 1.9f, 0f), 5);
-            var hairFront = Sprite(headPivot.gameObject, "Hair_Front", "Hair_Front", new Vector3(0f, 1.35f, 0f), 7);
+            var hairBackPivot = Child(root.transform, "HairBackPivot", new Vector3(0f, 1.55f, 0f));
+            var hairBack = Sprite(hairBackPivot.gameObject, "Hair_Back", "Hair_Back", new Vector3(0f, 1.45f, 0f), 1);
+            var neckPivot = Child(root.transform, "NeckPivot", new Vector3(0f, 0.75f, 0f));
+            var neck = Sprite(neckPivot.gameObject, "Neck", "Neck", new Vector3(0f, 0f, 0f), 2);
+            var headPivot = Child(neckPivot, "HeadPivot", new Vector3(0f, 0.8f, 0f));
+            var head = Sprite(headPivot.gameObject, "Head", "Head", new Vector3(0f, 1.9f, 0f), 3);
+            var hairFront = Sprite(headPivot.gameObject, "Hair_Front", "Hair_Front", new Vector3(0f, 1.35f, 0f), 4);
 
             var controller = root.AddComponent<AvatarPuppetController>();
-            controller.Configure(null, LoadSet("clean"), LoadSet("modular"), torso, armLeft, armRight, head, hairBack, hairFront, headPivot);
+            controller.Configure(null, LoadSet("clean"), LoadSet("modular"), torso, armLeft, armRight, neck, head, hairBack, hairFront, neckPivot, headPivot, hairBackPivot);
             controller.SelectArtSet(AvatarArtSet.Clean);
 
             var prefab = PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
@@ -83,7 +84,7 @@ namespace HeadbangHeroes.Editor
             return new AvatarSpriteSet
             {
                 torso = Load(set, "Torso"), armLeft = Load(set, "Arm_L"), armRight = Load(set, "Arm_R"),
-                head = Load(set, "Head"),
+                neck = Load(set, "Neck"), head = Load(set, "Head"),
                 hairBack = Load(set, "Hair_Back"), hairFront = Load(set, "Hair_Front")
             };
         }
