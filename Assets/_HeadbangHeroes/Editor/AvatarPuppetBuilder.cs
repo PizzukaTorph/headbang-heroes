@@ -52,7 +52,7 @@ namespace HeadbangHeroes.Editor
             }
         }
 
-        static readonly string[] Parts = { "Torso", "Arm_L", "Arm_R", "Neck", "Head", "Hair_Back", "Hair_Front" };
+        static readonly string[] Parts = { "Torso", "Arm_L", "Arm_R", "Head", "Hair_Back", "Hair_Front" };
 
         static GameObject BuildPrefab()
         {
@@ -62,15 +62,14 @@ namespace HeadbangHeroes.Editor
             var armLeft = Sprite(root, "Arm_L", "Arm_L", new Vector3(-2.05f, 0.55f, 0f), 1);
             var armRight = Sprite(root, "Arm_R", "Arm_R", new Vector3(2.05f, 0.55f, 0f), 1);
 
-            var neckPivot = Child(root.transform, "NeckPivot", new Vector3(0f, 2.25f, 0f));
-            var neck = Sprite(neckPivot.gameObject, "Neck", "Neck", new Vector3(0f, 0f, 0f), 3);
-            var headPivot = Child(neckPivot, "HeadPivot", new Vector3(0f, 1.05f, 0f));
+            // Torso already contains the visible neck/collar. HeadPivot sits directly at its top.
+            var headPivot = Child(root.transform, "HeadPivot", new Vector3(0f, 2.35f, 0f));
             var hairBack = Sprite(headPivot.gameObject, "Hair_Back", "Hair_Back", new Vector3(0f, 1.45f, 0f), 4);
             var head = Sprite(headPivot.gameObject, "Head", "Head", new Vector3(0f, 1.9f, 0f), 5);
             var hairFront = Sprite(headPivot.gameObject, "Hair_Front", "Hair_Front", new Vector3(0f, 1.35f, 0f), 7);
 
             var controller = root.AddComponent<AvatarPuppetController>();
-            controller.Configure(null, LoadSet("clean"), LoadSet("modular"), torso, armLeft, armRight, neck, head, hairBack, hairFront, headPivot);
+            controller.Configure(null, LoadSet("clean"), LoadSet("modular"), torso, armLeft, armRight, head, hairBack, hairFront, headPivot);
             controller.SelectArtSet(AvatarArtSet.Clean);
 
             var prefab = PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
@@ -83,7 +82,7 @@ namespace HeadbangHeroes.Editor
             return new AvatarSpriteSet
             {
                 torso = Load(set, "Torso"), armLeft = Load(set, "Arm_L"), armRight = Load(set, "Arm_R"),
-                neck = Load(set, "Neck"), head = Load(set, "Head"),
+                head = Load(set, "Head"),
                 hairBack = Load(set, "Hair_Back"), hairFront = Load(set, "Hair_Front")
             };
         }

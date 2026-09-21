@@ -21,20 +21,22 @@ Avatar
 ├── Torso
 ├── Arm_L
 ├── Arm_R
-└── NeckPivot
-    ├── Neck
-    └── HeadPivot
-        ├── Hair_Back
-        ├── Head
-        └── Hair_Front
+└── HeadPivot
+    ├── Hair_Back
+    ├── Head
+    └── Hair_Front
 ```
 
-Only these seven sprites are active in the PoC: torso, both arms, neck, complete head, and the
-two hair layers. The `Head` artwork already contains the mouth, chin and beard; there is no jaw,
+Only these six sprites are active in the PoC: torso, both arms, complete head, and the two hair
+layers. The `Torso` artwork already contains the upper neck/collar, and the `Head` artwork
+contains the mouth, chin and beard; there is no separate neck, jaw,
 mouth, eye, eyebrow or accessory overlay. All visible parts use `SpriteRenderer`. The
 `HeadPivot` is positioned at the head/neck join, so the complete head and both hair layers rotate
 as one attached visual unit. Torso and arms are static presentation layers. The two hair layers
 receive a small delayed spring response relative to `HeadPivot`.
+
+`Rest Pose Debug` forces every local rotation to zero and disables animation, smoothing and hair
+lag so the base alignment can be inspected as one illustration before enabling movement.
 
 ## Runtime ownership
 

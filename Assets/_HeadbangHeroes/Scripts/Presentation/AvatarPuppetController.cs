@@ -16,7 +16,6 @@ namespace HeadbangHeroes.Presentation
         public Sprite torso;
         public Sprite armLeft;
         public Sprite armRight;
-        public Sprite neck;
         public Sprite head;
         public Sprite hairBack;
         public Sprite hairFront;
@@ -43,7 +42,6 @@ namespace HeadbangHeroes.Presentation
         [SerializeField] SpriteRenderer torso;
         [SerializeField] SpriteRenderer armLeft;
         [SerializeField] SpriteRenderer armRight;
-        [SerializeField] SpriteRenderer neckSprite;
         [SerializeField] SpriteRenderer head;
         [SerializeField] SpriteRenderer hairBack;
         [SerializeField] SpriteRenderer hairFront;
@@ -56,6 +54,7 @@ namespace HeadbangHeroes.Presentation
         [SerializeField, Min(0f)] float verticalFollow = 1f;
 
         [Header("Editor alignment test")]
+        [SerializeField] bool restPoseDebug;
         [SerializeField] bool debugRotationTest;
         [SerializeField, Min(0.5f)] float debugRotationPeriod = 4f;
         [SerializeField, Range(0f, 20f)] float debugRotationAmplitude = 20f;
@@ -92,7 +91,7 @@ namespace HeadbangHeroes.Presentation
 
         public void Configure(NeckMotionModel source, AvatarSpriteSet cleanSet, AvatarSpriteSet modularSet,
             SpriteRenderer torsoRenderer, SpriteRenderer leftRenderer, SpriteRenderer rightRenderer,
-            SpriteRenderer neckRenderer, SpriteRenderer headRenderer, SpriteRenderer backHairRenderer,
+            SpriteRenderer headRenderer, SpriteRenderer backHairRenderer,
             SpriteRenderer frontHairRenderer, Transform headPivotTransform)
         {
             neck = source;
@@ -101,7 +100,6 @@ namespace HeadbangHeroes.Presentation
             torso = torsoRenderer;
             armLeft = leftRenderer;
             armRight = rightRenderer;
-            neckSprite = neckRenderer;
             head = headRenderer;
             hairBack = backHairRenderer;
             hairFront = frontHairRenderer;
@@ -128,6 +126,17 @@ namespace HeadbangHeroes.Presentation
 
         void LateUpdate()
         {
+            if (restPoseDebug)
+            {
+                headRoll = headPitch = 0f;
+                rollVelocity = pitchVelocity = 0f;
+                hairModel?.Reset();
+                if (headPivot != null) headPivot.localRotation = Quaternion.identity;
+                if (hairBack != null) hairBack.transform.localRotation = Quaternion.identity;
+                if (hairFront != null) hairFront.transform.localRotation = Quaternion.identity;
+                return;
+            }
+
             if (!debugRotationTest && neck == null) neck = FindAnyObjectByType<NeckMotionModel>();
             if (!debugRotationTest && neck == null) return;
 
@@ -193,7 +202,6 @@ namespace HeadbangHeroes.Presentation
             if (torso != null) torso.sprite = set.torso;
             if (armLeft != null) armLeft.sprite = set.armLeft;
             if (armRight != null) armRight.sprite = set.armRight;
-            if (neckSprite != null) neckSprite.sprite = set.neck;
             if (head != null) head.sprite = set.head;
             if (hairBack != null) hairBack.sprite = set.hairBack;
             if (hairFront != null) hairFront.sprite = set.hairFront;
