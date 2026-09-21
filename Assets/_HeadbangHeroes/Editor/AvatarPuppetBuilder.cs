@@ -62,13 +62,13 @@ namespace HeadbangHeroes.Editor
             var armLeft = Sprite(root, "Arm_L", "Arm_L", new Vector3(-2.05f, 0.55f, 0f), 1);
             var armRight = Sprite(root, "Arm_R", "Arm_R", new Vector3(2.05f, 0.55f, 0f), 1);
 
-            var hairBackPivot = Child(root.transform, "HairBackPivot", new Vector3(0f, 1.55f, 0f));
+            var hairBackPivot = Child(root.transform, "HairBackPivot", new Vector3(0f, 2.7f, 0f));
             var hairBack = Sprite(hairBackPivot.gameObject, "Hair_Back", "Hair_Back", new Vector3(0f, 1.45f, 0f), 1);
-            var neckPivot = Child(root.transform, "NeckPivot", new Vector3(0f, 0.75f, 0f));
+            var neckPivot = Child(root.transform, "NeckPivot", new Vector3(0f, 2f, 0f));
             var neck = Sprite(neckPivot.gameObject, "Neck", "Neck", new Vector3(0f, 0f, 0f), 2);
-            var headPivot = Child(neckPivot, "HeadPivot", new Vector3(0f, 0.8f, 0f));
-            var head = Sprite(headPivot.gameObject, "Head", "Head", new Vector3(0f, 1.9f, 0f), 3);
-            var hairFront = Sprite(headPivot.gameObject, "Hair_Front", "Hair_Front", new Vector3(0f, 1.35f, 0f), 4);
+            var headPivot = Child(neckPivot, "HeadPivot", new Vector3(0f, 0.55f, 0f));
+            var head = Sprite(headPivot.gameObject, "Head", "Head", new Vector3(0f, 1.55f, 0f), 3);
+            var hairFront = Sprite(headPivot.gameObject, "Hair_Front", "Hair_Front", new Vector3(0f, 1f, 0f), 4);
 
             var controller = root.AddComponent<AvatarPuppetController>();
             controller.Configure(null, LoadSet("clean"), LoadSet("modular"), torso, armLeft, armRight, neck, head, hairBack, hairFront, neckPivot, headPivot, hairBackPivot);
