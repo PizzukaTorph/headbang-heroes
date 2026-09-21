@@ -63,7 +63,8 @@ namespace HeadbangHeroes.Editor
             var armRight = Sprite(root, "Arm_R", "Arm_R", new Vector3(2.05f, 0.55f, 0f), 1);
 
             // Torso already contains the visible neck/collar. HeadPivot sits directly at its top.
-            var headPivot = Child(root.transform, "HeadPivot", new Vector3(0f, 2.35f, 0f));
+            // The torso artwork includes the upper neck and collar; this is the visual head/neck join.
+            var headPivot = Child(root.transform, "HeadPivot", new Vector3(0f, 1.55f, 0f));
             var hairBack = Sprite(headPivot.gameObject, "Hair_Back", "Hair_Back", new Vector3(0f, 1.45f, 0f), 4);
             var head = Sprite(headPivot.gameObject, "Head", "Head", new Vector3(0f, 1.9f, 0f), 5);
             var hairFront = Sprite(headPivot.gameObject, "Hair_Front", "Hair_Front", new Vector3(0f, 1.35f, 0f), 7);
