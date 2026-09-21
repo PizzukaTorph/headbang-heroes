@@ -18,7 +18,6 @@ namespace HeadbangHeroes.Presentation
         public Sprite armRight;
         public Sprite neck;
         public Sprite head;
-        public Sprite jaw;
         public Sprite hairBack;
         public Sprite hairFront;
     }
@@ -46,15 +45,20 @@ namespace HeadbangHeroes.Presentation
         [SerializeField] SpriteRenderer armRight;
         [SerializeField] SpriteRenderer neckSprite;
         [SerializeField] SpriteRenderer head;
-        [SerializeField] SpriteRenderer jaw;
         [SerializeField] SpriteRenderer hairBack;
         [SerializeField] SpriteRenderer hairFront;
+        [SerializeField] Transform headPivot;
 
         [Header("Head presentation spring")]
         [SerializeField, Min(1f)] float headSpring = 140f;
         [SerializeField, Range(0.2f, 1.2f)] float headDamping = 0.62f;
         [SerializeField, Min(1f)] float visualMaxAngle = 42f;
         [SerializeField, Min(0f)] float verticalFollow = 1f;
+
+        [Header("Editor alignment test")]
+        [SerializeField] bool debugRotationTest;
+        [SerializeField, Min(0.5f)] float debugRotationPeriod = 4f;
+        [SerializeField, Range(0f, 20f)] float debugRotationAmplitude = 20f;
 
         [Header("Hair secondary motion")]
         [SerializeField] HairTier hairTier = HairTier.MediumLong;
@@ -88,8 +92,8 @@ namespace HeadbangHeroes.Presentation
 
         public void Configure(NeckMotionModel source, AvatarSpriteSet cleanSet, AvatarSpriteSet modularSet,
             SpriteRenderer torsoRenderer, SpriteRenderer leftRenderer, SpriteRenderer rightRenderer,
-            SpriteRenderer neckRenderer, SpriteRenderer headRenderer, SpriteRenderer jawRenderer,
-            SpriteRenderer backHairRenderer, SpriteRenderer frontHairRenderer)
+            SpriteRenderer neckRenderer, SpriteRenderer headRenderer, SpriteRenderer backHairRenderer,
+            SpriteRenderer frontHairRenderer, Transform headPivotTransform)
         {
             neck = source;
             clean = cleanSet;
@@ -99,9 +103,9 @@ namespace HeadbangHeroes.Presentation
             armRight = rightRenderer;
             neckSprite = neckRenderer;
             head = headRenderer;
-            jaw = jawRenderer;
             hairBack = backHairRenderer;
             hairFront = frontHairRenderer;
+            headPivot = headPivotTransform;
             ApplyArtSet();
         }
 
@@ -117,28 +121,36 @@ namespace HeadbangHeroes.Presentation
             headRoll = headPitch = 0f;
             rollVelocity = pitchVelocity = 0f;
             hairModel?.Reset();
-            if (head != null) head.transform.localRotation = Quaternion.identity;
+            if (headPivot != null) headPivot.localRotation = Quaternion.identity;
             if (hairBack != null) hairBack.transform.localRotation = Quaternion.identity;
             if (hairFront != null) hairFront.transform.localRotation = Quaternion.identity;
         }
 
         void LateUpdate()
         {
-            if (neck == null) neck = FindAnyObjectByType<NeckMotionModel>();
-            if (neck == null) return;
+            if (!debugRotationTest && neck == null) neck = FindAnyObjectByType<NeckMotionModel>();
+            if (!debugRotationTest && neck == null) return;
 
             var dt = Mathf.Clamp(Time.deltaTime, 0f, 0.1f);
             if (dt <= 0f) return;
 
+            var targetRoll = debugRotationTest
+                ? Mathf.Sin(Time.time * Mathf.PI * 2f / debugRotationPeriod) * debugRotationAmplitude
+                : neck.HorizontalAngle;
+            var targetPitch = debugRotationTest ? 0f : neck.VerticalAngle * verticalFollow;
+            var targetAngularVelocity = debugRotationTest
+                ? Mathf.Cos(Time.time * Mathf.PI * 2f / debugRotationPeriod) * debugRotationAmplitude * Mathf.PI * 2f / debugRotationPeriod
+                : neck.HorizontalVelocity;
+
             // NeckMotionModel owns the physical impulse, damping and hard limits. This spring is
             // deliberately downstream: it adds visual mass without creating a second gameplay
             // simulation or changing the authoritative angle.
-            headRoll = StepAxis(headRoll, ref rollVelocity, neck.HorizontalAngle, dt);
-            headPitch = StepAxis(headPitch, ref pitchVelocity, neck.VerticalAngle * verticalFollow, dt);
-            if (head != null) head.transform.localRotation = Quaternion.Euler(headPitch, 0f, headRoll);
+            headRoll = StepAxis(headRoll, ref rollVelocity, targetRoll, dt);
+            headPitch = StepAxis(headPitch, ref pitchVelocity, targetPitch, dt);
+            if (headPivot != null) headPivot.localRotation = Quaternion.Euler(headPitch, 0f, headRoll);
 
             if (hairModel == null) hairModel = new HairChainModel(HairMotionTier.For(hairTier));
-            hairModel.Update(neck.HorizontalAngle, neck.HorizontalVelocity, hairHype, dt);
+            hairModel.Update(targetRoll, targetAngularVelocity, hairHype, dt);
             ApplyHairAngles();
         }
 
@@ -163,17 +175,15 @@ namespace HeadbangHeroes.Presentation
         void ApplyHairAngles()
         {
             if (hairModel == null) return;
-            var parentAngle = headRoll;
             if (hairBack != null && hairModel.SegmentCount > 0)
             {
                 var absolute = hairModel.SegmentAngle(0);
-                hairBack.transform.localRotation = Quaternion.Euler(0f, 0f, absolute - parentAngle);
-                parentAngle = absolute;
+                hairBack.transform.localRotation = Quaternion.Euler(0f, 0f, absolute - headRoll);
             }
             if (hairFront != null && hairModel.SegmentCount > 1)
             {
                 var absolute = hairModel.SegmentAngle(1);
-                hairFront.transform.localRotation = Quaternion.Euler(0f, 0f, absolute - parentAngle);
+                hairFront.transform.localRotation = Quaternion.Euler(0f, 0f, absolute - headRoll);
             }
         }
 
@@ -185,7 +195,6 @@ namespace HeadbangHeroes.Presentation
             if (armRight != null) armRight.sprite = set.armRight;
             if (neckSprite != null) neckSprite.sprite = set.neck;
             if (head != null) head.sprite = set.head;
-            if (jaw != null) jaw.sprite = set.jaw;
             if (hairBack != null) hairBack.sprite = set.hairBack;
             if (hairFront != null) hairFront.sprite = set.hairFront;
         }

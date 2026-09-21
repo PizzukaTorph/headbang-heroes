@@ -1,5 +1,4 @@
 #if UNITY_EDITOR
-using System.Collections.Generic;
 using System.IO;
 using HeadbangHeroes.Gameplay;
 using HeadbangHeroes.Presentation;
@@ -53,26 +52,25 @@ namespace HeadbangHeroes.Editor
             }
         }
 
-        static readonly string[] Parts = { "Torso", "Arm_L", "Arm_R", "Neck", "Head", "Jaw", "Hair_Back", "Hair_Front" };
+        static readonly string[] Parts = { "Torso", "Arm_L", "Arm_R", "Neck", "Head", "Hair_Back", "Hair_Front" };
 
         static GameObject BuildPrefab()
         {
             Directory.CreateDirectory(Path.GetDirectoryName(PrefabPath));
             var root = new GameObject("Avatar");
-            var torso = Sprite(root, "Torso", "clean/Torso", Vector3.zero, 0);
-            var armLeft = Sprite(root, "Arm_L", "clean/Arm_L", new Vector3(-2.05f, 0.55f, 0f), 1);
-            var armRight = Sprite(root, "Arm_R", "clean/Arm_R", new Vector3(2.05f, 0.55f, 0f), 1);
+            var torso = Sprite(root, "Torso", "Torso", Vector3.zero, 0);
+            var armLeft = Sprite(root, "Arm_L", "Arm_L", new Vector3(-2.05f, 0.55f, 0f), 1);
+            var armRight = Sprite(root, "Arm_R", "Arm_R", new Vector3(2.05f, 0.55f, 0f), 1);
 
             var neckPivot = Child(root.transform, "NeckPivot", new Vector3(0f, 2.25f, 0f));
-            var neck = Sprite(neckPivot.gameObject, "Neck", "clean/Neck", Vector3.zero, 3);
-            var headPivot = Child(neckPivot, "HeadPivot", new Vector3(0f, 0.65f, 0f));
-            var hairBack = Sprite(headPivot.gameObject, "Hair_Back", "clean/Hair_Back", new Vector3(0f, 1.45f, 0f), 4);
-            var head = Sprite(headPivot.gameObject, "Head", "clean/Head", new Vector3(0f, 1.5f, 0f), 5);
-            var jaw = Sprite(headPivot.gameObject, "Jaw", "clean/Jaw", new Vector3(0f, 0.25f, 0f), 6);
-            var hairFront = Sprite(headPivot.gameObject, "Hair_Front", "clean/Hair_Front", new Vector3(0f, 1.35f, 0f), 7);
+            var neck = Sprite(neckPivot.gameObject, "Neck", "Neck", new Vector3(0f, 0f, 0f), 3);
+            var headPivot = Child(neckPivot, "HeadPivot", new Vector3(0f, 1.05f, 0f));
+            var hairBack = Sprite(headPivot.gameObject, "Hair_Back", "Hair_Back", new Vector3(0f, 1.45f, 0f), 4);
+            var head = Sprite(headPivot.gameObject, "Head", "Head", new Vector3(0f, 1.9f, 0f), 5);
+            var hairFront = Sprite(headPivot.gameObject, "Hair_Front", "Hair_Front", new Vector3(0f, 1.35f, 0f), 7);
 
             var controller = root.AddComponent<AvatarPuppetController>();
-            controller.Configure(null, LoadSet("clean"), LoadSet("modular"), torso, armLeft, armRight, neck, head, jaw, hairBack, hairFront);
+            controller.Configure(null, LoadSet("clean"), LoadSet("modular"), torso, armLeft, armRight, neck, head, hairBack, hairFront, headPivot);
             controller.SelectArtSet(AvatarArtSet.Clean);
 
             var prefab = PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
@@ -85,7 +83,7 @@ namespace HeadbangHeroes.Editor
             return new AvatarSpriteSet
             {
                 torso = Load(set, "Torso"), armLeft = Load(set, "Arm_L"), armRight = Load(set, "Arm_R"),
-                neck = Load(set, "Neck"), head = Load(set, "Head"), jaw = Load(set, "Jaw"),
+                neck = Load(set, "Neck"), head = Load(set, "Head"),
                 hairBack = Load(set, "Hair_Back"), hairFront = Load(set, "Hair_Front")
             };
         }

@@ -26,20 +26,25 @@ Avatar
     └── HeadPivot
         ├── Hair_Back
         ├── Head
-        ├── Jaw
         └── Hair_Front
 ```
 
-All visible parts use `SpriteRenderer`. The `HeadPivot` is positioned at the neck base, so the
-head, jaw and hair rotate as one attached visual unit. Torso and arms are static presentation
-layers. The two hair layers receive a small delayed spring response.
+Only these seven sprites are active in the PoC: torso, both arms, neck, complete head, and the
+two hair layers. The `Head` artwork already contains the mouth, chin and beard; there is no jaw,
+mouth, eye, eyebrow or accessory overlay. All visible parts use `SpriteRenderer`. The
+`HeadPivot` is positioned at the head/neck join, so the complete head and both hair layers rotate
+as one attached visual unit. Torso and arms are static presentation layers. The two hair layers
+receive a small delayed spring response relative to `HeadPivot`.
 
 ## Runtime ownership
 
 `AvatarPuppetController` is presentation-only. It reads `NeckMotionModel` and applies a visual
-head spring plus `HairChainModel`; it does not receive input, alter the authoritative neck state,
+head spring by rotating only `HeadPivot`, plus `HairChainModel`; it does not receive input, alter the authoritative neck state,
 or participate in audio, chart, timing, scoring or feedback resolution. The existing
 `NeckMotionModel` remains the owner of impulse, damping, limits and return-to-center.
+
+Enable `Debug Rotation Test` on `AvatarPuppetController` to slowly sweep `HeadPivot` from -20 to
+20 degrees. This is a presentation alignment check only and does not change gameplay state.
 
 Use `SelectArtSet(AvatarArtSet.Modular)` from a future presentation/loadout boundary when modular
 switching is needed. This is deliberately not exposed as customization yet.
