@@ -118,7 +118,7 @@ namespace HeadbangHeroes.Presentation
             // the gameplay screen frame: gameplay vertical drives the model's lateral roll and
             // gameplay horizontal drives its forward/back pitch. Keep this conversion in the
             // presentation adapter; NeckMotionModel remains in the canonical gameplay frame.
-            var target = Avatar3DMapping.Map(neck.VerticalAngle, neck.HorizontalAngle, mapping);
+            var target = Avatar3DMapping.Map(neck.VerticalAngle, -neck.HorizontalAngle, mapping);
             var blend = visualSmoothing <= 0f
                 ? 1f
                 : 1f - Mathf.Exp(-visualSmoothing * Mathf.Clamp(Time.deltaTime, 0f, 0.1f));
