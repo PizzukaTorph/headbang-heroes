@@ -2,6 +2,23 @@
 
 The first usable 2D avatar lives in `Assets/_HeadbangHeroes/Prefabs/Avatar/Avatar_Puppet.prefab`.
 
+## Approved visual reference — corrected P01 (2026-09-22)
+
+The current `Avatar_Puppet.prefab` and `Prototype_Headbang` scene pose are the user-approved
+corrected `P01` reference. Older P01/P02 iterations are historical; do not restore their transforms
+over this baseline. Preserve this composition when making subsequent targeted revisions.
+
+Reference state: clean set, source sprites at 100 PPU and local scale 1, scene avatar scale 0.62,
+centered face/torso, `HeadPivot` at y=2.0, and static arms at x=±1.85, y=-0.65 behind the torso.
+`Hair_Front`, `Hair_Back`, and the Neck renderer are disabled; the complete `Head` artwork is used
+as one face-and-hair unit. No source PNG artwork was changed for this pose.
+
+Known follow-up observation, not part of the baseline correction: a small flesh-colored arm edge
+is visible at the shirt flank. It comes from the separate arm sprite silhouette meeting the edge
+of `Torso`; diagnose/correct only the arm-to-torso join in a later revision. Keep this P01 state as
+the comparison reference and do not move the torso, head, or other avatar parts as part of that
+targeted fix.
+
 ## Source sets
 
 - `Assets/sprites/clean/` is the default PoC set: black T-shirt avatar.
@@ -21,33 +38,30 @@ Avatar
 ├── Torso
 ├── Arm_L
 ├── Arm_R
-├── HairBackPivot
-│   └── Hair_Back
-└── NeckPivot
-    ├── Neck
-    └── HeadPivot
-        ├── Head
-        └── Hair_Front
+├── NeckPivot
+│   └── Neck (static; renderer disabled in corrected P01)
+└── HeadPivot
+    └── Head
 ```
 
-Only these seven sprites are active in the PoC: torso, both arms, neck, complete head, and the
-two hair layers. The `Head` artwork contains the mouth, chin and beard; there is no jaw,
-mouth, eye, eyebrow or accessory overlay. All visible parts use `SpriteRenderer`. The
-`HeadPivot` is positioned at the head/neck join, so the complete head and both hair layers rotate
-as one attached visual unit. Torso and arms are static presentation layers. The two hair layers
-receive a small delayed spring response relative to `HeadPivot`.
+The clean `Head.png` is used as one complete face-and-hairstyle sprite. It already contains the
+full hair silhouette around the face, as well as the mouth, chin and beard. `Hair_Front` and
+`Hair_Back` remain disabled in the prefab and scene; no separate hair sprite is rendered or
+animated. This avoids using the back-view silhouette as a false rear-hair mass and prevents gaps
+or duplicate strands caused by independently aligned layers. There are no jaw, mouth, eye,
+eyebrow or accessory overlays. The complete `Head` sprite is the only animated visual element;
+torso, arms and neck remain static.
 
-`Rest Pose Debug` forces every local rotation to zero and disables animation, smoothing and hair
-lag so the base alignment can be inspected as one illustration before enabling movement. In
-normal motion, `HeadPivot` follows 100% of the visual head angle, `NeckPivot` follows 20%, and
-`HairBackPivot` follows 10%; `Hair_Back` never inherits the full head rotation. Sorting is
-explicit: Torso 0, Hair_Back 1, Neck 2, Head 3, Hair_Front 4.
+The `HeadPivot` is a direct child of `Avatar` and is positioned at y=2.0 in corrected P01. The
+static neck hierarchy does not inherit head rotation.
+`Rest Pose Debug` holds the complete head sprite at zero rotation. The debug rotation test sweeps
+that whole sprite together; there is deliberately no secondary hair motion in this PoC.
 
 ## Runtime ownership
 
 `AvatarPuppetController` is presentation-only. It reads `NeckMotionModel` and applies a visual
-head spring by rotating only `HeadPivot`, plus `HairChainModel`; it does not receive input, alter the authoritative neck state,
-or participate in audio, chart, timing, scoring or feedback resolution. The existing
+head spring by rotating only `HeadPivot`; it does not receive input, alter the authoritative neck
+state, or participate in audio, chart, timing, scoring or feedback resolution. The existing
 `NeckMotionModel` remains the owner of impulse, damping, limits and return-to-center.
 
 Enable `Debug Rotation Test` on `AvatarPuppetController` to slowly sweep `HeadPivot` from -20 to

@@ -18,15 +18,11 @@ namespace HeadbangHeroes.Presentation
         public Sprite armRight;
         public Sprite neck;
         public Sprite head;
-        public Sprite hairBack;
-        public Sprite hairFront;
     }
 
     /// <summary>
-    /// Presentation-only 2D avatar puppet. It reads the authoritative NeckMotionModel and never
-    /// accepts input or writes gameplay state. The neck model remains the source of impulse,
-    /// damping, limits and return-to-center; this component supplies visual spring lag and hair
-    /// secondary motion around the already simulated pose.
+    /// Presentation-only avatar. It reads NeckMotionModel and rotates the complete Head sprite
+    /// (including its full hairstyle) as one unit; it never changes gameplay state.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class AvatarPuppetController : MonoBehaviour
@@ -39,25 +35,21 @@ namespace HeadbangHeroes.Presentation
         [SerializeField] AvatarSpriteSet clean;
         [SerializeField] AvatarSpriteSet modular;
 
-        [Header("Sprite layers")]
+        [Header("Static body layers")]
         [SerializeField] SpriteRenderer torso;
         [SerializeField] SpriteRenderer armLeft;
         [SerializeField] SpriteRenderer armRight;
         [SerializeField] SpriteRenderer neckSprite;
+
+        [Header("Complete head and hair")]
         [SerializeField] SpriteRenderer head;
-        [SerializeField] SpriteRenderer hairBack;
-        [SerializeField] SpriteRenderer hairFront;
         [SerializeField] Transform headPivot;
-        [SerializeField] Transform neckPivot;
-        [SerializeField] Transform hairBackPivot;
 
         [Header("Head presentation spring")]
         [SerializeField, Min(1f)] float headSpring = 140f;
         [SerializeField, Range(0.2f, 1.2f)] float headDamping = 0.62f;
         [SerializeField, Min(1f)] float visualMaxAngle = 42f;
         [SerializeField, Min(0f)] float verticalFollow = 1f;
-        [SerializeField, Range(0.15f, 0.25f)] float neckFollow = 0.2f;
-        [SerializeField, Range(0.05f, 0.15f)] float hairBackFollow = 0.1f;
 
         [Header("Editor alignment test")]
         [SerializeField] bool restPoseDebug;
@@ -65,17 +57,10 @@ namespace HeadbangHeroes.Presentation
         [SerializeField, Min(0.5f)] float debugRotationPeriod = 4f;
         [SerializeField, Range(0f, 20f)] float debugRotationAmplitude = 20f;
 
-        [Header("Hair secondary motion")]
-        [SerializeField] HairTier hairTier = HairTier.MediumLong;
-        [SerializeField, Range(0f, 1f)] float hairHype = 0f;
-
         float headRoll;
         float headPitch;
         float rollVelocity;
         float pitchVelocity;
-        float backHairAngle;
-        float backHairVelocity;
-        HairChainModel hairModel;
 
         public AvatarArtSet CurrentArtSet => artSet;
         public float HeadAngle => headRoll;
@@ -85,23 +70,19 @@ namespace HeadbangHeroes.Presentation
         void Awake()
         {
             if (neck == null) neck = FindAnyObjectByType<NeckMotionModel>();
-            hairModel = new HairChainModel(HairMotionTier.For(hairTier));
             ApplyArtSet();
         }
 
         void OnValidate()
         {
             if (!Application.isPlaying) ApplyArtSet();
-            if (hairModel == null) hairModel = new HairChainModel(HairMotionTier.For(hairTier));
         }
 
         public void SetSource(NeckMotionModel value) => neck = value;
 
         public void Configure(NeckMotionModel source, AvatarSpriteSet cleanSet, AvatarSpriteSet modularSet,
             SpriteRenderer torsoRenderer, SpriteRenderer leftRenderer, SpriteRenderer rightRenderer,
-            SpriteRenderer neckRenderer, SpriteRenderer headRenderer, SpriteRenderer backHairRenderer,
-            SpriteRenderer frontHairRenderer, Transform neckPivotTransform,
-            Transform headPivotTransform, Transform hairBackPivotTransform)
+            SpriteRenderer neckRenderer, SpriteRenderer headRenderer, Transform headPivotTransform)
         {
             neck = source;
             clean = cleanSet;
@@ -111,15 +92,10 @@ namespace HeadbangHeroes.Presentation
             armRight = rightRenderer;
             neckSprite = neckRenderer;
             head = headRenderer;
-            hairBack = backHairRenderer;
-            hairFront = frontHairRenderer;
-            neckPivot = neckPivotTransform;
             headPivot = headPivotTransform;
-            hairBackPivot = hairBackPivotTransform;
             ApplyArtSet();
         }
 
-        /// <summary>Presentation-only set switch. Both sets remain serialized in the prefab.</summary>
         public void SelectArtSet(AvatarArtSet value)
         {
             artSet = value;
@@ -130,13 +106,7 @@ namespace HeadbangHeroes.Presentation
         {
             headRoll = headPitch = 0f;
             rollVelocity = pitchVelocity = 0f;
-            backHairAngle = backHairVelocity = 0f;
-            hairModel?.Reset();
             if (headPivot != null) headPivot.localRotation = Quaternion.identity;
-            if (neckPivot != null) neckPivot.localRotation = Quaternion.identity;
-            if (hairBackPivot != null) hairBackPivot.localRotation = Quaternion.identity;
-            if (hairBack != null) hairBack.transform.localRotation = Quaternion.identity;
-            if (hairFront != null) hairFront.transform.localRotation = Quaternion.identity;
         }
 
         void LateUpdate()
@@ -145,13 +115,7 @@ namespace HeadbangHeroes.Presentation
             {
                 headRoll = headPitch = 0f;
                 rollVelocity = pitchVelocity = 0f;
-                backHairAngle = backHairVelocity = 0f;
-                hairModel?.Reset();
                 if (headPivot != null) headPivot.localRotation = Quaternion.identity;
-                if (neckPivot != null) neckPivot.localRotation = Quaternion.identity;
-                if (hairBackPivot != null) hairBackPivot.localRotation = Quaternion.identity;
-                if (hairBack != null) hairBack.transform.localRotation = Quaternion.identity;
-                if (hairFront != null) hairFront.transform.localRotation = Quaternion.identity;
                 return;
             }
 
@@ -165,25 +129,11 @@ namespace HeadbangHeroes.Presentation
                 ? Mathf.Sin(Time.time * Mathf.PI * 2f / debugRotationPeriod) * debugRotationAmplitude
                 : neck.HorizontalAngle;
             var targetPitch = debugRotationTest ? 0f : neck.VerticalAngle * verticalFollow;
-            var targetAngularVelocity = debugRotationTest
-                ? Mathf.Cos(Time.time * Mathf.PI * 2f / debugRotationPeriod) * debugRotationAmplitude * Mathf.PI * 2f / debugRotationPeriod
-                : neck.HorizontalVelocity;
 
-            // NeckMotionModel owns the physical impulse, damping and hard limits. This spring is
-            // deliberately downstream: it adds visual mass without creating a second gameplay
-            // simulation or changing the authoritative angle.
+            // This visual spring is downstream of the authoritative neck simulation.
             headRoll = StepAxis(headRoll, ref rollVelocity, targetRoll, dt);
             headPitch = StepAxis(headPitch, ref pitchVelocity, targetPitch, dt);
             if (headPivot != null) headPivot.localRotation = Quaternion.Euler(headPitch, 0f, headRoll);
-            if (neckPivot != null) neckPivot.localRotation = Quaternion.Euler(headPitch * neckFollow, 0f, headRoll * neckFollow);
-
-            var hairBackTarget = headRoll * hairBackFollow;
-            backHairAngle = StepAxis(backHairAngle, ref backHairVelocity, hairBackTarget, dt);
-            if (hairBackPivot != null) hairBackPivot.localRotation = Quaternion.Euler(0f, 0f, backHairAngle);
-
-            if (hairModel == null) hairModel = new HairChainModel(HairMotionTier.For(hairTier));
-            hairModel.Update(targetRoll, targetAngularVelocity, hairHype, dt);
-            ApplyHairAngles();
         }
 
         float StepAxis(float current, ref float velocity, float target, float dt)
@@ -204,22 +154,6 @@ namespace HeadbangHeroes.Presentation
             return current;
         }
 
-        void ApplyHairAngles()
-        {
-            if (hairModel == null) return;
-            if (hairBack != null)
-            {
-                // Hair_Back is attached to its own low-follow pivot. Keep its local rotation
-                // neutral so it cannot inherit the full HeadPivot rotation.
-                hairBack.transform.localRotation = Quaternion.identity;
-            }
-            if (hairFront != null && hairModel.SegmentCount > 1)
-            {
-                var absolute = hairModel.SegmentAngle(1);
-                hairFront.transform.localRotation = Quaternion.Euler(0f, 0f, absolute - headRoll);
-            }
-        }
-
         void ApplyArtSet()
         {
             var set = artSet == AvatarArtSet.Modular ? modular : clean;
@@ -228,8 +162,6 @@ namespace HeadbangHeroes.Presentation
             if (armRight != null) armRight.sprite = set.armRight;
             if (neckSprite != null) neckSprite.sprite = set.neck;
             if (head != null) head.sprite = set.head;
-            if (hairBack != null) hairBack.sprite = set.hairBack;
-            if (hairFront != null) hairFront.sprite = set.hairFront;
         }
     }
 }
