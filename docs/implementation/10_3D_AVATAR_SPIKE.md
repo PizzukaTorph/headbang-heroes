@@ -21,39 +21,32 @@ velocity is used by timing, judgment, Motion Quality, chart resolution, or scori
 
 ## Generated prototype
 
-Run `Headbang Heroes > Avatar 3D > Build Placeholder Prefab + Scene` in the Unity Editor. The
-builder creates:
+Run `Headbang Heroes > Avatar 3D > Build Sidekick Host + Scene` in the Unity Editor. The builder
+discovers the first local Humanoid prefab below `Assets/Synty/SidekickCharacters/Characters`,
+instantiates it as a scene dependency, and creates:
 
 - `Assets/_HeadbangHeroes/Prefabs/Avatar/Avatar3D_Prototype.prefab`
 - `Assets/_HeadbangHeroes/Scenes/Prototype_Headbang_3D.unity`
-- inexpensive URP-compatible materials under `Assets/_HeadbangHeroes/Content/Art/Generated3D/`
-
 The builder copies the current gameplay scene, disables only the 2D avatar instance, and inserts
-the 3D prefab. `Prototype_Headbang.unity`, `Avatar_Puppet.prefab`, and the existing sprite art are
-not deleted or rewritten.
+the HH-owned host plus the local Sidekick prefab. No Synty mesh, texture, material or script is
+copied into `_HeadbangHeroes`; `Assets/Synty/` remains a local gitignored dependency.
+`Prototype_Headbang.unity`, `Avatar_Puppet.prefab`, and the existing sprite art are not deleted or
+rewritten.
 
 ## Hierarchy
 
 ```text
-Avatar3D
-└── Root
-    └── BodyRoot
-        └── Spine
-            └── Chest
-                ├── Neck
-                │   └── NeckMesh
-                ├── Head
-                │   ├── HeadMesh
-                │   └── HairCap
-                ├── Shoulder_L
-                │   └── Arm_L
-                └── Shoulder_R
-                    └── Arm_R
+HH_Avatar_3D                         (HH-owned host + Avatar3DPresenter)
+└── SidekickCharacter_LocalDependency (local Sidekick prefab instance)
+    └── Animator (Humanoid Avatar)
+        ├── ... Neck ...
+        ├── ... Head ...
+        └── ... Chest / UpperChest ...
 ```
 
-The mannequin uses Unity primitives with generated materials. Colliders are removed and no
-Rigidbody2D, Rigidbody, or Animator is added. `Neck` and `Head` are explicit independent bones for
-the presentation mapping.
+The presenter resolves `HumanBodyBones.Neck` and `HumanBodyBones.Head`, then prefers
+`HumanBodyBones.UpperChest` with `Chest` as fallback. It also retains explicit Transform slots as a
+fallback for future non-Humanoid prototypes. No Rigidbody or animation clip is required.
 
 ## Mapping
 
@@ -66,12 +59,15 @@ each gameplay axis to ±42 degrees and distributes it as:
 
 Horizontal gameplay angle maps to local Z rotation and vertical gameplay angle maps to local X
 rotation. `Avatar3DPresenter` applies the result in `LateUpdate`; its optional smoothing is visual
-only. It consumes the same `NeckMotionModel` instance used by the gameplay controller in the copied
-scene, so input, audio timing, charts, judgment, scoring, and Motion Quality remain unchanged.
+only. It captures each imported bone's rest local rotation and composes the visual rotation on top
+of it, so the Sidekick import orientation is preserved. It consumes the same `NeckMotionModel`
+instance used by the gameplay controller in the copied scene, so input, audio timing, charts,
+judgment, scoring, and Motion Quality remain unchanged. The Animator is not the headbang authority
+and no visual state is sent back to gameplay.
 
 ## Intentionally not implemented
 
-- no final character model, humanoid rig, or external asset/package;
+- no final character model decision or external package dependency;
 - no Unity Animator authority or animation state machine;
 - no final toon/cel shader or post-processing dependency;
 - no final hair physics or revival of the old 2D hair layers;

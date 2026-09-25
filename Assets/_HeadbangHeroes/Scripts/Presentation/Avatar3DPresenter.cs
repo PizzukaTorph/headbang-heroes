@@ -13,7 +13,12 @@ namespace HeadbangHeroes.Presentation
         [Header("Authoritative source (read-only)")]
         [SerializeField] NeckMotionModel neck;
 
-        [Header("3D bones")]
+        [Header("Character rig")]
+        [Tooltip("Optional Humanoid Animator on the character model. When assigned, Neck/Head/Chest are resolved with HumanBodyBones.")]
+        [SerializeField] Animator characterAnimator;
+        [SerializeField] bool preferHumanoidBones = true;
+
+        [Header("Resolved/fallback bones")]
         [SerializeField] Transform neckBone;
         [SerializeField] Transform headBone;
         [SerializeField] Transform chestBone;
@@ -30,6 +35,11 @@ namespace HeadbangHeroes.Presentation
         [SerializeField] bool restPoseDebug;
 
         Avatar3DPose currentPose;
+        Quaternion neckRestRotation = Quaternion.identity;
+        Quaternion headRestRotation = Quaternion.identity;
+        Quaternion chestRestRotation = Quaternion.identity;
+        bool restRotationsCaptured;
+        bool warnedAboutHumanoidRig;
 
         public Avatar3DMappingConfig Mapping => mapping.Sanitized();
         public Avatar3DPose CurrentPose => currentPose;
@@ -38,16 +48,53 @@ namespace HeadbangHeroes.Presentation
         {
             if (mapping.maxVisualAngle <= 0f) mapping = Avatar3DMappingConfig.Default;
             if (neck == null) neck = FindAnyObjectByType<NeckMotionModel>();
+            ResolveBones();
             ApplyPose(Avatar3DPose.Neutral);
         }
 
         void OnValidate()
         {
             mapping = mapping.Sanitized();
+            ResolveBones();
             if (!Application.isPlaying) ApplyPose(Avatar3DPose.Neutral);
         }
 
         public void SetSource(NeckMotionModel value) => neck = value;
+
+        /// <summary>
+        /// Assigns a character Animator without making the Animator or its clips authoritative.
+        /// The presenter reads only the Humanoid bone transforms and writes visual local rotations.
+        /// </summary>
+        public void SetAnimator(Animator value)
+        {
+            characterAnimator = value;
+            restRotationsCaptured = false;
+            ResolveBones();
+            ApplyPose(currentPose);
+        }
+
+        /// <summary>Resolves Humanoid bones, preferring UpperChest over Chest when available.</summary>
+        public void ResolveBones()
+        {
+            if (preferHumanoidBones && characterAnimator != null)
+            {
+                if (characterAnimator.isHuman)
+                {
+                    neckBone = characterAnimator.GetBoneTransform(HumanBodyBones.Neck) ?? neckBone;
+                    headBone = characterAnimator.GetBoneTransform(HumanBodyBones.Head) ?? headBone;
+                    chestBone = characterAnimator.GetBoneTransform(HumanBodyBones.UpperChest)
+                        ?? characterAnimator.GetBoneTransform(HumanBodyBones.Chest)
+                        ?? chestBone;
+                }
+                else if (!warnedAboutHumanoidRig)
+                {
+                    Debug.LogWarning($"{name}: assigned Animator is not Humanoid; using explicit bone fallbacks.", this);
+                    warnedAboutHumanoidRig = true;
+                }
+            }
+
+            CaptureRestRotations();
+        }
 
         public void ResetPresentation()
         {
@@ -88,9 +135,19 @@ namespace HeadbangHeroes.Presentation
 
         void ApplyPose(Avatar3DPose pose)
         {
-            if (neckBone != null) neckBone.localRotation = Quaternion.Euler(pose.neckPitch, 0f, pose.neckRoll);
-            if (headBone != null) headBone.localRotation = Quaternion.Euler(pose.headPitch, 0f, pose.headRoll);
-            if (chestBone != null) chestBone.localRotation = Quaternion.Euler(pose.chestPitch, 0f, pose.chestRoll);
+            if (neckBone != null) neckBone.localRotation = neckRestRotation * Quaternion.Euler(pose.neckPitch, 0f, pose.neckRoll);
+            if (headBone != null) headBone.localRotation = headRestRotation * Quaternion.Euler(pose.headPitch, 0f, pose.headRoll);
+            if (chestBone != null) chestBone.localRotation = chestRestRotation * Quaternion.Euler(pose.chestPitch, 0f, pose.chestRoll);
+        }
+
+        void CaptureRestRotations()
+        {
+            if (restRotationsCaptured) return;
+
+            if (neckBone != null) neckRestRotation = neckBone.localRotation;
+            if (headBone != null) headRestRotation = headBone.localRotation;
+            if (chestBone != null) chestRestRotation = chestBone.localRotation;
+            restRotationsCaptured = neckBone != null || headBone != null || chestBone != null;
         }
     }
 }
