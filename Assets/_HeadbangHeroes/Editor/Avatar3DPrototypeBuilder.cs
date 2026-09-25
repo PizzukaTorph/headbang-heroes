@@ -82,7 +82,7 @@ namespace HeadbangHeroes.Editor
             if (camera != null)
             {
                 camera.orthographic = true;
-                camera.orthographicSize = 2.8f;
+                camera.orthographicSize = 2.1f;
                 camera.transform.position = new Vector3(0f, 0f, -10f);
                 camera.transform.rotation = Quaternion.identity;
             }

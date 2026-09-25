@@ -19,7 +19,7 @@ namespace HeadbangHeroes.Input
     public sealed class HeadbangInput : MonoBehaviour
     {
         [SerializeField] AudioClock clock;
-        [Tooltip("WASD keyboard bangs (A=Left, D=Right, W=Up, S=Down) alongside mouse/touch, for desktop playtesting.")]
+        [Tooltip("WASD or arrow-key bangs alongside mouse/touch, for desktop playtesting.")]
         [SerializeField] bool enableKeyboard = true;
 
         /// <summary>Emitted with the direction and the input's authoritative song-time.</summary>
@@ -71,10 +71,14 @@ namespace HeadbangHeroes.Input
             if (kb == null) return;
 
             // A/D = horizontal inversion, W/S = vertical. Same semantics as the tap wedges.
-            if (kb.aKey.wasPressedThisFrame) EmitDirection(BangDirection.Left, SourceKeyboard, NoPos);
-            if (kb.dKey.wasPressedThisFrame) EmitDirection(BangDirection.Right, SourceKeyboard, NoPos);
-            if (kb.wKey.wasPressedThisFrame) EmitDirection(BangDirection.Up, SourceKeyboard, NoPos);
-            if (kb.sKey.wasPressedThisFrame) EmitDirection(BangDirection.Down, SourceKeyboard, NoPos);
+            if (kb.aKey.wasPressedThisFrame || kb.leftArrowKey.wasPressedThisFrame)
+                EmitDirection(BangDirection.Left, SourceKeyboard, NoPos);
+            if (kb.dKey.wasPressedThisFrame || kb.rightArrowKey.wasPressedThisFrame)
+                EmitDirection(BangDirection.Right, SourceKeyboard, NoPos);
+            if (kb.wKey.wasPressedThisFrame || kb.upArrowKey.wasPressedThisFrame)
+                EmitDirection(BangDirection.Up, SourceKeyboard, NoPos);
+            if (kb.sKey.wasPressedThisFrame || kb.downArrowKey.wasPressedThisFrame)
+                EmitDirection(BangDirection.Down, SourceKeyboard, NoPos);
         }
 #endif
 
