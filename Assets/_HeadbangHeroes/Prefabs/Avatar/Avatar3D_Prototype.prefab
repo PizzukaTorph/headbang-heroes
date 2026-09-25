@@ -73,8 +73,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: HeadbangHeroes.Runtime::HeadbangHeroes.Presentation.Avatar3DHairMotion
   hairRoot: {fileID: 0}
   dynamicJoints: []
-  lag: 0.9
-  springStiffness: 18
-  springDamping: 4
-  whipGain: 1.6
-  maxSecondaryAngle: 48
+  lag: 0.95
+  springStiffness: 12
+  springDamping: 2
+  whipGain: 2.4
+  maxSecondaryAngle: 70

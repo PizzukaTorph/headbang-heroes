@@ -16,11 +16,11 @@ namespace HeadbangHeroes.Presentation
         [SerializeField] Transform[] dynamicJoints = new Transform[0];
 
         [Header("Presentation-only tuning")]
-        [SerializeField, Range(0f, 1f)] float lag = 0.9f;
-        [SerializeField, Min(0f)] float springStiffness = 18f;
-        [SerializeField, Min(0f)] float springDamping = 4f;
-        [SerializeField, Range(0.5f, 2f)] float whipGain = 1.6f;
-        [SerializeField, Min(0f)] float maxSecondaryAngle = 48f;
+        [SerializeField, Range(0f, 1f)] float lag = 0.95f;
+        [SerializeField, Min(0f)] float springStiffness = 12f;
+        [SerializeField, Min(0f)] float springDamping = 2f;
+        [SerializeField, Range(0.5f, 3f)] float whipGain = 2.4f;
+        [SerializeField, Min(0f)] float maxSecondaryAngle = 70f;
 
         Quaternion[] restRotations = new Quaternion[0];
         float[] pitchAngles = new float[0];
@@ -118,7 +118,7 @@ namespace HeadbangHeroes.Presentation
             lag = Mathf.Clamp01(lag);
             springStiffness = Mathf.Max(0f, springStiffness);
             springDamping = Mathf.Max(0f, springDamping);
-            whipGain = Mathf.Clamp(whipGain, 0.5f, 2f);
+            whipGain = Mathf.Clamp(whipGain, 0.5f, 3f);
             maxSecondaryAngle = Mathf.Max(0f, maxSecondaryAngle);
             if (!Application.isPlaying)
             {
