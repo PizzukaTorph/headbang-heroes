@@ -34,12 +34,14 @@ namespace HeadbangHeroes.Editor
         {
             var root = new GameObject("Avatar3D");
             var presenter = root.AddComponent<Avatar3DPresenter>();
+            var hairMotion = root.AddComponent<Avatar3DHairMotion>();
             var serialized = new SerializedObject(presenter);
             var mapping = serialized.FindProperty("mapping");
             mapping.FindPropertyRelative("neckShare").floatValue = 0.35f;
             mapping.FindPropertyRelative("headShare").floatValue = 0.65f;
             mapping.FindPropertyRelative("chestCompensation").floatValue = 0.08f;
             mapping.FindPropertyRelative("maxVisualAngle").floatValue = 42f;
+            serialized.FindProperty("hairMotion").objectReferenceValue = hairMotion;
             serialized.ApplyModifiedPropertiesWithoutUndo();
 
             var prefab = PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
@@ -77,12 +79,15 @@ namespace HeadbangHeroes.Editor
             if (animator == null || !animator.isHuman)
                 throw new System.InvalidOperationException($"Selected Sidekick prefab has no Humanoid Animator: {AssetDatabase.GetAssetPath(sidekickPrefab)}");
             presenter.SetAnimator(animator);
+            var hairMotion = avatar.GetComponent<Avatar3DHairMotion>();
+            hairMotion.Configure(character.transform);
+            presenter.SetHairMotion(hairMotion);
 
             var camera = Camera.main;
             if (camera != null)
             {
                 camera.orthographic = true;
-                camera.orthographicSize = 2.1f;
+                camera.orthographicSize = 1.65f;
                 camera.transform.position = new Vector3(0f, 0f, -10f);
                 camera.transform.rotation = Quaternion.identity;
             }
@@ -123,6 +128,9 @@ namespace HeadbangHeroes.Editor
                 string.Compare(AssetDatabase.GUIDToAssetPath(left), AssetDatabase.GUIDToAssetPath(right),
                     System.StringComparison.Ordinal));
 
+            GameObject bestPrefab = null;
+            var bestHairJointCount = -1;
+            var bestPath = string.Empty;
             foreach (var guid in guids)
             {
                 var path = AssetDatabase.GUIDToAssetPath(guid);
@@ -130,9 +138,23 @@ namespace HeadbangHeroes.Editor
                 var animator = prefab == null ? null : prefab.GetComponentInChildren<Animator>(true);
                 if (animator != null && animator.avatar != null)
                 {
-                    Debug.Log($"Using local Humanoid avatar dependency: {path}");
-                    return prefab;
+                    var hairJointCount = 0;
+                    foreach (var joint in prefab.GetComponentsInChildren<Transform>(true))
+                        if (joint.name.StartsWith("hair_dyn_", System.StringComparison.OrdinalIgnoreCase)) hairJointCount++;
+                    if (hairJointCount > bestHairJointCount ||
+                        hairJointCount == bestHairJointCount && string.Compare(path, bestPath, System.StringComparison.Ordinal) < 0)
+                    {
+                        bestPrefab = prefab;
+                        bestHairJointCount = hairJointCount;
+                        bestPath = path;
+                    }
                 }
+            }
+
+            if (bestPrefab != null)
+            {
+                Debug.Log($"Using local Humanoid avatar dependency: {bestPath} ({bestHairJointCount} hair_dyn joints)");
+                return bestPrefab;
             }
 
             throw new System.InvalidOperationException(

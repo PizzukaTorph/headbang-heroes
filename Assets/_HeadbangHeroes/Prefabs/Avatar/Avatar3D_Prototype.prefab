@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6172926519896319656}
   - component: {fileID: 2764252720950837116}
+  - component: {fileID: 6935217476974942670}
   m_Layer: 0
   m_Name: Avatar3D_Prototype
   m_TagString: Untagged
@@ -50,6 +51,7 @@ MonoBehaviour:
   neckBone: {fileID: 0}
   headBone: {fileID: 0}
   chestBone: {fileID: 0}
+  hairMotion: {fileID: 6935217476974942670}
   mapping:
     neckShare: 0.35
     headShare: 0.65
@@ -57,3 +59,22 @@ MonoBehaviour:
     maxVisualAngle: 42
   visualSmoothing: 18
   restPoseDebug: 0
+--- !u!114 &6935217476974942670
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4600532001541413656}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 83bb25640db714af6aa0ec2486352d6b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: HeadbangHeroes.Runtime::HeadbangHeroes.Presentation.Avatar3DHairMotion
+  hairRoot: {fileID: 0}
+  dynamicJoints: []
+  lag: 0.7
+  springStiffness: 22
+  springDamping: 7
+  whipGain: 1.25
+  maxSecondaryAngle: 32

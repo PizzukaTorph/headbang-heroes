@@ -22,6 +22,7 @@ namespace HeadbangHeroes.Presentation
         [SerializeField] Transform neckBone;
         [SerializeField] Transform headBone;
         [SerializeField] Transform chestBone;
+        [SerializeField] Avatar3DHairMotion hairMotion;
 
         [Header("Presentation mapping")]
         [SerializeField] Avatar3DMappingConfig mapping = new Avatar3DMappingConfig
@@ -49,7 +50,9 @@ namespace HeadbangHeroes.Presentation
             if (mapping.maxVisualAngle <= 0f) mapping = Avatar3DMappingConfig.Default;
             if (neck == null) neck = FindAnyObjectByType<NeckMotionModel>();
             ResolveBones();
+            hairMotion?.Configure(characterAnimator == null ? transform : characterAnimator.transform);
             ApplyPose(Avatar3DPose.Neutral);
+            hairMotion?.ResetMotion();
         }
 
         void OnValidate()
@@ -71,6 +74,13 @@ namespace HeadbangHeroes.Presentation
             restRotationsCaptured = false;
             ResolveBones();
             ApplyPose(currentPose);
+            hairMotion?.Apply(currentPose, 0f);
+        }
+
+        public void SetHairMotion(Avatar3DHairMotion value)
+        {
+            hairMotion = value;
+            hairMotion?.Configure(characterAnimator == null ? transform : characterAnimator.transform);
         }
 
         /// <summary>Resolves Humanoid bones, preferring UpperChest over Chest when available.</summary>
@@ -100,6 +110,7 @@ namespace HeadbangHeroes.Presentation
         {
             currentPose = Avatar3DPose.Neutral;
             ApplyPose(currentPose);
+            hairMotion?.ResetMotion();
         }
 
         void LateUpdate()
@@ -108,6 +119,7 @@ namespace HeadbangHeroes.Presentation
             {
                 currentPose = Avatar3DPose.Neutral;
                 ApplyPose(currentPose);
+                hairMotion?.ResetMotion();
                 return;
             }
 
@@ -124,6 +136,7 @@ namespace HeadbangHeroes.Presentation
                 : 1f - Mathf.Exp(-visualSmoothing * Mathf.Clamp(Time.deltaTime, 0f, 0.1f));
             currentPose = Blend(currentPose, target, blend);
             ApplyPose(currentPose);
+            hairMotion?.Apply(currentPose, Time.deltaTime);
         }
 
         static Avatar3DPose Blend(Avatar3DPose from, Avatar3DPose to, float amount)
