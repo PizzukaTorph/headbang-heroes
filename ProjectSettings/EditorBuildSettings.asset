@@ -8,5 +8,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/_HeadbangHeroes/Scenes/Prototype_Headbang.unity
     guid: e281fd9c8e5e14b6fb5ea0eee7aee389
+  - enabled: 1
+    path: Assets/_HeadbangHeroes/Scenes/Prototype_Headbang_3D.unity
+    guid: a346aa0c5d603487abec9192dc842350
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
