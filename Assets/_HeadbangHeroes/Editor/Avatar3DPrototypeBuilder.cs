@@ -66,7 +66,8 @@ namespace HeadbangHeroes.Editor
             character.name = "SidekickCharacter_LocalDependency";
             character.transform.SetParent(avatar.transform, false);
             character.transform.localPosition = Vector3.zero;
-            character.transform.localRotation = Quaternion.identity;
+            // Sidekick Humanoid models face +Z; the fixed HH camera looks from -Z.
+            character.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
             character.transform.localScale = Vector3.one;
 
             var source = FindSourceNeck();
@@ -81,7 +82,7 @@ namespace HeadbangHeroes.Editor
             if (camera != null)
             {
                 camera.orthographic = true;
-                camera.orthographicSize = 5f;
+                camera.orthographicSize = 2.8f;
                 camera.transform.position = new Vector3(0f, 0f, -10f);
                 camera.transform.rotation = Quaternion.identity;
             }
