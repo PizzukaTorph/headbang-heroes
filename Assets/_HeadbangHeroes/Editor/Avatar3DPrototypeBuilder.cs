@@ -122,8 +122,8 @@ namespace HeadbangHeroes.Editor
 
         static GameObject FindHumanoidCharacterPrefab()
         {
-            const string searchRoot = "Assets/Synty/SidekickCharacters/Characters";
-            const string preferredLongHairPrefab = "HumanSpecies_01.prefab";
+            const string searchRoot = "Assets/Synty/SidekickCharacters";
+            const string preferredLongHairPrefab = "SK_FacialDemoCharacter.prefab";
             var guids = AssetDatabase.FindAssets("t:Prefab", new[] { searchRoot });
             System.Array.Sort(guids, (left, right) =>
                 string.Compare(AssetDatabase.GUIDToAssetPath(left), AssetDatabase.GUIDToAssetPath(right),
