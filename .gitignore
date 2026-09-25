@@ -12,6 +12,10 @@ Recordings/
 # Asset Store / local licensed content
 Assets/AssetStoreTools*
 Assets/ThirdPartyLicensedLocal/
+Assets/Synty/
+Assets/Synty.meta
+Assets/SyntyPackageHelper/
+Assets/SyntyPackageHelper.meta
 Assets/_HeadbangHeroes/Content/Lab/LocalAudio/
 Assets/_HeadbangHeroes/Content/Lab/LocalSource/
 # Licensed audio placed directly in Content/Lab (either location is accepted by the builder)
