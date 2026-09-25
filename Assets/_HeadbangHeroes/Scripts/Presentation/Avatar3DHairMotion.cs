@@ -16,11 +16,11 @@ namespace HeadbangHeroes.Presentation
         [SerializeField] Transform[] dynamicJoints = new Transform[0];
 
         [Header("Presentation-only tuning")]
-        [SerializeField, Range(0f, 1f)] float lag = 0.7f;
-        [SerializeField, Min(0f)] float springStiffness = 22f;
-        [SerializeField, Min(0f)] float springDamping = 7f;
-        [SerializeField, Range(0.5f, 2f)] float whipGain = 1.25f;
-        [SerializeField, Min(0f)] float maxSecondaryAngle = 32f;
+        [SerializeField, Range(0f, 1f)] float lag = 0.9f;
+        [SerializeField, Min(0f)] float springStiffness = 18f;
+        [SerializeField, Min(0f)] float springDamping = 4f;
+        [SerializeField, Range(0.5f, 2f)] float whipGain = 1.6f;
+        [SerializeField, Min(0f)] float maxSecondaryAngle = 48f;
 
         Quaternion[] restRotations = new Quaternion[0];
         float[] pitchAngles = new float[0];

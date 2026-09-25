@@ -22,8 +22,8 @@ velocity is used by timing, judgment, Motion Quality, chart resolution, or scori
 ## Generated prototype
 
 Run `Headbang Heroes > Avatar 3D > Build Sidekick Host + Scene` in the Unity Editor. The builder
-discovers the local Humanoid prefab below `Assets/Synty/SidekickCharacters/Characters` with the
-most existing `hair_dyn_*` joints,
+discovers the local `HumanSpecies_01` Humanoid prefab as the long-hair test case below
+`Assets/Synty/SidekickCharacters/Characters`,
 instantiates it as a scene dependency, and creates:
 
 - `Assets/_HeadbangHeroes/Prefabs/Avatar/Avatar3D_Prototype.prefab`
@@ -73,8 +73,8 @@ ship a runtime dynamic-joint component or hair-physics API. Its runtime `hair_dy
 ordinary imported `Transform` joints. The guide points to optional external solutions such as
 UniVRM SpringBone; no such package is added here.
 
-The builder currently selects the local `HumanSpecies_04` long-hair variant because it exposes the
-largest set of those existing joints. The exact asset remains a local Synty dependency. The
+The builder currently selects the local `HumanSpecies_01` long-hair variant for the visible test
+case. The exact asset remains a local Synty dependency. The
 HH-owned `Avatar3DHairMotion` adapter discovers those names and applies a small under-damped,
 inverse spring to the imported rest rotations after the presenter has applied the head pose. The
 default response is intentionally readable: lag, direction inversion, whip, overshoot, and settle.

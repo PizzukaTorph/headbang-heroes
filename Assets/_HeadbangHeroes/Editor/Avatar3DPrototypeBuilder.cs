@@ -123,6 +123,7 @@ namespace HeadbangHeroes.Editor
         static GameObject FindHumanoidCharacterPrefab()
         {
             const string searchRoot = "Assets/Synty/SidekickCharacters/Characters";
+            const string preferredLongHairPrefab = "HumanSpecies_01.prefab";
             var guids = AssetDatabase.FindAssets("t:Prefab", new[] { searchRoot });
             System.Array.Sort(guids, (left, right) =>
                 string.Compare(AssetDatabase.GUIDToAssetPath(left), AssetDatabase.GUIDToAssetPath(right),
@@ -131,6 +132,7 @@ namespace HeadbangHeroes.Editor
             GameObject bestPrefab = null;
             var bestHairJointCount = -1;
             var bestPath = string.Empty;
+            var bestIsPreferredLongHair = false;
             foreach (var guid in guids)
             {
                 var path = AssetDatabase.GUIDToAssetPath(guid);
@@ -141,12 +143,16 @@ namespace HeadbangHeroes.Editor
                     var hairJointCount = 0;
                     foreach (var joint in prefab.GetComponentsInChildren<Transform>(true))
                         if (joint.name.StartsWith("hair_dyn_", System.StringComparison.OrdinalIgnoreCase)) hairJointCount++;
-                    if (hairJointCount > bestHairJointCount ||
-                        hairJointCount == bestHairJointCount && string.Compare(path, bestPath, System.StringComparison.Ordinal) < 0)
+                    var isPreferredLongHair = path.EndsWith(preferredLongHairPrefab, System.StringComparison.OrdinalIgnoreCase);
+                    if (isPreferredLongHair && !bestIsPreferredLongHair ||
+                        isPreferredLongHair == bestIsPreferredLongHair &&
+                        (hairJointCount > bestHairJointCount ||
+                         hairJointCount == bestHairJointCount && string.Compare(path, bestPath, System.StringComparison.Ordinal) < 0))
                     {
                         bestPrefab = prefab;
                         bestHairJointCount = hairJointCount;
                         bestPath = path;
+                        bestIsPreferredLongHair = isPreferredLongHair;
                     }
                 }
             }
