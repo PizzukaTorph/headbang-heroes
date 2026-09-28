@@ -213,6 +213,32 @@ charts, timing, scoring, or the existing 2D/3D avatar paths. Current limitations
 proves a looping Headbang clip, has no Idle/Horns states, and is not yet synchronized with gameplay.
 The next step is to connect this FLP renderer to the real gameplay flow and the Beyond the Pain test.
 
+## Real gameplay integration POC
+
+The FLP presentation is also wired into the real Beyond the Pain prototype scene:
+
+- Scene: `Assets/_HeadbangHeroes/Scenes/Prototype_Headbang.unity`
+- Gameplay instance: `HH_Avatar_FLP`
+- Runtime presenter: `Assets/_HeadbangHeroes/Scripts/Presentation/FlpAvatarPresenter.cs`
+- Source prefab: `Assets/_HeadbangHeroes/Prefabs/FLP/Erik_FLPPoc.prefab`
+
+The old `HH_Avatar_Puppet` remains in the scene and is disabled as a reversible presentation
+toggle; its prefab and assets are not deleted. `HH_Avatar_FLP` disables the looping Animator and
+uses the presenter to show `headbang_00` as neutral, then play `headbang_00` through `headbang_15`
+once at 12 FPS. A new `HeadbangInput.Bang` restarts the sequence, so rapid inputs remain responsive.
+
+The trigger is the existing semantic input event, after input has already been converted to the
+authoritative song-time domain. The presenter does not judge the input and does not observe or alter
+chart resolution, `AudioClock`, `NeckMotionModel`, Motion Quality, scoring, or feedback. The current
+prototype does not expose a separate successful-player presentation event; observing `Bang` keeps
+physical neck input and presentation reactive while preserving the gameplay ownership boundary.
+
+Known limitations: the frames are intentionally rough/generated POC art, frame-to-frame consistency
+is not production quality, and this integration validates motion/readability rather than final art.
+The next experiment is to evaluate the same presenter at gameplay scale during Beyond the Pain,
+then consider Idle, Horns, technique variants, and reaction clips without building a customization
+framework yet.
+
 ---
 
 ## Hard production requirement

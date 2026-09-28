@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 6864570686548829760}
   - component: {fileID: 7972698057006914404}
   - component: {fileID: 292461188250340929}
+  - component: {fileID: 293461188250340929}
   m_Layer: 0
   m_Name: Erik_FLPPoc
   m_TagString: Untagged
@@ -115,3 +116,36 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &293461188250340929
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1433507023263662067}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a15c6ab3c5c4e3fa1c0bb3be3adf1b2, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: HeadbangHeroes.Runtime::HeadbangHeroes.Presentation.FlpAvatarPresenter
+  target: {fileID: 7972698057006914404}
+  headbangFrames:
+  - {fileID: 21300000, guid: 5d9dfc9aef50a478789984b5b240a4ef, type: 3}
+  - {fileID: 21300000, guid: 86db5fc3b1e4c4aedb912feca420bab1, type: 3}
+  - {fileID: 21300000, guid: 412ccfda8b3d54da587dbba4f0f01a16, type: 3}
+  - {fileID: 21300000, guid: e5d7e2006ee934d8fa5f7268810e812d, type: 3}
+  - {fileID: 21300000, guid: 71e0de435a2de48d6b939ece475dee66, type: 3}
+  - {fileID: 21300000, guid: eb6804512d2eb47a597ef31b7017701d, type: 3}
+  - {fileID: 21300000, guid: 28fabd8a3810a49fa9d3b9cea58df51c, type: 3}
+  - {fileID: 21300000, guid: 742ce4ded895846b0937fe5a6c79a5d1, type: 3}
+  - {fileID: 21300000, guid: a4beed0ea384c48c3bc10242f52f7ae4, type: 3}
+  - {fileID: 21300000, guid: 4b04c49e1c97e4ad7a86316316238d98, type: 3}
+  - {fileID: 21300000, guid: 9b1d77523a9e841948a08caa6a205dcc, type: 3}
+  - {fileID: 21300000, guid: 86dd3c6207b224cb79e2152b1540b6f8, type: 3}
+  - {fileID: 21300000, guid: 949fc4319ea2f4934b6c4a6bf51611bf, type: 3}
+  - {fileID: 21300000, guid: f939b50c345374abf8670f2991619519, type: 3}
+  - {fileID: 21300000, guid: 4109479657321434b9d8c0a11ce9dabb, type: 3}
+  - {fileID: 21300000, guid: d77ea44de76fd41199c64e27277b0ae7, type: 3}
+  frameRate: 12
+  input: {fileID: 0}
+  listenToInput: 1

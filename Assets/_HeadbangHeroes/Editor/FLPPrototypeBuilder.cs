@@ -5,6 +5,8 @@ using UnityEditor.Animations;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using HeadbangHeroes.Input;
+using HeadbangHeroes.Presentation;
 
 namespace HeadbangHeroes.Editor
 {
@@ -21,6 +23,8 @@ namespace HeadbangHeroes.Editor
         const string ControllerPath = AnimationRoot + "/Erik_Headbang_POC.controller";
         const string PrefabPath = PrefabRoot + "/Erik_FLPPoc.prefab";
         const string ScenePath = "Assets/_HeadbangHeroes/Scenes/FLPHeadbangPOC.unity";
+        const string GameplayScenePath = "Assets/_HeadbangHeroes/Scenes/Prototype_Headbang.unity";
+        const string GameplayPrefabName = "HH_Avatar_FLP";
         const float FrameRate = 12f;
         const int PixelsPerUnit = 100;
 
@@ -34,12 +38,66 @@ namespace HeadbangHeroes.Editor
             var sprites = ConfigureAndLoadFrames();
             var clip = BuildClip(sprites);
             var controller = BuildController(clip);
-            var prefab = BuildPrefab(sprites[0], controller);
+            var prefab = BuildPrefab(sprites, controller);
             BuildScene(prefab);
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             Debug.Log($"FLP POC built with {sprites.Length} frames at {FrameRate} FPS: {ScenePath}");
+        }
+
+        [MenuItem("Headbang Heroes/FLP/Integrate Erik Into Gameplay Scene")]
+        public static void IntegrateIntoGameplayScene()
+        {
+            var sprites = ConfigureAndLoadFrames();
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath);
+            if (prefab == null)
+            {
+                var clip = BuildClip(sprites);
+                prefab = BuildPrefab(sprites, BuildController(clip));
+            }
+
+            var scene = EditorSceneManager.OpenScene(GameplayScenePath, OpenSceneMode.Single);
+            var legacy = FindRoot(scene, "HH_Avatar_Puppet") ?? FindRoot(scene, "Prototype_Avatar");
+            var input = UnityEngine.Object.FindFirstObjectByType<HeadbangInput>();
+            if (input == null) throw new InvalidOperationException("Gameplay scene has no HeadbangInput.");
+
+            var oldPosition = legacy != null ? legacy.transform.position : Vector3.zero;
+            var oldRotation = legacy != null ? legacy.transform.rotation : Quaternion.identity;
+            var oldScale = legacy != null ? legacy.transform.lossyScale : Vector3.one;
+            if (legacy != null) legacy.SetActive(false);
+
+            var existing = GameObject.Find(GameplayPrefabName);
+            if (existing != null) UnityEngine.Object.DestroyImmediate(existing);
+
+            var avatar = (GameObject)PrefabUtility.InstantiatePrefab(prefab, scene);
+            avatar.name = GameplayPrefabName;
+            avatar.transform.position = oldPosition;
+            avatar.transform.rotation = oldRotation;
+            avatar.transform.localScale = oldScale;
+
+            var animator = avatar.GetComponent<Animator>();
+            if (animator != null) animator.enabled = false;
+
+            var presenter = avatar.GetComponent<FlpAvatarPresenter>();
+            if (presenter == null) throw new InvalidOperationException("Erik FLP prefab has no FlpAvatarPresenter.");
+            var so = new SerializedObject(presenter);
+            so.FindProperty("input").objectReferenceValue = input;
+            so.FindProperty("listenToInput").boolValue = true;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            presenter.enabled = true;
+
+            EditorSceneManager.SaveScene(scene, GameplayScenePath);
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+            Debug.Log($"FLP gameplay integration built in {GameplayScenePath}. Legacy avatar disabled; {GameplayPrefabName} listens to HeadbangInput.Bang.");
+        }
+
+        static GameObject FindRoot(Scene scene, string objectName)
+        {
+            foreach (var root in scene.GetRootGameObjects())
+                if (root.name == objectName) return root;
+            return null;
         }
 
         static Sprite[] ConfigureAndLoadFrames()
@@ -115,17 +173,26 @@ namespace HeadbangHeroes.Editor
             return controller;
         }
 
-        static GameObject BuildPrefab(Sprite firstFrame, RuntimeAnimatorController controller)
+        static GameObject BuildPrefab(IReadOnlyList<Sprite> sprites, RuntimeAnimatorController controller)
         {
             DeleteAssetIfPresent(PrefabPath);
             var root = new GameObject("Erik_FLPPoc");
             var renderer = root.AddComponent<SpriteRenderer>();
-            renderer.sprite = firstFrame;
+            renderer.sprite = sprites[0];
             renderer.sortingOrder = 0;
             renderer.drawMode = SpriteDrawMode.Simple;
             var animator = root.AddComponent<Animator>();
             animator.runtimeAnimatorController = controller;
             animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+            var presenter = root.AddComponent<FlpAvatarPresenter>();
+            var serializedPresenter = new SerializedObject(presenter);
+            serializedPresenter.FindProperty("target").objectReferenceValue = renderer;
+            var frames = serializedPresenter.FindProperty("headbangFrames");
+            frames.arraySize = sprites.Count;
+            for (var i = 0; i < sprites.Count; i++)
+                frames.GetArrayElementAtIndex(i).objectReferenceValue = sprites[i];
+            serializedPresenter.ApplyModifiedPropertiesWithoutUndo();
+            presenter.enabled = false;
             var prefab = PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
             UnityEngine.Object.DestroyImmediate(root);
             return prefab;
