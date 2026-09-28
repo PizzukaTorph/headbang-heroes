@@ -235,9 +235,38 @@ physical neck input and presentation reactive while preserving the gameplay owne
 
 Known limitations: the frames are intentionally rough/generated POC art, frame-to-frame consistency
 is not production quality, and this integration validates motion/readability rather than final art.
-The next experiment is to evaluate the same presenter at gameplay scale during Beyond the Pain,
-then consider Idle, Horns, technique variants, and reaction clips without building a customization
-framework yet.
+
+### Runtime states: Idle / Headbang / Horns
+
+The gameplay presenter now exposes a deliberately small local state flow:
+
+- `Idle` shows `headbang_00` without motion.
+- `Headbang` restarts `headbang_00` through `headbang_15` once at 12 FPS, then returns to Idle.
+- `Horns` plays `horns_00` through `horns_07` once at 12 FPS, then returns to Idle.
+
+The reusable runtime component is `FlpAvatarPresenter` on the `HH_Avatar_FLP` instance, sourced
+from `Assets/_HeadbangHeroes/Prefabs/FLP/Erik_FLPPoc.prefab`. `Headbang` continues to observe the
+existing `HeadbangInput.Bang` presentation signal. Horns currently has a dev-only keyboard hook:
+press `H` while the gameplay scene is playing. If Horns is triggered during another one-shot it
+replaces and restarts that one-shot; a new Headbang similarly restarts Headbang.
+
+The source clips are kept as normal Unity assets for inspection and future migration to a more
+formal state setup:
+
+- `Assets/_HeadbangHeroes/Content/FLP/Erik/Animations/Erik_Idle_POC.anim`
+- `Assets/_HeadbangHeroes/Content/FLP/Erik/Animations/Erik_Headbang_POC.anim`
+- `Assets/_HeadbangHeroes/Content/FLP/Erik/Animations/Erik_Horns_POC.anim`
+
+The gameplay presenter drives sprites directly; Unity's Animator remains disabled on the gameplay
+instance and is not authoritative. Gameplay timing, input, scoring, chart resolution and feedback
+remain unchanged. The isolated `FLPHeadbangPOC` scene still exists as a separate asset preview.
+
+Known limitations remain: the current art is rough/generated POC art, frame-to-frame consistency is
+not production quality, the state flow is intentionally minimal, and the Horns keyboard trigger is
+temporary/dev-only. No final animation system, reaction library or customization layer exists yet.
+The next experiment is to test the presentation in Beyond the Pain at gameplay scale, then consider
+Idle polish, Horns/technique variants, reactions and future customization without building a
+generalized framework prematurely.
 
 ---
 

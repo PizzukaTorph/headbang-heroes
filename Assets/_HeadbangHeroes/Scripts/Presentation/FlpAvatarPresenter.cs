@@ -1,5 +1,6 @@
 using HeadbangHeroes.Input;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace HeadbangHeroes.Presentation
 {
@@ -11,22 +12,33 @@ namespace HeadbangHeroes.Presentation
     [DisallowMultipleComponent]
     public sealed class FlpAvatarPresenter : MonoBehaviour
     {
+        enum PlaybackState
+        {
+            Idle,
+            Headbang,
+            Horns
+        }
+
         [SerializeField] SpriteRenderer target;
+        [SerializeField] Sprite idleFrame;
         [SerializeField] Sprite[] headbangFrames;
+        [SerializeField] Sprite[] hornsFrames;
         [SerializeField, Min(1f)] float frameRate = 12f;
         [SerializeField] HeadbangInput input;
         [SerializeField] bool listenToInput = true;
+        [SerializeField] bool enableDebugHorns = true;
 
         float elapsed;
         int frameIndex;
-        bool playing;
+        PlaybackState state;
 
-        public bool IsPlaying => playing;
+        public bool IsPlaying => state != PlaybackState.Idle;
+        public string CurrentState => state.ToString();
 
         void Awake()
         {
             if (target == null) target = GetComponent<SpriteRenderer>();
-            ShowNeutral();
+            PlayIdle();
         }
 
         void OnEnable()
@@ -41,21 +53,30 @@ namespace HeadbangHeroes.Presentation
 
         void Update()
         {
-            if (!playing || target == null || headbangFrames == null || headbangFrames.Length == 0) return;
+            if (enableDebugHorns && Keyboard.current != null && Keyboard.current.hKey.wasPressedThisFrame)
+                PlayHorns();
+
+            if (!IsPlaying || target == null) return;
 
             elapsed += Time.deltaTime;
-            var nextFrame = Mathf.FloorToInt(elapsed * Mathf.Max(1f, frameRate));
-            if (nextFrame >= headbangFrames.Length)
+            var frames = state == PlaybackState.Horns ? hornsFrames : headbangFrames;
+            if (frames == null || frames.Length == 0)
             {
-                playing = false;
-                ShowNeutral();
+                PlayIdle();
+                return;
+            }
+
+            var nextFrame = Mathf.FloorToInt(elapsed * Mathf.Max(1f, frameRate));
+            if (nextFrame >= frames.Length)
+            {
+                PlayIdle();
                 return;
             }
 
             if (nextFrame != frameIndex)
             {
                 frameIndex = nextFrame;
-                target.sprite = headbangFrames[frameIndex];
+                target.sprite = frames[frameIndex];
             }
         }
 
@@ -67,21 +88,42 @@ namespace HeadbangHeroes.Presentation
         /// <summary>Restarts the visual sequence from its neutral frame.</summary>
         public void TriggerHeadbang()
         {
-            if (target == null || headbangFrames == null || headbangFrames.Length == 0) return;
-            elapsed = 0f;
-            frameIndex = 0;
-            playing = true;
-            target.sprite = headbangFrames[0];
+            PlayHeadbang();
         }
 
-        /// <summary>Stops playback and leaves the character on the neutral frame.</summary>
-        public void ShowNeutral()
+        /// <summary>Shows the neutral frame and stops any one-shot presentation.</summary>
+        public void PlayIdle()
         {
             elapsed = 0f;
             frameIndex = 0;
-            playing = false;
-            if (target != null && headbangFrames != null && headbangFrames.Length > 0)
-                target.sprite = headbangFrames[0];
+            state = PlaybackState.Idle;
+            if (target != null) target.sprite = idleFrame != null ? idleFrame : FirstFrame(headbangFrames);
+        }
+
+        /// <summary>Restarts the headbang one-shot from frame zero.</summary>
+        public void PlayHeadbang()
+        {
+            PlayOneShot(PlaybackState.Headbang, headbangFrames);
+        }
+
+        /// <summary>Restarts the horns one-shot from frame zero.</summary>
+        public void PlayHorns()
+        {
+            PlayOneShot(PlaybackState.Horns, hornsFrames);
+        }
+
+        void PlayOneShot(PlaybackState nextState, Sprite[] frames)
+        {
+            if (target == null || frames == null || frames.Length == 0) return;
+            elapsed = 0f;
+            frameIndex = 0;
+            state = nextState;
+            target.sprite = frames[0];
+        }
+
+        static Sprite FirstFrame(Sprite[] frames)
+        {
+            return frames != null && frames.Length > 0 ? frames[0] : null;
         }
     }
 }

@@ -17,9 +17,12 @@ namespace HeadbangHeroes.Editor
     public static class FLPPrototypeBuilder
     {
         const string FrameRoot = "Assets/_HeadbangHeroes/Content/FLP/Erik/Headbang";
+        const string HornsFrameRoot = "Assets/_HeadbangHeroes/Content/FLP/Erik/Horns";
         const string AnimationRoot = "Assets/_HeadbangHeroes/Content/FLP/Erik/Animations";
         const string PrefabRoot = "Assets/_HeadbangHeroes/Prefabs/FLP";
         const string ClipPath = AnimationRoot + "/Erik_Headbang_POC.anim";
+        const string IdleClipPath = AnimationRoot + "/Erik_Idle_POC.anim";
+        const string HornsClipPath = AnimationRoot + "/Erik_Horns_POC.anim";
         const string ControllerPath = AnimationRoot + "/Erik_Headbang_POC.controller";
         const string PrefabPath = PrefabRoot + "/Erik_FLPPoc.prefab";
         const string ScenePath = "Assets/_HeadbangHeroes/Scenes/FLPHeadbangPOC.unity";
@@ -35,10 +38,13 @@ namespace HeadbangHeroes.Editor
             EnsureFolder("Assets/_HeadbangHeroes/Content/FLP/Erik", "Animations");
             EnsureFolder("Assets/_HeadbangHeroes/Prefabs", "FLP");
 
-            var sprites = ConfigureAndLoadFrames();
-            var clip = BuildClip(sprites);
+            var sprites = ConfigureAndLoadFrames(FrameRoot, "headbang", 16);
+            var hornsSprites = ConfigureAndLoadFrames(HornsFrameRoot, "horns", 8);
+            var clip = BuildClip(sprites, ClipPath, "Erik_Headbang_POC", true);
+            BuildClip(new[] { sprites[0] }, IdleClipPath, "Erik_Idle_POC", true);
+            BuildClip(hornsSprites, HornsClipPath, "Erik_Horns_POC", false);
             var controller = BuildController(clip);
-            var prefab = BuildPrefab(sprites, controller);
+            var prefab = BuildPrefab(sprites, hornsSprites, controller);
             BuildScene(prefab);
 
             AssetDatabase.SaveAssets();
@@ -49,12 +55,15 @@ namespace HeadbangHeroes.Editor
         [MenuItem("Headbang Heroes/FLP/Integrate Erik Into Gameplay Scene")]
         public static void IntegrateIntoGameplayScene()
         {
-            var sprites = ConfigureAndLoadFrames();
+            var sprites = ConfigureAndLoadFrames(FrameRoot, "headbang", 16);
+            var hornsSprites = ConfigureAndLoadFrames(HornsFrameRoot, "horns", 8);
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath);
             if (prefab == null)
             {
-                var clip = BuildClip(sprites);
-                prefab = BuildPrefab(sprites, BuildController(clip));
+                var clip = BuildClip(sprites, ClipPath, "Erik_Headbang_POC", true);
+                BuildClip(new[] { sprites[0] }, IdleClipPath, "Erik_Idle_POC", true);
+                BuildClip(hornsSprites, HornsClipPath, "Erik_Horns_POC", false);
+                prefab = BuildPrefab(sprites, hornsSprites, BuildController(clip));
             }
 
             var scene = EditorSceneManager.OpenScene(GameplayScenePath, OpenSceneMode.Single);
@@ -100,12 +109,12 @@ namespace HeadbangHeroes.Editor
             return null;
         }
 
-        static Sprite[] ConfigureAndLoadFrames()
+        static Sprite[] ConfigureAndLoadFrames(string frameRoot, string prefix, int frameCount)
         {
-            var sprites = new Sprite[16];
+            var sprites = new Sprite[frameCount];
             for (var i = 0; i < sprites.Length; i++)
             {
-                var path = $"{FrameRoot}/headbang_{i:00}.png";
+                var path = $"{frameRoot}/{prefix}_{i:00}.png";
                 var importer = AssetImporter.GetAtPath(path) as TextureImporter;
                 if (importer == null) throw new InvalidOperationException($"Missing Erik frame importer: {path}");
 
@@ -138,14 +147,14 @@ namespace HeadbangHeroes.Editor
             return sprites;
         }
 
-        static AnimationClip BuildClip(IReadOnlyList<Sprite> sprites)
+        static AnimationClip BuildClip(IReadOnlyList<Sprite> sprites, string path, string clipName, bool loop)
         {
-            DeleteAssetIfPresent(ClipPath);
+            DeleteAssetIfPresent(path);
             var clip = new AnimationClip
             {
-                name = "Erik_Headbang_POC",
+                name = clipName,
                 frameRate = FrameRate,
-                wrapMode = WrapMode.Loop
+                wrapMode = loop ? WrapMode.Loop : WrapMode.Once
             };
 
             var keyframes = new ObjectReferenceKeyframe[sprites.Count];
@@ -155,9 +164,9 @@ namespace HeadbangHeroes.Editor
             var binding = EditorCurveBinding.PPtrCurve("", typeof(SpriteRenderer), "m_Sprite");
             AnimationUtility.SetObjectReferenceCurve(clip, binding, keyframes);
             var settings = AnimationUtility.GetAnimationClipSettings(clip);
-            settings.loopTime = true;
+            settings.loopTime = loop;
             AnimationUtility.SetAnimationClipSettings(clip, settings);
-            AssetDatabase.CreateAsset(clip, ClipPath);
+            AssetDatabase.CreateAsset(clip, path);
             return clip;
         }
 
@@ -173,7 +182,7 @@ namespace HeadbangHeroes.Editor
             return controller;
         }
 
-        static GameObject BuildPrefab(IReadOnlyList<Sprite> sprites, RuntimeAnimatorController controller)
+        static GameObject BuildPrefab(IReadOnlyList<Sprite> sprites, IReadOnlyList<Sprite> hornsSprites, RuntimeAnimatorController controller)
         {
             DeleteAssetIfPresent(PrefabPath);
             var root = new GameObject("Erik_FLPPoc");
@@ -187,10 +196,15 @@ namespace HeadbangHeroes.Editor
             var presenter = root.AddComponent<FlpAvatarPresenter>();
             var serializedPresenter = new SerializedObject(presenter);
             serializedPresenter.FindProperty("target").objectReferenceValue = renderer;
+            serializedPresenter.FindProperty("idleFrame").objectReferenceValue = sprites[0];
             var frames = serializedPresenter.FindProperty("headbangFrames");
             frames.arraySize = sprites.Count;
             for (var i = 0; i < sprites.Count; i++)
                 frames.GetArrayElementAtIndex(i).objectReferenceValue = sprites[i];
+            var horns = serializedPresenter.FindProperty("hornsFrames");
+            horns.arraySize = hornsSprites.Count;
+            for (var i = 0; i < hornsSprites.Count; i++)
+                horns.GetArrayElementAtIndex(i).objectReferenceValue = hornsSprites[i];
             serializedPresenter.ApplyModifiedPropertiesWithoutUndo();
             presenter.enabled = false;
             var prefab = PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
