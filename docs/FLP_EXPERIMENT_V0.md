@@ -194,6 +194,25 @@ ChatGPT may be used for concepting and sprite generation where suitable. If a di
 
 The project must not depend on one specific image generator.
 
+## Unity POC implementation
+
+The first isolated Unity proof of concept is available at:
+
+- Scene: `Assets/_HeadbangHeroes/Scenes/FLPHeadbangPOC.unity`
+- Prefab: `Assets/_HeadbangHeroes/Prefabs/FLP/Erik_FLPPoc.prefab`
+- Animation: `Assets/_HeadbangHeroes/Content/FLP/Erik/Animations/Erik_Headbang_POC.anim`
+- Controller: `Assets/_HeadbangHeroes/Content/FLP/Erik/Animations/Erik_Headbang_POC.controller`
+
+The POC uses Unity's native `SpriteRenderer` + `Animator` path. It plays
+`headbang_00.png` through `headbang_15.png` in numeric order at 12 FPS and loops immediately.
+All frames use the same 100 Pixels Per Unit, centered pivot, Point filtering, disabled mipmaps,
+uncompressed texture data, and preserved alpha. The source PNG artwork is unchanged.
+
+The POC is intentionally isolated: it does not reference Synty, `NeckMotionModel`, input,
+charts, timing, scoring, or the existing 2D/3D avatar paths. Current limitations are that it only
+proves a looping Headbang clip, has no Idle/Horns states, and is not yet synchronized with gameplay.
+The next step is to connect this FLP renderer to the real gameplay flow and the Beyond the Pain test.
+
 ---
 
 ## Hard production requirement

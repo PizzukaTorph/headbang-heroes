@@ -1,0 +1,178 @@
+using System;
+using System.Collections.Generic;
+using UnityEditor;
+using UnityEditor.Animations;
+using UnityEditor.SceneManagement;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+
+namespace HeadbangHeroes.Editor
+{
+    /// <summary>
+    /// Builds the isolated Erik frame-animation proof of concept.
+    /// It intentionally has no dependency on gameplay, chart, input, or avatar presentation code.
+    /// </summary>
+    public static class FLPPrototypeBuilder
+    {
+        const string FrameRoot = "Assets/_HeadbangHeroes/Content/FLP/Erik/Headbang";
+        const string AnimationRoot = "Assets/_HeadbangHeroes/Content/FLP/Erik/Animations";
+        const string PrefabRoot = "Assets/_HeadbangHeroes/Prefabs/FLP";
+        const string ClipPath = AnimationRoot + "/Erik_Headbang_POC.anim";
+        const string ControllerPath = AnimationRoot + "/Erik_Headbang_POC.controller";
+        const string PrefabPath = PrefabRoot + "/Erik_FLPPoc.prefab";
+        const string ScenePath = "Assets/_HeadbangHeroes/Scenes/FLPHeadbangPOC.unity";
+        const float FrameRate = 12f;
+        const int PixelsPerUnit = 100;
+
+        [MenuItem("Headbang Heroes/FLP/Build Erik Headbang POC")]
+        public static void Build()
+        {
+            EnsureFolder("Assets/_HeadbangHeroes/Content/FLP", "Erik");
+            EnsureFolder("Assets/_HeadbangHeroes/Content/FLP/Erik", "Animations");
+            EnsureFolder("Assets/_HeadbangHeroes/Prefabs", "FLP");
+
+            var sprites = ConfigureAndLoadFrames();
+            var clip = BuildClip(sprites);
+            var controller = BuildController(clip);
+            var prefab = BuildPrefab(sprites[0], controller);
+            BuildScene(prefab);
+
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+            Debug.Log($"FLP POC built with {sprites.Length} frames at {FrameRate} FPS: {ScenePath}");
+        }
+
+        static Sprite[] ConfigureAndLoadFrames()
+        {
+            var sprites = new Sprite[16];
+            for (var i = 0; i < sprites.Length; i++)
+            {
+                var path = $"{FrameRoot}/headbang_{i:00}.png";
+                var importer = AssetImporter.GetAtPath(path) as TextureImporter;
+                if (importer == null) throw new InvalidOperationException($"Missing Erik frame importer: {path}");
+
+                importer.textureType = TextureImporterType.Sprite;
+                importer.spriteImportMode = SpriteImportMode.Single;
+                importer.mipmapEnabled = false;
+                importer.filterMode = FilterMode.Point;
+                importer.textureCompression = TextureImporterCompression.Uncompressed;
+                importer.alphaIsTransparency = true;
+                var textureSettings = new TextureImporterSettings();
+                importer.ReadTextureSettings(textureSettings);
+                textureSettings.spriteAlignment = (int)SpriteAlignment.Center;
+                textureSettings.spritePivot = new Vector2(0.5f, 0.5f);
+                importer.SetTextureSettings(textureSettings);
+                importer.spritePixelsPerUnit = PixelsPerUnit;
+
+                foreach (var platform in new[] { "DefaultTexturePlatform", "Standalone", "Android", "iOS" })
+                {
+                    var settings = importer.GetPlatformTextureSettings(platform);
+                    settings.name = platform;
+                    settings.textureCompression = TextureImporterCompression.Uncompressed;
+                    importer.SetPlatformTextureSettings(settings);
+                }
+
+                importer.SaveAndReimport();
+                sprites[i] = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+                if (sprites[i] == null) throw new InvalidOperationException($"Could not load Erik frame: {path}");
+            }
+
+            return sprites;
+        }
+
+        static AnimationClip BuildClip(IReadOnlyList<Sprite> sprites)
+        {
+            DeleteAssetIfPresent(ClipPath);
+            var clip = new AnimationClip
+            {
+                name = "Erik_Headbang_POC",
+                frameRate = FrameRate,
+                wrapMode = WrapMode.Loop
+            };
+
+            var keyframes = new ObjectReferenceKeyframe[sprites.Count];
+            for (var i = 0; i < sprites.Count; i++)
+                keyframes[i] = new ObjectReferenceKeyframe { time = i / FrameRate, value = sprites[i] };
+
+            var binding = EditorCurveBinding.PPtrCurve("", typeof(SpriteRenderer), "m_Sprite");
+            AnimationUtility.SetObjectReferenceCurve(clip, binding, keyframes);
+            var settings = AnimationUtility.GetAnimationClipSettings(clip);
+            settings.loopTime = true;
+            AnimationUtility.SetAnimationClipSettings(clip, settings);
+            AssetDatabase.CreateAsset(clip, ClipPath);
+            return clip;
+        }
+
+        static AnimatorController BuildController(AnimationClip clip)
+        {
+            DeleteAssetIfPresent(ControllerPath);
+            var controller = AnimatorController.CreateAnimatorControllerAtPath(ControllerPath);
+            var stateMachine = controller.layers[0].stateMachine;
+            var state = stateMachine.AddState("Headbang");
+            state.motion = clip;
+            stateMachine.defaultState = state;
+            EditorUtility.SetDirty(controller);
+            return controller;
+        }
+
+        static GameObject BuildPrefab(Sprite firstFrame, RuntimeAnimatorController controller)
+        {
+            DeleteAssetIfPresent(PrefabPath);
+            var root = new GameObject("Erik_FLPPoc");
+            var renderer = root.AddComponent<SpriteRenderer>();
+            renderer.sprite = firstFrame;
+            renderer.sortingOrder = 0;
+            renderer.drawMode = SpriteDrawMode.Simple;
+            var animator = root.AddComponent<Animator>();
+            animator.runtimeAnimatorController = controller;
+            animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+            var prefab = PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
+            UnityEngine.Object.DestroyImmediate(root);
+            return prefab;
+        }
+
+        static void BuildScene(GameObject prefab)
+        {
+            DeleteAssetIfPresent(ScenePath);
+            var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            var cameraObject = new GameObject("Main Camera");
+            cameraObject.tag = "MainCamera";
+            var camera = cameraObject.AddComponent<Camera>();
+            camera.orthographic = true;
+            camera.orthographicSize = 2.25f;
+            camera.clearFlags = CameraClearFlags.SolidColor;
+            camera.backgroundColor = new Color(0.025f, 0.025f, 0.04f, 1f);
+            camera.transform.position = new Vector3(0f, 0f, -10f);
+
+            var avatar = (GameObject)PrefabUtility.InstantiatePrefab(prefab, scene);
+            avatar.name = "Erik_FLPPoc";
+            avatar.transform.position = Vector3.zero;
+            avatar.transform.localScale = Vector3.one;
+
+            EditorSceneManager.SaveScene(scene, ScenePath);
+            RegisterSceneInBuildSettings();
+        }
+
+        static void RegisterSceneInBuildSettings()
+        {
+            var scenes = new List<EditorBuildSettingsScene>(EditorBuildSettings.scenes);
+            var index = scenes.FindIndex(scene => scene.path == ScenePath);
+            var entry = new EditorBuildSettingsScene(ScenePath, true);
+            if (index >= 0) scenes[index] = entry;
+            else scenes.Add(entry);
+            EditorBuildSettings.scenes = scenes.ToArray();
+        }
+
+        static void EnsureFolder(string parent, string name)
+        {
+            var path = parent + "/" + name;
+            if (!AssetDatabase.IsValidFolder(path)) AssetDatabase.CreateFolder(parent, name);
+        }
+
+        static void DeleteAssetIfPresent(string path)
+        {
+            if (AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(path) != null)
+                AssetDatabase.DeleteAsset(path);
+        }
+    }
+}

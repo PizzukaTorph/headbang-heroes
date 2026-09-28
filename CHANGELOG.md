@@ -13,6 +13,9 @@ In progress on `develop`. Plan: `docs/implementation/09_V0_0_3_PLAN.md`. Two tra
 Planned packages: P14 MISS root-cause fix · P15 SectorPulseCue peak · P16 HH-MIDI importer/validator ·
 P17 first authored song · P18 consolidate + tag. iOS device validation (Package 07) remains deferred.
 
+Experimental `develop-flp`: added an isolated Erik frame-animation POC scene and 12 FPS looping
+Headbang clip without changing gameplay or the existing avatar paths.
+
 ## [0.0.2] — 2026-09-19 — "From validated toy to playable prototype"
 
 Builds on the frozen `v0.0.1` core (feel validated). No changes to neck physics / timing windows /
