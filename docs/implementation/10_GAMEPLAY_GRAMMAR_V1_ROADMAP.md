@@ -60,39 +60,66 @@ Do not pre-implement later packages merely because their future interface is obv
 
 ### Purpose
 
-Define exactly what each canonical headbang technique means before writing a TechniqueEvaluator.
+Freeze the gameplay contract for Classic and the four authored Technique Skills before writing recognizers/evaluators.
 
-Initial canonical vocabulary:
+Canonical split:
 
-- Classic
-- Half
-- Deep
-- Whiplash
-- Windmill
+```text
+Classic
+= core movement
+= always available
+= not a special skill
 
-The contract must answer for each technique:
+Technique Skills
+├── Half
+├── Deep
+├── Whiplash
+└── Windmill
+```
 
-- intended physical/performance meaning;
-- required trajectory context;
-- motion evidence needed to evaluate it;
-- which evidence is mandatory vs optional;
-- what is authored data vs tuning data;
-- setup/first-bang behavior;
-- failure/degradation semantics;
-- how the technique remains performable at different song tempos.
+Technique Skills are manually authored special moments in the HH custom MIDI/chart source. They are not automatically injected from BPM, density or difficulty.
+
+Each Technique Skill uses a recognizable on-screen gesture. Gesture recognition expresses player intent; it does not directly award success or bypass authoritative neck/gameplay evaluation.
+
+See `docs/GAMEPLAY_TECHNIQUES_V1.md`.
+
+### Authoring rule
+
+```text
+custom HH MIDI
+        ↓
+explicit technique marker/event
+        ↓
+chart compilation
+        ↓
+RuntimeChart
+```
+
+Every occurrence is chosen by the chart author for a musical reason.
+
+Hard rule:
+
+> **Do not spam or procedurally generate Technique Skills.**
+
+Higher difficulty may use a broader authored vocabulary, but the runtime never adds skills merely because a chart is harder.
 
 ### Hard constraints
 
-- no technique changes base neck physics;
-- no technique is defined only as a UI button;
+- Classic remains the normal/base HH gameplay;
+- Half / Deep / Whiplash / Windmill are Technique Skills;
+- Technique Skills are gesture-driven;
+- no permanent extra skill buttons are required;
+- no skill changes base neck physics;
+- no skill auto-succeeds from gesture recognition alone;
 - no technique is judged from animation frames;
-- timing and technique quality remain separate;
+- timing and technique execution remain separate;
 - thresholds are data-driven;
+- standard gameplay remains CURRENT + NEXT;
 - no TechniqueEvaluator implementation until this contract is accepted.
 
 ### Exit gate
 
-A canonical table/spec exists for all five techniques and every required runtime signal is identified.
+A canonical contract exists for Classic and all four Technique Skills, defined one at a time, including gesture semantics and required runtime evidence.
 
 ---
 
