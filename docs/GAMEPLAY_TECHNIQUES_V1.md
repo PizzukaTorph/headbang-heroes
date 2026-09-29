@@ -111,6 +111,45 @@ The runtime must not:
 
 Difficulty may determine whether a particular authored chart contains a broader technique vocabulary, but every Technique Skill occurrence remains explicit authored content.
 
+## Dedicated MIDI technique track
+
+Technique Skills are authored on a dedicated MIDI track/lane for each chart variant.
+
+Conceptually:
+
+```text
+song-easy.mid
+├── HH_CLASSIC / base chart data
+└── HH_TECHNIQUES   (may be empty or absent)
+
+song-normal.mid
+├── HH_CLASSIC / base chart data
+└── HH_TECHNIQUES   (authored where appropriate)
+
+song-hard.mid
+├── HH_CLASSIC / base chart data
+└── HH_TECHNIQUES   (may contain many more authored skill moments)
+
+song-extreme.mid
+├── HH_CLASSIC / base chart data
+└── HH_TECHNIQUES
+```
+
+The dedicated track keeps special-technique authoring explicit, inspectable and independent per difficulty chart.
+
+Important distinction:
+
+> **A harder chart may contain more Technique Skill events because the author placed them there, not because the runtime generated them.**
+
+Therefore:
+- Easy may legitimately contain zero Technique Skills;
+- Normal may introduce one or two;
+- Hard/Extreme may use them much more frequently where musically appropriate;
+- there is still no automatic density rule or quota;
+- every occurrence remains hand-authored in the chart source.
+
+The exact MIDI encoding inside `HH_TECHNIQUES` (note numbers, marker values, duration semantics and optional parameters) is deferred to the authoring-format specification.
+
 ## Frequency / musical role
 
 Technique Skills are special moments, not the default input stream.
