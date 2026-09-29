@@ -106,3 +106,22 @@ docs/
 ~~~
 
 See docs/GODOT_PORT.md for the migration map and known validation gates.
+
+
+## POC tuning lab
+
+The values most likely to change during feel iteration live in one file:
+
+~~~text
+game/config/poc_tuning.json
+~~~
+
+It currently owns:
+- timing windows;
+- neck simulation/impulse/damping/limits;
+- FLP frame-travel mapping and visual FPS cap;
+- cue look-ahead/radii/preview alpha.
+
+In a debug run press **F4** to reload the file without restarting the project. Press **F3** to toggle the telemetry HUD.
+
+The debug HUD shows authoritative song time, calibration/output latency, CURRENT/NEXT event ids, neck angle/velocity, FLP frame/phase, and timing bias statistics. Results also include mean signed timing bias, mean absolute timing error, and early/late counts.

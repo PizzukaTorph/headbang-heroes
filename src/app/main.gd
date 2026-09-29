@@ -27,13 +27,15 @@ func _show_home() -> void:
 	add_child(stack)
 
 	var title := Label.new()
-	title.text = "HEADBANG\nHEROES"
+	title.text = "HEADBANG
+HEROES"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_size_override("font_size", 48)
 	stack.add_child(title)
 
 	var subtitle := Label.new()
-	subtitle.text = "Godot FLP migration POC\nAudio-clock authoritative · frame-based Erik"
+	subtitle.text = "Godot FLP migration POC
+Audio-clock authoritative · physics-driven Erik"
 	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	subtitle.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	subtitle.add_theme_font_size_override("font_size", 18)
@@ -51,13 +53,15 @@ func _show_home() -> void:
 	stack.add_child(start)
 
 	var note := Label.new()
-	note.text = "Touch: LEFT / UP / DOWN / RIGHT\nKeyboard: arrows or WASD · B = THE BANG · [ ] = calibration"
+	note.text = "Touch: LEFT / UP / DOWN / RIGHT
+Keyboard: arrows/WASD · B THE BANG · [ ] calibration · F3 debug · F4 reload tuning"
 	note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	stack.add_child(note)
 
 	var source := Label.new()
-	source.text = "Included validation track: TempoRamp.wav\nBeyond the Pain chart + MIDI remain bundled as authoring fixtures; licensed/local song audio is intentionally not committed."
+	source.text = "Included validation track: TempoRamp.wav
+Beyond the Pain chart + MIDI remain bundled as authoring fixtures; licensed/local song audio is intentionally not committed."
 	source.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	source.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	source.modulate = Color(0.72, 0.70, 0.76)
@@ -77,6 +81,7 @@ func _start_game() -> void:
 	gameplay_view.the_bang_requested.connect(_activate_the_bang)
 	gameplay_view.pause_requested.connect(gameplay_run.toggle_pause)
 	gameplay_view.calibration_delta_requested.connect(_change_calibration)
+	gameplay_view.reload_tuning_requested.connect(_reload_tuning)
 
 	gameplay_run.cue_changed.connect(gameplay_view.update_cue)
 	gameplay_run.hud_changed.connect(gameplay_view.update_hud)
@@ -88,6 +93,7 @@ func _start_game() -> void:
 	if not gameplay_run.configure(CHART_PATH, AUDIO_PATH):
 		_show_error("Could not load the included POC content.")
 		return
+	gameplay_view.apply_tuning(gameplay_run.presentation_tuning())
 	gameplay_run.set_calibration_ms(calibration_ms_value)
 	gameplay_run.start_run()
 
@@ -99,6 +105,12 @@ func _change_calibration(delta_ms: float) -> void:
 	calibration_ms_value = clampf(calibration_ms_value + delta_ms, -250.0, 250.0)
 	if gameplay_run != null:
 		gameplay_run.set_calibration_ms(calibration_ms_value)
+
+func _reload_tuning() -> void:
+	if gameplay_run == null or gameplay_view == null:
+		return
+	gameplay_run.reload_tuning()
+	gameplay_view.apply_tuning(gameplay_run.presentation_tuning())
 
 func _show_results(result: Dictionary) -> void:
 	calibration_ms_value = float(result.get("calibration_ms", calibration_ms_value))
@@ -112,9 +124,9 @@ func _show_results(result: Dictionary) -> void:
 	var stack := VBoxContainer.new()
 	stack.anchor_left = 0.08
 	stack.anchor_right = 0.92
-	stack.anchor_top = 0.08
-	stack.anchor_bottom = 0.92
-	stack.add_theme_constant_override("separation", 12)
+	stack.anchor_top = 0.07
+	stack.anchor_bottom = 0.93
+	stack.add_theme_constant_override("separation", 10)
 	add_child(stack)
 
 	var title := Label.new()
@@ -129,8 +141,22 @@ func _show_results(result: Dictionary) -> void:
 	score.add_theme_font_size_override("font_size", 42)
 	stack.add_child(score)
 
+	var diag: Dictionary = result.get("timing_diagnostics", {})
 	var details := Label.new()
-	details.text = "PERFECT  %d\nGREAT    %d\nGOOD     %d\nWELL     %d\nMISS     %d\n\nLONGEST COMBO  %d\nHYPE EARNED    %d\nTHE BANG       %d\nFINISHERS      %d" % [
+	details.text = "PERFECT  %d
+GREAT    %d
+GOOD     %d
+WELL     %d
+MISS     %d
+
+LONGEST COMBO  %d
+HYPE EARNED    %d
+THE BANG       %d
+FINISHERS      %d
+
+TIMING BIAS   %+.1f ms
+MEAN ABS ERR  %.1f ms
+EARLY / LATE  %d / %d" % [
 		int(result.get("perfect", 0)),
 		int(result.get("great", 0)),
 		int(result.get("good", 0)),
@@ -139,10 +165,14 @@ func _show_results(result: Dictionary) -> void:
 		int(result.get("longest_combo", 0)),
 		int(result.get("total_hype_earned", 0)),
 		int(result.get("the_bang_activations", 0)),
-		int(result.get("finishers", 0))
+		int(result.get("finishers", 0)),
+		float(diag.get("mean_signed_ms", 0.0)),
+		float(diag.get("mean_absolute_ms", 0.0)),
+		int(diag.get("early", 0)),
+		int(diag.get("late", 0))
 	]
 	details.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	details.add_theme_font_size_override("font_size", 18)
+	details.add_theme_font_size_override("font_size", 17)
 	stack.add_child(details)
 
 	var retry := Button.new()
@@ -160,7 +190,9 @@ func _show_results(result: Dictionary) -> void:
 func _show_error(message: String) -> void:
 	_clear_screen()
 	var label := Label.new()
-	label.text = "HEADBANG HEROES\n\n%s" % message
+	label.text = "HEADBANG HEROES
+
+%s" % message
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)

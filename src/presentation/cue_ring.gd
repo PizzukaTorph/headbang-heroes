@@ -4,7 +4,12 @@ extends Control
 ## POC/Easy readability profile:
 ## every semantic direction shares one central target.
 ## CURRENT owns the closing ring; NEXT is a faint, larger concentric preview.
-## Future difficulty profiles may spatialize the cue anchor without changing chart semantics.
+
+const DEFAULT_TARGET_RADIUS := 42.0
+const DEFAULT_APPROACH_RADIUS := 104.0
+const DEFAULT_NEXT_MIN_RADIUS := 122.0
+const DEFAULT_NEXT_MAX_RADIUS := 142.0
+const DEFAULT_NEXT_ALPHA := 0.28
 
 var current_active: bool = false
 var next_active: bool = false
@@ -15,13 +20,22 @@ var next_progress: float = 0.0
 var current_direction: StringName = &""
 var next_direction: StringName = &""
 
-var target_radius: float = 42.0
-var approach_radius: float = 104.0
-var next_min_radius: float = 122.0
-var next_max_radius: float = 142.0
+var target_radius: float = DEFAULT_TARGET_RADIUS
+var approach_radius: float = DEFAULT_APPROACH_RADIUS
+var next_min_radius: float = DEFAULT_NEXT_MIN_RADIUS
+var next_max_radius: float = DEFAULT_NEXT_MAX_RADIUS
+var next_alpha: float = DEFAULT_NEXT_ALPHA
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+func apply_tuning(values: Dictionary) -> void:
+	target_radius = maxf(8.0, float(values.get("targetRadius", DEFAULT_TARGET_RADIUS)))
+	approach_radius = maxf(target_radius + 1.0, float(values.get("approachRadius", DEFAULT_APPROACH_RADIUS)))
+	next_min_radius = maxf(approach_radius + 1.0, float(values.get("nextMinRadius", DEFAULT_NEXT_MIN_RADIUS)))
+	next_max_radius = maxf(next_min_radius, float(values.get("nextMaxRadius", DEFAULT_NEXT_MAX_RADIUS)))
+	next_alpha = clampf(float(values.get("nextAlpha", DEFAULT_NEXT_ALPHA)), 0.05, 0.9)
+	queue_redraw()
 
 func set_cues(
 	current_event: Dictionary,
@@ -71,16 +85,11 @@ func _draw() -> void:
 		return
 
 	var center := size * 0.5
-
-	# One semantic target, independent from direction. This is the intentionally easy/readable
-	# profile. LEFT/RIGHT/UP/DOWN are still distinct inputs, only their visual target is shared.
 	draw_arc(center, target_radius, 0.0, TAU, 64, Color(1.0, 1.0, 1.0, 0.34), 4.0, true)
 
-	# NEXT never competes with CURRENT for the target. It stays outside as a low-alpha concentric
-	# preview and communicates its direction primarily through color + the textual NEXT label.
 	if next_active:
 		var next_color := _direction_color(next_direction)
-		next_color.a = 0.28
+		next_color.a = next_alpha
 		var next_radius := lerpf(next_max_radius, next_min_radius, next_progress)
 		draw_arc(center, next_radius, 0.0, TAU, 64, next_color, 4.0, true)
 

@@ -98,6 +98,14 @@ game/assets/          runtime content
 tests/                headless smoke/domain validation
 ~~~
 
+## POC tuning
+
+Current feel-sensitive values are centralized in `game/config/poc_tuning.json`.
+
+This is prototype tuning data, not a new source of gameplay semantics. It may change numeric timing windows, neck coefficients and presentation parameters, but it must not bypass the ownership rules in FOUNDATION/TECHNICAL_CONTRACTS.
+
+Debug telemetry may observe authoritative state but cannot feed back into judgment or scoring.
+
 ## Performance
 
 - avoid per-frame allocations in hot paths where profiling shows impact;

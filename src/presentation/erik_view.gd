@@ -20,6 +20,9 @@ func _ready() -> void:
 
 	reset_pose()
 
+func apply_tuning(values: Dictionary) -> void:
+	frame_driver.configure(values)
+
 func reset_pose() -> void:
 	frame_driver.reset()
 	_last_frame = -1
@@ -30,6 +33,9 @@ func apply_neck_state(neck_state: Dictionary, delta: float) -> void:
 		return
 	var frame := frame_driver.update(neck_state, delta)
 	_set_frame(frame)
+
+func debug_snapshot() -> Dictionary:
+	return frame_driver.debug_snapshot()
 
 func _set_frame(frame: int) -> void:
 	if frames.is_empty():

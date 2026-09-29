@@ -1,0 +1,33 @@
+{
+  "timing": {
+    "perfectWindowMs": 70,
+    "greatWindowMs": 130,
+    "goodWindowMs": 190,
+    "wellWindowMs": 240,
+    "candidateLeadMs": 1000,
+    "lateExpiryMs": 240
+  },
+  "neck": {
+    "simulationHz": 120,
+    "impulse": 190,
+    "damping": 5.5,
+    "returnStrength": 9.0,
+    "maxAngle": 42,
+    "maxVelocity": 360,
+    "limitBounce": -0.15
+  },
+  "flp": {
+    "framesPerDegree": 0.12,
+    "maxVisualFps": 9.0,
+    "settledAngleDeg": 1.5,
+    "settledSpeedDegPerSec": 10.0
+  },
+  "cue": {
+    "nextHorizonMultiplier": 2.25,
+    "targetRadius": 42,
+    "approachRadius": 104,
+    "nextMinRadius": 122,
+    "nextMaxRadius": 142,
+    "nextAlpha": 0.28
+  }
+}

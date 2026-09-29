@@ -7,6 +7,8 @@ const NeckMotionScript = preload("res://src/domain/neck_motion_state.gd")
 const MotionQualityScript = preload("res://src/domain/motion_quality.gd")
 const RunScorerScript = preload("res://src/domain/run_scorer.gd")
 const FLPFrameDriverScript = preload("res://src/presentation/flp_frame_driver.gd")
+const POCTuningScript = preload("res://src/config/poc_tuning.gd")
+const RunDiagnosticsScript = preload("res://src/debug/run_diagnostics.gd")
 
 var failures := 0
 
@@ -17,6 +19,8 @@ func _init() -> void:
 	_test_neck_and_motion_quality()
 	_test_scoring()
 	_test_flp_frame_driver()
+	_test_poc_tuning()
+	_test_run_diagnostics()
 	if failures == 0:
 		print("HH GODOT TESTS: PASS")
 		quit(0)
@@ -105,9 +109,36 @@ func _test_flp_frame_driver() -> void:
 	driver.update(moving, 1.0 / 60.0)
 	_expect(driver.phase_frames > 0.0, "physical angular travel must advance FLP phase")
 	_expect(
-		driver.phase_frames <= FLPFrameDriverScript.MAX_VISUAL_FPS / 60.0 + 0.0001,
+		driver.phase_frames <= driver.max_visual_fps / 60.0 + 0.0001,
 		"FLP phase must respect the readability speed cap"
 	)
 
 	driver.update(neutral, 1.0 / 60.0)
 	_expect(driver.current_frame == 0, "physically settled neutral must return presentation to frame 0")
+
+
+func _test_poc_tuning() -> void:
+	var tuning = POCTuningScript.new()
+	_expect(tuning.load_from_file(), "committed POC tuning JSON must load")
+	_expect(absf(tuning.number("flp", "maxVisualFps", 0.0) - 9.0) < 0.001, "FLP visual FPS must come from tuning data")
+	_expect(absf(tuning.number("neck", "impulse", 0.0) - 190.0) < 0.001, "neck impulse must come from tuning data")
+
+	var tuned_neck = NeckMotionScript.new()
+	tuned_neck.configure({"impulse": 100.0, "simulationHz": 120.0})
+	tuned_neck.apply_bang(&"left")
+	var state: Dictionary = tuned_neck.presentation_state()
+	_expect(absf(float(state.get("horizontal_velocity", 0.0)) - 100.0) < 0.001, "neck tuning must alter launch impulse without changing algorithm")
+
+	var driver = FLPFrameDriverScript.new(16)
+	driver.configure({"maxVisualFps": 5.0})
+	_expect(absf(driver.max_visual_fps - 5.0) < 0.001, "FLP tuning must alter readability cap")
+
+func _test_run_diagnostics() -> void:
+	var diag = RunDiagnosticsScript.new()
+	diag.record(&"GREAT", -0.040)
+	diag.record(&"PERFECT", 0.020)
+	var snapshot: Dictionary = diag.snapshot()
+	_expect(int(snapshot.get("samples", 0)) == 2, "timing diagnostics must count consumed player inputs")
+	_expect(int(snapshot.get("early", 0)) == 1 and int(snapshot.get("late", 0)) == 1, "timing diagnostics must track early/late bias")
+	_expect(absf(float(snapshot.get("mean_signed_ms", 0.0)) + 10.0) < 0.01, "timing diagnostics mean bias must preserve sign")
+	_expect(absf(float(snapshot.get("mean_absolute_ms", 0.0)) - 30.0) < 0.01, "timing diagnostics must report mean absolute error")

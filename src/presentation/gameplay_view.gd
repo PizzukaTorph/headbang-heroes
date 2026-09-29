@@ -5,6 +5,7 @@ signal bang_requested(direction: StringName)
 signal the_bang_requested
 signal pause_requested
 signal calibration_delta_requested(delta_ms: float)
+signal reload_tuning_requested
 
 var erik: ErikView
 var cue_ring: CueRing
@@ -15,16 +16,30 @@ var hype_label: Label
 var time_label: Label
 var calibration_label: Label
 var feedback_label: Label
+var debug_panel: PanelContainer
+var debug_label: Label
 var bang_button: Button
 var pause_button: Button
 var _feedback_tween: Tween
+var _debug_visible: bool = true
+var _current_cue_debug: Dictionary = {}
+var _next_cue_debug: Dictionary = {}
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_debug_visible = OS.is_debug_build()
 	_build_ui()
+
+func apply_tuning(values: Dictionary) -> void:
+	if erik != null:
+		erik.apply_tuning(values.get("flp", {}))
+	if cue_ring != null:
+		cue_ring.apply_tuning(values.get("cue", {}))
 
 func update_cue(payload: Dictionary) -> void:
 	if payload.is_empty():
+		_current_cue_debug = {}
+		_next_cue_debug = {}
 		cue_label.text = ""
 		cue_ring.clear()
 		return
@@ -34,6 +49,9 @@ func update_cue(payload: Dictionary) -> void:
 	var song_time := float(payload.get("song_time", 0.0))
 	var approach_time := float(payload.get("approach_time", 1.0))
 	var preview_horizon := float(payload.get("preview_horizon", approach_time * 2.0))
+
+	_current_cue_debug = _cue_debug_payload(current_event, song_time)
+	_next_cue_debug = _cue_debug_payload(next_event, song_time)
 
 	var lines: Array[String] = []
 
@@ -77,9 +95,9 @@ func update_hud(state: Dictionary) -> void:
 	bang_button.disabled = not bool(state.get("the_bang_ready", false)) and not bool(state.get("the_bang", false))
 	bang_button.text = "THE BANG ACTIVE" if bool(state.get("the_bang", false)) else ("ACTIVATE THE BANG" if bool(state.get("the_bang_ready", false)) else "THE BANG")
 
-	# FLP presentation follows authoritative physical neck travel. No input/judgment callback
-	# independently starts or speeds up the frame sequence anymore.
-	erik.apply_neck_state(state.get("neck", {}), get_process_delta_time())
+	var neck_state: Dictionary = state.get("neck", {})
+	erik.apply_neck_state(neck_state, get_process_delta_time())
+	_update_debug(state)
 
 func show_judgment(outcome: Dictionary) -> void:
 	var judgment := str(outcome.get("judgment", ""))
@@ -134,8 +152,28 @@ func _build_ui() -> void:
 	erik.anchor_bottom = 0.59
 	add_child(erik)
 
-	# One central cue anchor for every direction. This is intentionally the easy/readable POC
-	# profile; the four semantic input buttons remain distinct.
+	debug_panel = PanelContainer.new()
+	debug_panel.anchor_left = 0.025
+	debug_panel.anchor_right = 0.61
+	debug_panel.anchor_top = 0.17
+	debug_panel.anchor_bottom = 0.335
+	debug_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	debug_panel.visible = _debug_visible
+	var debug_style := StyleBoxFlat.new()
+	debug_style.bg_color = Color(0.0, 0.0, 0.0, 0.72)
+	debug_style.corner_radius_top_left = 8
+	debug_style.corner_radius_top_right = 8
+	debug_style.corner_radius_bottom_left = 8
+	debug_style.corner_radius_bottom_right = 8
+	debug_panel.add_theme_stylebox_override("panel", debug_style)
+	add_child(debug_panel)
+
+	debug_label = Label.new()
+	debug_label.add_theme_font_size_override("font_size", 11)
+	debug_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	debug_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	debug_panel.add_child(debug_label)
+
 	cue_ring = CueRing.new()
 	cue_ring.anchor_left = 0.5
 	cue_ring.anchor_right = 0.5
@@ -271,9 +309,81 @@ func _input(event: InputEvent) -> void:
 			calibration_delta_requested.emit(5.0)
 		KEY_P:
 			pause_requested.emit()
+		KEY_F3:
+			_debug_visible = not _debug_visible
+			debug_panel.visible = _debug_visible
+		KEY_F4:
+			reload_tuning_requested.emit()
 
 func set_paused(value: bool) -> void:
 	pause_button.text = "RESUME" if value else "PAUSE"
+
+func _update_debug(state: Dictionary) -> void:
+	if debug_label == null or not _debug_visible:
+		return
+
+	var neck: Dictionary = state.get("neck", {})
+	var diag: Dictionary = state.get("timing_diagnostics", {})
+	var flp := erik.debug_snapshot()
+
+	var now_text := _cue_debug_text("NOW", _current_cue_debug)
+	var next_text := _cue_debug_text("NEXT", _next_cue_debug)
+
+	debug_label.text = (
+		"DEBUG · F3 hide · F4 reload tuning
+"
+		+ "t %.3f  cal %+.0fms  out %.0fms
+" % [
+			float(state.get("song_time", 0.0)),
+			float(state.get("calibration_ms", 0.0)),
+			float(state.get("audio_latency_ms", 0.0))
+		]
+		+ "%s
+%s
+" % [now_text, next_text]
+		+ "neck H %+.1f° @ %+.1f°/s   V %+.1f° @ %+.1f°/s
+" % [
+			float(neck.get("horizontal_angle", 0.0)),
+			float(neck.get("horizontal_velocity", 0.0)),
+			float(neck.get("vertical_angle", 0.0)),
+			float(neck.get("vertical_velocity", 0.0))
+		]
+		+ "FLP %02d  phase %.2f  travel %.2f°  cap %.1ffps
+" % [
+			int(flp.get("frame", 0)),
+			float(flp.get("phase", 0.0)),
+			float(flp.get("angular_travel", 0.0)),
+			float(flp.get("max_visual_fps", 0.0))
+		]
+		+ "timing n=%d  bias %+.1fms  abs %.1fms  E/L %d/%d  last %s %+.1fms" % [
+			int(diag.get("samples", 0)),
+			float(diag.get("mean_signed_ms", 0.0)),
+			float(diag.get("mean_absolute_ms", 0.0)),
+			int(diag.get("early", 0)),
+			int(diag.get("late", 0)),
+			str(diag.get("last_judgment", "")),
+			float(diag.get("last_error_ms", 0.0))
+		]
+	)
+
+func _cue_debug_payload(event: Dictionary, song_time: float) -> Dictionary:
+	if event.is_empty():
+		return {}
+	return {
+		"id": str(event.get("id", "")),
+		"direction": str(event.get("direction", "")),
+		"remaining_ms": (float(event.get("time", 0.0)) - song_time) * 1000.0
+	}
+
+func _cue_debug_text(prefix: String, cue: Dictionary) -> String:
+	if cue.is_empty():
+		return "%s —" % prefix
+	return "%s %s %s %+.0fms" % [
+		prefix,
+		str(cue.get("id", "")),
+		str(cue.get("direction", "")).to_upper(),
+		float(cue.get("remaining_ms", 0.0))
+	]
 
 func _arrow_for_direction(direction: StringName) -> String:
 	match direction:

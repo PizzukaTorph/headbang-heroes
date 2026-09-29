@@ -172,3 +172,20 @@ These are outside the current FLP POC or require device/product decisions:
 - platform signing/export presets
 
 The architecture keeps those concerns outside the gameplay domain so they can be added without rewriting the rhythm core.
+
+
+## Tuning and diagnostics
+
+POC feel values are intentionally centralized in `game/config/poc_tuning.json` rather than scattered through GDScript constants. The current file covers timing, neck physics, FLP presentation and cue presentation.
+
+A debug run supports:
+- `F3` — toggle tuning telemetry;
+- `F4` — reload the JSON tuning file without restarting the run.
+
+Timing telemetry is observational only. It records consumed player inputs and exposes:
+- signed mean error (calibration bias);
+- mean absolute error;
+- early/late counts;
+- last judgment/error.
+
+Expired events are not inserted as synthetic zero-error samples, and the diagnostics never participate in judgment, score or progression.
