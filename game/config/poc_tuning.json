@@ -28,6 +28,8 @@
     "approachRadius": 104,
     "nextMinRadius": 122,
     "nextMaxRadius": 142,
-    "nextAlpha": 0.28
+    "nextAlpha": 0.28,
+    "layoutMode": "centered",
+    "directionalSpreadPx": 82
   }
 }

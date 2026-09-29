@@ -9,6 +9,7 @@ const RunScorerScript = preload("res://src/domain/run_scorer.gd")
 const FLPFrameDriverScript = preload("res://src/presentation/flp_frame_driver.gd")
 const POCTuningScript = preload("res://src/config/poc_tuning.gd")
 const RunDiagnosticsScript = preload("res://src/debug/run_diagnostics.gd")
+const CueLayoutScript = preload("res://src/presentation/cue_layout.gd")
 
 var failures := 0
 
@@ -21,6 +22,7 @@ func _init() -> void:
 	_test_flp_frame_driver()
 	_test_poc_tuning()
 	_test_run_diagnostics()
+	_test_cue_layout_profiles()
 	if failures == 0:
 		print("HH GODOT TESTS: PASS")
 		quit(0)
@@ -142,3 +144,9 @@ func _test_run_diagnostics() -> void:
 	_expect(int(snapshot.get("early", 0)) == 1 and int(snapshot.get("late", 0)) == 1, "timing diagnostics must track early/late bias")
 	_expect(absf(float(snapshot.get("mean_signed_ms", 0.0)) + 10.0) < 0.01, "timing diagnostics mean bias must preserve sign")
 	_expect(absf(float(snapshot.get("mean_absolute_ms", 0.0)) - 30.0) < 0.01, "timing diagnostics must report mean absolute error")
+
+
+func _test_cue_layout_profiles() -> void:
+	_expect(CueLayoutScript.offset_for(&"left", &"centered", 82.0) == Vector2.ZERO, "Easy/centered cue profile must share one anchor")
+	_expect(CueLayoutScript.offset_for(&"right", &"directional", 82.0) == Vector2(82.0, 0.0), "directional cue profile must spatialize RIGHT")
+	_expect(CueLayoutScript.offset_for(&"up", &"directional", 82.0) == Vector2(0.0, -82.0), "directional cue profile must spatialize UP")

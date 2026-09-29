@@ -172,6 +172,13 @@ Initial direction:
 
 Exact mappings remain tuning data.
 
+The Godot POC already supports two presentation-only layout profiles through `game/config/poc_tuning.json`:
+
+- `centered` — every direction shares the same cue anchor (current default);
+- `directional` — LEFT/RIGHT/UP/DOWN move to direction-aligned anchors using a configurable pixel spread.
+
+Switching profile must never change candidate matching, timing, neck physics or score.
+
 ## Timing windows
 
 Timing-window tolerance and chart density are separate dimensions.
