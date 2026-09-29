@@ -148,7 +148,24 @@ Therefore:
 - there is still no automatic density rule or quota;
 - every occurrence remains hand-authored in the chart source.
 
-The exact MIDI encoding inside `HH_TECHNIQUES` (note numbers, marker values, duration semantics and optional parameters) is deferred to the authoring-format specification.
+The dedicated track uses long MIDI notes as the base Technique Skill encoding:
+
+```text
+NOTE ON  = authored Technique Skill start
+NOTE OFF = authored Technique Skill end
+PITCH    = Technique Skill identity
+VELOCITY = optional authored intensity
+```
+
+The note duration describes the authored musical/gesture window, not an automatic success state and not merely an animation duration.
+
+Per-technique semantics may interpret that window differently. For example, a sustained Windmill may require continuous circular input for most or all of the authored note duration, while Deep may use the same duration as the available time to complete its full-extension gesture.
+
+Hard rule:
+
+> **Holding the note window is never sufficient by itself; the expected gesture must still be recognized and evaluated.**
+
+Exact pitch assignments for Half / Deep / Whiplash / Windmill are deferred to the authoring-format specification.
 
 ## Frequency / musical role
 
