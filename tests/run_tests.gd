@@ -55,9 +55,10 @@ func _test_candidate_resolution() -> void:
 	var match: Dictionary = resolver.resolve(&"right", 1.075, cfg)
 	_expect(bool(match.get("consumed", false)), "eligible input must consume one event")
 	_expect(str((match.get("event", {}) as Dictionary).get("id", "")) == "b", "compatible nearest candidate must win")
-	var upcoming: Array[Dictionary] = resolver.upcoming_unresolved(0.5, 1.0, 2)
+	var preview_resolver = CandidateResolverScript.new(events)
+	var upcoming: Array[Dictionary] = preview_resolver.upcoming_unresolved(0.5, 1.0, 2)
 	_expect(upcoming.size() == 2, "cue look-ahead must expose current + next without consuming them")
-	_expect(not resolver.resolved[0] and not resolver.resolved[1], "cue look-ahead must be presentation-only")
+	_expect(not preview_resolver.resolved[0] and not preview_resolver.resolved[1], "cue look-ahead must be presentation-only")
 
 	var resolver_wrong = CandidateResolverScript.new([{"id":"x", "time":2.0, "direction":&"left"}])
 	var wrong: Dictionary = resolver_wrong.resolve(&"right", 2.0, cfg)
