@@ -143,3 +143,24 @@ and demonstrates:
 - real-device calibration/latency validation.
 
 The final acceptance criterion is experiential as well as technical: repeated play must be desirable because the headbang mechanic itself is satisfying.
+
+
+## Post-POC continuation
+
+Gameplay Grammar v1 is tracked separately in:
+
+`docs/implementation/10_GAMEPLAY_GRAMMAR_V1_ROADMAP.md`
+
+Its packages are intentionally sequential:
+
+```text
+GG1 Technique Contract
+→ GG2 Rich Motion Evidence
+→ GG3 Technique Evaluator
+→ GG4 Modifier v1
+→ GG5 Cue Language
+→ GG6 Outcome / Scoring Integration
+→ GG7 Technique Lab
+```
+
+Do not collapse these packages into one implementation pass.
