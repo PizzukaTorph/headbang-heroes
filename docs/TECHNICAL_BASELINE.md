@@ -1,17 +1,19 @@
-# Technical Baseline
+# Technical Baseline — Godot Branch
 
 ## Authority
 
-Read `FOUNDATION.md` and `TECHNICAL_CONTRACTS_V1.md` first for canonical ownership/runtime rules.
+Read FOUNDATION.md, TECHNICAL_CONTRACTS_V1.md, and GODOT_PORT.md first.
 
-This document defines the practical Unity baseline.
+This document defines the practical baseline for develop-godot.
 
 ## Engine
 
-Unity 6.6 Supported, current validated 6000.6.x patch.
+Godot 4.7.2 stable line.
 
-- no alpha/beta editor builds
-- migrate to a later LTS/Supported release only after validation
+- GDScript runtime
+- no .NET requirement
+- no third-party addons in the POC baseline
+- use stable engine releases only
 
 ## Platforms
 
@@ -19,222 +21,125 @@ Product targets:
 - Android
 - iOS
 
-Desktop Editor play mode is development-only.
-
-No WebGL requirement.
+Desktop is a development/validation target, not the product target.
 
 ## Presentation
 
 - 2D
 - portrait-first
 - touch-first
-- safe-area aware
+- safe-area work required before production mobile release
 - responsive phone aspect ratios
 - 60 FPS presentation baseline
+- FLP authored frame animation
 
 Rendering can vary independently from gameplay simulation timing.
 
-## Rendering
-
-Use Unity 2D workflow/URP where useful.
-
-Prefer:
-- static layered backgrounds
-- lightweight parallax
-- restrained lighting/particles
-- mobile profiling early
-
-Avoid expensive visual features without demonstrated value.
-
-## Input
-
-Use Unity Input System.
-
-Physical controls map to semantic gameplay intent through InputRouter.
-
-Touch coordinates/regions are never chart semantics.
-
-Convert input timestamps into authoritative song-time before domain judgment.
-
 ## Audio/rhythm timing
 
-Audio/DSP clock is authoritative.
+SongClock owns authoritative song time.
 
-Use scheduled playback where appropriate.
+Canonical Godot formula:
+
+~~~text
+AudioStreamPlayer.get_playback_position()
++ AudioServer.get_time_since_last_mix()
+- AudioServer.get_output_latency()
++ calibration
+~~~
+
+Clamp the exposed song clock monotonically so mix-thread jitter cannot move gameplay backwards.
 
 Never base authoritative scoring on:
-- Update timing
+- process elapsed time
 - animation callbacks
-- coroutines
+- Tween completion
 - frame count
 - visual cue completion
 
-Required architecture includes:
-- AudioClock
-- RuntimeChart / ChartRuntime
-- CueScheduler
-- InputRouter
-- NeckMotionModel
-- JudgmentSystem
-- MotionQualityEvaluator
-- RestEvaluator
-- ScoringSystem
-- HypeSystem
-- GameplayRun
-- calibration/debug tools
+## Input
+
+Physical touch/keyboard input maps to semantic intent before judgment.
+
+Touch coordinates are never chart semantics. Domain matching receives a semantic direction plus authoritative song time.
 
 ## Neck simulation
 
-Prototype may iterate quickly, but production scoring must not depend on render-frame pacing.
+The port keeps a deterministic fixed-step spring/damper simulation at 120 Hz baseline.
 
-Direction:
-- authoritative fixed simulation step (target such as 120 Hz to validate), or deterministic time-evaluated equivalent
-- render interpolation independent of simulation
-- event/gesture-local Motion Quality history
-
-Current M0 `Time.deltaTime` neck integration is experimental and not the final contract.
+- render delta only causes the application layer to ask how much authoritative song-time elapsed;
+- state advances in fixed ticks;
+- Motion Quality uses evidence since the previous inversion boundary;
+- first action from neutral remains setup/unprepared;
+- MISS never resets physical state.
 
 ## Content pipeline
 
-Canonical flow:
-
-```text
+~~~text
 audio + metadata + chart
-→ validate
-→ compile RuntimeChart
-→ package
-→ publish
-→ server/CDN
-→ client cache
-```
+→ validate/compile
+→ runtime chart
+→ gameplay
+~~~
 
-MIDI may be used for authoring/import, not required runtime parsing.
+MIDI remains authoring/import material, not a required runtime parser.
 
-Compatible official content can be delivered remotely.
+Remote content comes later behind a content-provider boundary.
 
-Remote content cannot introduce gameplay semantics unknown to the installed client.
+## Runtime layout
 
-## Content hosting
+~~~text
+src/domain/           engine-light gameplay rules/state
+src/application/      run orchestration
+src/infrastructure/   Godot/platform adapters (audio now)
+src/presentation/     cues, HUD, FLP Erik
+src/app/              shell / flow
+game/assets/          runtime content
+tests/                headless smoke/domain validation
+~~~
 
-Use a provider abstraction rather than binding gameplay to one vendor.
+## Performance
 
-Possible implementations:
-- local
-- Addressables-backed
-- custom object storage/CDN
-
-MVP trust baseline:
-- HTTPS
-- explicit versions
-- hashes/checksums
-
-Production publication should use trusted/signed release-manifest semantics or equivalent.
-
-## Persistence
-
-POC/MVP may use a simple versioned local profile.
-
-SaveService owns serialization/migrations; gameplay systems never write files directly.
-
-Future sync/economy authority stays behind ProfileSyncService/backend boundaries.
-
-## Performance rules
-
-- avoid per-frame allocations in gameplay hot paths
-- pool repeated cue/feedback objects where useful
-- profile on real Android/iOS hardware early
-- protect audio/touch latency
-- render frame drops must not redefine authored timing or gameplay-critical neck physics
-- do not optimize blindly
+- avoid per-frame allocations in hot paths where profiling shows impact;
+- do not make rendering authoritative;
+- validate audio/touch latency on real devices;
+- FLP texture memory must be measured before multiplying characters/animations;
+- prefer atlas/content optimization after the production asset contract stabilizes.
 
 ## Testing
 
-Use Unity Test Framework.
+Pure/domain smoke suite:
 
-EditMode/pure tests:
-- chart compile/validation
-- candidate event matching
-- timing boundaries
-- neck simulation
-- Motion Quality history
-- Rest evaluation
-- scoring/HYPE/progression
-- save migrations
+~~~bash
+godot --headless --path . --script res://tests/run_tests.gd
+~~~
 
-PlayMode/device:
-- audio scheduling/sync
-- pause/resume/retry
-- touch/Input System
+Device validation remains mandatory for:
+- touch feel
+- audio latency
 - calibration
-- content cache/offline
-- haptics
-- presentation readability
-
-## Repository layout target
-
-```text
-Assets/
-  _HeadbangHeroes/
-    Art/
-    Audio/
-    Content/
-    Prefabs/
-    Scenes/
-    Scripts/
-      Core/
-      Audio/
-      Charts/
-      Input/
-      Gameplay/
-      Presentation/
-      UI/
-      Progression/
-      Persistence/
-      Content/
-      Debug/
-    Settings/
-    Tests/
-Packages/
-ProjectSettings/
-docs/
-```
-
-Do not reorganize purely for aesthetics; migrate toward this structure as production systems replace M0 prototype classes.
+- interruption/pause behavior
+- iOS/Android export
+- memory/performance
 
 ## Dependency policy
 
-Core target remains mostly vanilla Unity + Headbang Heroes code.
+Stay vanilla Godot until a concrete requirement proves otherwise.
 
-Build game-specific core systems ourselves:
-- DSP rhythm timing
-- chart/runtime event model
-- cue scheduling
-- candidate matching/judgment
-- neck simulation
-- Motion Quality
-- scoring/HYPE
-- gameplay presentation orchestration
+Do not add generic rhythm frameworks, DI frameworks, animation packages, networking SDKs, or analytics/ads/IAP plugins until that requirement enters current scope.
 
-Avoid by default:
-- generic rhythm-game frameworks
-- structural DOTween dependence
-- FMOD/Wwise before measured need
-- third-party physics frameworks
-- networking SDKs before online work
-- dependency-injection frameworks
-- large architecture packages
+## POC exit gate
 
-A dependency is justified only when it solves a current concrete problem materially better than a small maintained implementation.
-
-## POC technical exit gate
-
-One song proves:
+One complete committed fixture proves:
 - synchronized audio/chart
-- readable cues
-- always-responsive neck input
-- meaningful momentum
-- deterministic-enough scoring path moving toward authoritative fixed simulation
-- timing vs Motion Quality separation
-- HYPE/THE BANG/Finisher
-- Results/Retry
-- real-device feel worth replaying
+- readable cue
+- semantic directional input
+- always-responsive deterministic neck state
+- Timing + Motion Quality separation
+- score/combo/multiplier
+- HYPE/THE BANG code path
+- FLP Erik feedback
+- Results + Retry
+- calibration control
+
+Production readiness additionally requires real-device validation and a legal production song/content package.

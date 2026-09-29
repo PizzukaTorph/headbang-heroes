@@ -89,18 +89,20 @@ Hard rule:
 
 > **AudioClock owns authoritative song time.**
 
-Use Unity DSP/audio timing as the source of truth.
-
-Conceptually:
+Use the engine audio playback clock as the source of truth. On the Godot runtime the authoritative estimate is:
 
 ```text
-songTime = dspTime - songStartDspTime + songStartOffset + calibration
+songTime =
+    AudioStreamPlayer.get_playback_position()
+    + AudioServer.get_time_since_last_mix()
+    - AudioServer.get_output_latency()
+    + calibration
 ```
 
-Scheduled playback should be used so start timing is not bound to an arbitrary `Update()` frame.
+Expose the result monotonically so audio-thread/mix jitter cannot make gameplay time run backwards. Playback and run start must not be anchored to an arbitrary render frame.
 
 Judgment must never use as authority:
-- `Time.time`
+- `_process()` elapsed/render time
 - animation completion
 - coroutine completion
 - frame count
@@ -660,7 +662,7 @@ Examples:
 - HairProfile
 - VenueProfile
 
-ScriptableObjects are suitable where Unity editor workflow adds value, but are not the default mutable runtime state and are not authoritative save files.
+Engine resources are suitable where editor workflow adds value, but are not the default mutable runtime state and are not authoritative save files. On Godot this means Resources may hold authored/configuration data, while live run state remains explicit domain/application state.
 
 ---
 
@@ -680,10 +682,10 @@ EditMode/pure-domain tests should cover:
 - grade/progression calculations
 - save migrations
 
-PlayMode/device tests should cover:
-- DSP start alignment
+Runtime/device tests should cover:
+- audio playback-clock start alignment
 - pause/resume/retry sync
-- Input System integration
+- Godot input/touch integration
 - cue scheduling
 - real-device calibration/latency
 - haptics

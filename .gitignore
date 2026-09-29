@@ -1,4 +1,16 @@
-# Unity
+# Godot
+.godot/
+.import/
+export.cfg
+export_presets.cfg
+*.translation
+
+# Godot exports
+/build/
+build/
+dist/
+
+# Legacy Unity workspace retained on develop-godot as migration/reference material
 [Ll]ibrary/
 [Tt]emp/
 [Oo]bj/
@@ -14,21 +26,19 @@ Assets/AssetStoreTools*
 Assets/ThirdPartyLicensedLocal/
 Assets/_HeadbangHeroes/Content/Lab/LocalAudio/
 Assets/_HeadbangHeroes/Content/Lab/LocalSource/
-# Licensed audio placed directly in Content/Lab (either location is accepted by the builder)
 Assets/_HeadbangHeroes/Content/Lab/BeyondThePain.mp3
 Assets/_HeadbangHeroes/Content/Lab/BeyondThePain.mp3.meta
 Assets/_HeadbangHeroes/Content/Lab/BeyondThePain.wav
 Assets/_HeadbangHeroes/Content/Lab/BeyondThePain.ogg
+game/assets/audio/beyond_the_pain.mp3
+game/assets/audio/beyond_the_pain.wav
+game/assets/audio/beyond_the_pain.ogg
 
-# WISH — licensed audio + source MIDI (local only; do not commit copyrighted material)
+# WISH — licensed/local only
 Assets/_HeadbangHeroes/Content/Lab/wish.mp3
 Assets/_HeadbangHeroes/Content/Lab/wish.mp3.meta
 Assets/_HeadbangHeroes/Content/Lab/wish.mid
 Assets/_HeadbangHeroes/Content/Lab/wish.mid.meta
-
-# Generated at build time by the M0 builder (regenerated on demand)
-Assets/_HeadbangHeroes/Content/Lab/Generated/M0_ClickTrack.wav
-Assets/_HeadbangHeroes/Content/Lab/Generated/M0_ClickTrack.wav.meta
 
 # IDE
 .vs/
@@ -39,15 +49,10 @@ Assets/_HeadbangHeroes/Content/Lab/Generated/M0_ClickTrack.wav.meta
 *.suo
 *.user
 *.userprefs
-*.pidb
-*.booproj
-*.svd
 
-# OS
+# OS / debug
 .DS_Store
 Thumbs.db
-
-# Crash/debug
 sysinfo.txt
 *.stackdump
 

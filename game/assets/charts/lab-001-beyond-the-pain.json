@@ -1,0 +1,33 @@
+{
+  "songId": "lab-001-beyond-the-pain",
+  "title": "Beyond the Pain",
+  "artist": "Asidie",
+  "source": {
+    "audioFile": "2 - Beyond the Pain.mp3",
+    "midiFile": "06 - Beyond the Pain.mid",
+    "audioCommitted": false,
+    "midiCommitted": false
+  },
+  "analysis": {
+    "midiType": 1,
+    "ppq": 480,
+    "initialBpm": 150.0,
+    "tempoChanges": [
+      { "midiTime": 258.8, "bpm": 140.00014 }
+    ],
+    "timeSignatures": [
+      { "midiTime": 0.0, "signature": "4/4" },
+      { "midiTime": 158.4, "signature": "3/4" },
+      { "midiTime": 159.6, "signature": "4/4" }
+    ],
+    "estimatedAudioOffsetSeconds": 10.54,
+    "note": "Audio onset correlation places the MIDI drum entrance at ~23.34s versus MIDI ~12.80s. Offset is provisional until device/editor playback verification."
+  },
+  "prototypeSection": {
+    "audioStart": 23.34,
+    "audioEnd": 83.34,
+    "midiStart": 12.80,
+    "midiEnd": 72.80,
+    "purpose": "Classic Bang M0 timing/momentum test"
+  }
+}

@@ -1,41 +1,108 @@
-# Headbang Heroes
+# Headbang Heroes — Godot
 
 **A mobile rhythm game where you do not play the music — you play the neck.**
 
-Headbang Heroes is a 2D mobile rhythm game built around headbanging. Timing, momentum, direction and increasingly complex gestures turn each song into a physical rhythm challenge.
+develop-godot is the native Godot port of the working FLP POC. The branch deliberately preserves the original Unity folders as migration/reference material, but Godot ignores them through .gdignore. The active project starts at the repository root with project.godot.
 
-## Vision
+## Run it
 
-- Mobile-first, portrait-friendly 2D gameplay
-- Metal and hard-music identity
-- Timing communicated through closing/converging circles
-- Song audio paired with MIDI/event data for deterministic charts
-- Head movement with inertia rather than binary canned input
-- Multiple headbang techniques and combo chains
-- Customizable avatar, cosmetics and gestures
-- Static genre-themed venues/backgrounds with lightweight effects
-- Per-song, friends, weekly and genre leaderboards
-- Asynchronous challenges first; realtime multiplayer only if justified
-- Lightweight horizontal campaign: **Road to the Pit**
-- Original and licensed underground music, with a future path to Underground Platform integration
+Requirements:
 
-## First milestone — Make The Headbang Fun
+- Godot 4.7.2
+- no addons or external packages
 
-The prototype has one job: prove that controlling a head in time with music is satisfying.
+Steps:
 
-Prototype scope:
+1. Clone the repository and checkout develop-godot.
+2. Import the repository root in Godot Project Manager (project.godot).
+3. Let Godot import the PNG/WAV assets.
+4. Press Play Project.
+5. Press PLAY TEMPO RAMP.
 
-1. One original/test track
-2. Audio + authored MIDI/event chart
-3. One placeholder avatar
-4. Closing-circle timing cue
-5. Basic directional input
-6. Head/neck momentum and inertia
-7. PERFECT / GREAT / GOOD / MISS judgments
-8. Combo and score
-9. Immediate audiovisual feedback
-10. Debug timing/calibration controls
+The repository contains a redistributable validation fixture (TempoRamp.wav) so the POC works immediately after clone. Beyond the Pain chart/MIDI fixtures are also retained, but the song audio is intentionally local-only/licensed and is not committed.
 
-No account system, store, campaign, online multiplayer or production art until the core interaction is fun.
+## Controls
 
-See [docs/GDD.md](docs/GDD.md) and [docs/ROADMAP.md](docs/ROADMAP.md).
+Mobile/touch:
+- LEFT / UP / DOWN / RIGHT buttons
+- THE BANG button when HYPE is ready
+- calibration +/- controls
+
+Desktop:
+- arrows or WASD = semantic bang directions
+- B = THE BANG
+- [ / ] = calibration -/+ 5 ms
+- P = pause/resume
+
+## Runtime architecture
+
+~~~text
+AudioStreamPlayer
+      ↓
+SongClock (authoritative audio time)
+      ↓
+Runtime chart + CandidateResolver
+      ↓
+NeckMotionState (120 Hz fixed simulation)
+      ↓
+Timing + MotionQuality
+      ↓
+RunScorer + HypeSystem
+      ↓
+GameplayView / Erik FLP animation
+~~~
+
+Hard rules retained from the canonical docs:
+
+- audio time owns judgment timing;
+- input always changes neck motion, even with no matching cue;
+- a MISS never snaps/reset the neck;
+- Timing Quality and Motion Quality are independent;
+- FLP animation is presentation only;
+- chart authoring data is compiled before the gameplay hot path;
+- wrong-direction input inside an eligible window consumes that event as MISS;
+- score/HYPE/results consume deterministic domain outcomes.
+
+## Audio timing
+
+Song time uses the Godot rhythm-game clock recommended by the engine documentation:
+
+~~~text
+AudioStreamPlayer.get_playback_position()
++ AudioServer.get_time_since_last_mix()
+- AudioServer.get_output_latency()
++ user calibration
+~~~
+
+The value is monotonic-clamped to prevent mix jitter from moving gameplay time backwards.
+
+## Tests
+
+From a terminal with Godot available:
+
+~~~bash
+godot --headless --path . --script res://tests/run_tests.gd
+~~~
+
+The smoke/domain suite covers chart compilation, timing boundaries, candidate matching, deterministic neck evidence and scoring transitions.
+
+## Important paths
+
+~~~text
+project.godot
+scenes/
+src/
+  app/
+  application/
+  domain/
+  infrastructure/
+  presentation/
+game/assets/
+  audio/
+  charts/
+  characters/erik/headbang/
+tests/
+docs/
+~~~
+
+See docs/GODOT_PORT.md for the migration map and known validation gates.
