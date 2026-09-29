@@ -5,7 +5,7 @@ extends Control
 ## every semantic direction shares one central target.
 ## CURRENT owns the closing ring; NEXT is a faint preview.
 ##
-## layout_mode can be switched to "directional" from tuning data to spatialize the same
+## cue_layout_mode can be switched to "directional" from tuning data to spatialize the same
 ## semantic cues without touching chart/runtime rules.
 
 const DEFAULT_TARGET_RADIUS := 42.0
@@ -29,7 +29,7 @@ var approach_radius: float = DEFAULT_APPROACH_RADIUS
 var next_min_radius: float = DEFAULT_NEXT_MIN_RADIUS
 var next_max_radius: float = DEFAULT_NEXT_MAX_RADIUS
 var next_alpha: float = DEFAULT_NEXT_ALPHA
-var layout_mode: StringName = &"centered"
+var cue_layout_mode: StringName = &"centered"
 var directional_spread_px: float = DEFAULT_DIRECTIONAL_SPREAD_PX
 
 func _ready() -> void:
@@ -42,7 +42,7 @@ func apply_tuning(values: Dictionary) -> void:
 	next_max_radius = maxf(next_min_radius, float(values.get("nextMaxRadius", DEFAULT_NEXT_MAX_RADIUS)))
 	next_alpha = clampf(float(values.get("nextAlpha", DEFAULT_NEXT_ALPHA)), 0.05, 0.9)
 	var requested_mode := StringName(str(values.get("layoutMode", "centered")).to_lower())
-	layout_mode = requested_mode if requested_mode in [&"centered", &"directional"] else &"centered"
+	cue_layout_mode = requested_mode if requested_mode in [&"centered", &"directional"] else &"centered"
 	directional_spread_px = maxf(0.0, float(values.get("directionalSpreadPx", DEFAULT_DIRECTIONAL_SPREAD_PX)))
 	queue_redraw()
 
@@ -94,8 +94,8 @@ func _draw() -> void:
 		return
 
 	var base_center := size * 0.5
-	var current_center := base_center + CueLayout.offset_for(current_direction, layout_mode, directional_spread_px)
-	var next_center := base_center + CueLayout.offset_for(next_direction, layout_mode, directional_spread_px)
+	var current_center := base_center + CueLayout.offset_for(current_direction, cue_layout_mode, directional_spread_px)
+	var next_center := base_center + CueLayout.offset_for(next_direction, cue_layout_mode, directional_spread_px)
 
 	# Draw the semantic target where CURRENT belongs. If only NEXT is visible, draw a dim target
 	# at its future anchor so directional preview mode remains readable.
