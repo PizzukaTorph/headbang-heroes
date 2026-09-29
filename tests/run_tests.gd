@@ -6,6 +6,7 @@ const CandidateResolverScript = preload("res://src/domain/candidate_resolver.gd"
 const NeckMotionScript = preload("res://src/domain/neck_motion_state.gd")
 const MotionQualityScript = preload("res://src/domain/motion_quality.gd")
 const RunScorerScript = preload("res://src/domain/run_scorer.gd")
+const FLPFrameDriverScript = preload("res://src/presentation/flp_frame_driver.gd")
 
 var failures := 0
 
@@ -15,6 +16,7 @@ func _init() -> void:
 	_test_candidate_resolution()
 	_test_neck_and_motion_quality()
 	_test_scoring()
+	_test_flp_frame_driver()
 	if failures == 0:
 		print("HH GODOT TESTS: PASS")
 		quit(0)
@@ -53,6 +55,10 @@ func _test_candidate_resolution() -> void:
 	var match: Dictionary = resolver.resolve(&"right", 1.075, cfg)
 	_expect(bool(match.get("consumed", false)), "eligible input must consume one event")
 	_expect(str((match.get("event", {}) as Dictionary).get("id", "")) == "b", "compatible nearest candidate must win")
+	var upcoming: Array[Dictionary] = resolver.upcoming_unresolved(0.5, 1.0, 2)
+	_expect(upcoming.size() == 2, "cue look-ahead must expose current + next without consuming them")
+	_expect(not resolver.resolved[0] and not resolver.resolved[1], "cue look-ahead must be presentation-only")
+
 	var resolver_wrong = CandidateResolverScript.new([{"id":"x", "time":2.0, "direction":&"left"}])
 	var wrong: Dictionary = resolver_wrong.resolve(&"right", 2.0, cfg)
 	_expect(StringName(wrong.get("judgment", "")) == &"MISS", "wrong direction in-window must consume as MISS")
@@ -77,3 +83,30 @@ func _test_scoring() -> void:
 	_expect(int(outcome.get("combo", 0)) == 1, "PERFECT must advance combo")
 	scorer.resolve({"id":"m0001","finisher_candidate":false}, &"MISS", 0.0, 0.0, false)
 	_expect(scorer.combo == 0, "MISS must reset combo")
+
+
+func _test_flp_frame_driver() -> void:
+	var driver = FLPFrameDriverScript.new(16)
+	var neutral := {
+		"horizontal_angle": 0.0,
+		"vertical_angle": 0.0,
+		"horizontal_velocity": 0.0,
+		"vertical_velocity": 0.0
+	}
+	_expect(driver.update(neutral, 1.0 / 60.0) == 0, "settled neck must show neutral FLP frame")
+
+	var moving := {
+		"horizontal_angle": 42.0,
+		"vertical_angle": 0.0,
+		"horizontal_velocity": 360.0,
+		"vertical_velocity": 0.0
+	}
+	driver.update(moving, 1.0 / 60.0)
+	_expect(driver.phase_frames > 0.0, "physical angular travel must advance FLP phase")
+	_expect(
+		driver.phase_frames <= FLPFrameDriverScript.MAX_VISUAL_FPS / 60.0 + 0.0001,
+		"FLP phase must respect the readability speed cap"
+	)
+
+	driver.update(neutral, 1.0 / 60.0)
+	_expect(driver.current_frame == 0, "physically settled neutral must return presentation to frame 0")

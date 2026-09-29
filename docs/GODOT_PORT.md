@@ -89,15 +89,37 @@ Input is sampled into the same song-time domain at the instant the semantic bang
 
 ## FLP contract
 
-The 16 Erik PNGs are imported as independent textures and played as an authored frame sequence.
+The 16 Erik PNGs are imported as independent textures. The sequence is now physically driven rather than timer-driven.
+
+Presentation flow:
+
+```text
+NeckMotionState
+    ↓
+actual angular travel
+    ↓
+FLPFrameDriver
+    ↓
+authored frame phase
+    ↓
+ErikView
+```
+
+The frame driver advances from real neck travel and is capped at 9 visual frames/second so high physical velocity cannot make the art unreadably fast. Near physical extrema, angular travel naturally falls and the displayed pose dwells longer. Once the neck is physically settled near neutral, presentation returns to frame 0.
 
 Important:
 
-- they do not drive the neck state;
+- FLP frames observe neck state; they never mutate it;
 - they do not drive event completion;
 - they do not drive score;
-- restarting/replacing the visual sequence cannot change a judgment;
+- timing/judgment never use FLP phase;
 - future Idle/Horns sequences can be added without modifying the domain.
+
+## Cue readability profile
+
+The current POC uses one shared central cue location for all four semantic directions. CURRENT is the strong closing ring; NEXT is a faint larger concentric preview. Direction remains explicit through arrow/color and the four input buttons stay distinct.
+
+This intentionally creates a low-search-cost baseline. A future difficulty profile may move/spatialize cue anchors without changing chart semantics or neck physics.
 
 ## Included content and local audio
 

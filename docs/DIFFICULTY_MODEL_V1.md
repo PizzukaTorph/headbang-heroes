@@ -135,6 +135,43 @@ This table is guidance, not a mandatory unlock law.
 
 A particular song may omit a technique even on Extreme if the music does not call for it.
 
+## Cue layout as a readability dimension
+
+Cue position is allowed to participate in difficulty/readability, provided it remains presentation-only.
+
+Current POC / Easy-profile rule:
+
+```text
+LEFT / RIGHT / UP / DOWN
+        ↓
+one shared central cue target
+        ↓
+direction encoded by arrow/color
+        ↓
+four distinct semantic input buttons remain
+```
+
+This deliberately reduces visual search cost while preserving the four-direction control vocabulary.
+
+A future harder presentation profile may spatialize the same authored cues (for example, direction-aligned anchors or larger visual travel). That may increase reading demand without changing:
+
+- authored event time;
+- semantic direction;
+- timing judgment rules;
+- candidate consumption;
+- neck physics;
+- Motion Quality;
+- score semantics.
+
+The cue layout must therefore never become timing authority.
+
+Initial direction:
+- Easy: centered/shared target;
+- Normal: centered or mildly spatialized after playtest;
+- Hard/Extreme: spatialization may be used when it improves challenge rather than merely adding clutter.
+
+Exact mappings remain tuning data.
+
 ## Timing windows
 
 Timing-window tolerance and chart density are separate dimensions.

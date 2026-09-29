@@ -28,14 +28,28 @@ func next_unresolved_time() -> float:
 	return -1.0
 
 func earliest_unresolved_within(now: float, lead_seconds: float) -> Dictionary:
+	var upcoming := upcoming_unresolved(now, lead_seconds, 1)
+	return upcoming[0] if not upcoming.is_empty() else {}
+
+## Returns up to count unresolved authored events inside the presentation horizon,
+## preserving authored order. This is presentation look-ahead only; it does not consume,
+## judge or otherwise mutate candidate state.
+func upcoming_unresolved(now: float, lead_seconds: float, count: int = 2) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	if count <= 0:
+		return result
+
 	for i in events.size():
 		if resolved[i]:
 			continue
 		var event := events[i]
-		if float(event["time"]) - now <= lead_seconds:
-			return {"slot": i, "event": event}
-		return {}
-	return {}
+		var remaining := float(event["time"]) - now
+		if remaining > lead_seconds:
+			break
+		result.append({"slot": i, "event": event})
+		if result.size() >= count:
+			break
+	return result
 
 func resolve(direction: StringName, song_time: float, config: TimingConfig) -> Dictionary:
 	var have_compatible := false

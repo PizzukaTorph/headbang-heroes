@@ -8,6 +8,8 @@ signal free_bang(direction: StringName)
 signal run_finished(result: Dictionary)
 signal pause_changed(paused: bool)
 
+const NEXT_CUE_HORIZON_MULTIPLIER := 2.25
+
 var chart: Dictionary = {}
 var resolver: CandidateResolver
 var timing := TimingConfig.new()
@@ -128,20 +130,44 @@ func _process(_delta: float) -> void:
 		var outcome := scorer.resolve_expired(expired_event)
 		judgment_resolved.emit(outcome)
 
-	var cue := resolver.earliest_unresolved_within(now, float(chart.get("approach_time", 1.0)))
-	if cue.is_empty():
-		cue_changed.emit({})
-	else:
-		var payload: Dictionary = cue.duplicate(true)
-		payload["song_time"] = now
-		payload["approach_time"] = float(chart.get("approach_time", 1.0))
-		cue_changed.emit(payload)
-
+	_emit_cues(now)
 	_emit_hud()
 
 	var last_event_time := _last_authored_event_time()
 	if resolver.all_resolved() and (now >= last_event_time + 0.75 or _audio_finished):
 		_finish()
+
+func _emit_cues(now: float) -> void:
+	var approach_time := float(chart.get("approach_time", 1.0))
+	var preview_horizon := approach_time * NEXT_CUE_HORIZON_MULTIPLIER
+	var upcoming := resolver.upcoming_unresolved(now, preview_horizon, 2)
+
+	if upcoming.is_empty():
+		cue_changed.emit({})
+		return
+
+	var current_event: Dictionary = {}
+	var next_event: Dictionary = {}
+
+	var first: Dictionary = upcoming[0]
+	var first_event: Dictionary = first["event"]
+	var first_remaining := float(first_event["time"]) - now
+
+	if first_remaining <= approach_time:
+		current_event = first_event
+		if upcoming.size() > 1:
+			next_event = (upcoming[1] as Dictionary)["event"]
+	else:
+		# Nothing is judgeable/closing yet. Show the first upcoming event only as NEXT preview.
+		next_event = first_event
+
+	cue_changed.emit({
+		"current": current_event,
+		"next": next_event,
+		"song_time": now,
+		"approach_time": approach_time,
+		"preview_horizon": preview_horizon
+	})
 
 func _emit_hud() -> void:
 	if scorer == null:

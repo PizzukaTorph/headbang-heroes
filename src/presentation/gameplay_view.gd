@@ -26,13 +26,40 @@ func _ready() -> void:
 func update_cue(payload: Dictionary) -> void:
 	if payload.is_empty():
 		cue_label.text = ""
-		cue_ring.set_cue({}, 0.0, 1.0)
+		cue_ring.clear()
 		return
-	var event: Dictionary = payload["event"]
-	var direction := str(event.get("direction", "")).to_upper()
-	var remaining := float(event.get("time", 0.0)) - float(payload.get("song_time", 0.0))
-	cue_label.text = "%s  %+.0f ms" % [direction, remaining * 1000.0]
-	cue_ring.set_cue(event, float(payload["song_time"]), float(payload["approach_time"]))
+
+	var current_event: Dictionary = payload.get("current", {})
+	var next_event: Dictionary = payload.get("next", {})
+	var song_time := float(payload.get("song_time", 0.0))
+	var approach_time := float(payload.get("approach_time", 1.0))
+	var preview_horizon := float(payload.get("preview_horizon", approach_time * 2.0))
+
+	var lines: Array[String] = []
+
+	if not current_event.is_empty():
+		var current_remaining := float(current_event.get("time", 0.0)) - song_time
+		lines.append(
+			"NOW  %s %s  %+.0f ms" % [
+				_arrow_for_direction(StringName(current_event.get("direction", ""))),
+				str(current_event.get("direction", "")).to_upper(),
+				current_remaining * 1000.0
+			]
+		)
+
+	if not next_event.is_empty():
+		var next_remaining := float(next_event.get("time", 0.0)) - song_time
+		lines.append(
+			"NEXT %s %s  %+.0f ms" % [
+				_arrow_for_direction(StringName(next_event.get("direction", ""))),
+				str(next_event.get("direction", "")).to_upper(),
+				next_remaining * 1000.0
+			]
+		)
+
+	cue_label.text = "
+".join(lines)
+	cue_ring.set_cues(current_event, next_event, song_time, approach_time, preview_horizon)
 
 func update_hud(state: Dictionary) -> void:
 	score_label.text = "SCORE  %09d" % int(state.get("score", 0))
@@ -50,16 +77,19 @@ func update_hud(state: Dictionary) -> void:
 	bang_button.disabled = not bool(state.get("the_bang_ready", false)) and not bool(state.get("the_bang", false))
 	bang_button.text = "THE BANG ACTIVE" if bool(state.get("the_bang", false)) else ("ACTIVATE THE BANG" if bool(state.get("the_bang_ready", false)) else "THE BANG")
 
+	# FLP presentation follows authoritative physical neck travel. No input/judgment callback
+	# independently starts or speeds up the frame sequence anymore.
+	erik.apply_neck_state(state.get("neck", {}), get_process_delta_time())
+
 func show_judgment(outcome: Dictionary) -> void:
 	var judgment := str(outcome.get("judgment", ""))
 	var error_ms := float(outcome.get("error", 0.0)) * 1000.0
 	var mq := float(outcome.get("motion_quality", 0.0)) * 100.0
-	_show_feedback("%s  %+.0f ms\nMOTION %.0f%%" % [judgment, error_ms, mq])
-	erik.play_headbang(1.0)
+	_show_feedback("%s  %+.0f ms
+MOTION %.0f%%" % [judgment, error_ms, mq])
 
 func show_free_bang(_direction: StringName) -> void:
 	_show_feedback("BANG")
-	erik.play_headbang(0.75)
 
 func _build_ui() -> void:
 	var background := ColorRect.new()
@@ -104,24 +134,27 @@ func _build_ui() -> void:
 	erik.anchor_bottom = 0.59
 	add_child(erik)
 
+	# One central cue anchor for every direction. This is intentionally the easy/readable POC
+	# profile; the four semantic input buttons remain distinct.
 	cue_ring = CueRing.new()
 	cue_ring.anchor_left = 0.5
 	cue_ring.anchor_right = 0.5
 	cue_ring.anchor_top = 0.54
 	cue_ring.anchor_bottom = 0.54
-	cue_ring.offset_left = -115.0
-	cue_ring.offset_right = 115.0
-	cue_ring.offset_top = -115.0
-	cue_ring.offset_bottom = 115.0
+	cue_ring.offset_left = -155.0
+	cue_ring.offset_right = 155.0
+	cue_ring.offset_top = -155.0
+	cue_ring.offset_bottom = 155.0
 	add_child(cue_ring)
 
 	cue_label = Label.new()
-	cue_label.anchor_left = 0.1
-	cue_label.anchor_right = 0.9
+	cue_label.anchor_left = 0.08
+	cue_label.anchor_right = 0.92
 	cue_label.anchor_top = 0.655
-	cue_label.anchor_bottom = 0.70
+	cue_label.anchor_bottom = 0.715
 	cue_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	cue_label.add_theme_font_size_override("font_size", 22)
+	cue_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	cue_label.add_theme_font_size_override("font_size", 18)
 	add_child(cue_label)
 
 	feedback_label = Label.new()
@@ -143,10 +176,14 @@ func _build_ui() -> void:
 	controls.anchor_bottom = 0.82
 	controls.add_theme_constant_override("separation", 8)
 	add_child(controls)
-	_add_direction_button(controls, "◀\nLEFT", &"left")
-	_add_direction_button(controls, "▲\nUP", &"up")
-	_add_direction_button(controls, "▼\nDOWN", &"down")
-	_add_direction_button(controls, "▶\nRIGHT", &"right")
+	_add_direction_button(controls, "◀
+LEFT", &"left")
+	_add_direction_button(controls, "▲
+UP", &"up")
+	_add_direction_button(controls, "▼
+DOWN", &"down")
+	_add_direction_button(controls, "▶
+RIGHT", &"right")
 
 	bang_button = Button.new()
 	bang_button.anchor_left = 0.12
@@ -209,7 +246,6 @@ func _add_direction_button(parent: HBoxContainer, text_value: String, direction:
 	parent.add_child(button)
 
 func _on_direction_pressed(direction: StringName) -> void:
-	erik.play_headbang(0.9)
 	bang_requested.emit(direction)
 
 func _input(event: InputEvent) -> void:
@@ -238,6 +274,14 @@ func _input(event: InputEvent) -> void:
 
 func set_paused(value: bool) -> void:
 	pause_button.text = "RESUME" if value else "PAUSE"
+
+func _arrow_for_direction(direction: StringName) -> String:
+	match direction:
+		&"left": return "◀"
+		&"right": return "▶"
+		&"up": return "▲"
+		&"down": return "▼"
+		_: return "•"
 
 func _show_feedback(text_value: String) -> void:
 	if _feedback_tween != null and _feedback_tween.is_valid():
