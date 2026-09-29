@@ -120,10 +120,34 @@ func _test_flp_frame_driver() -> void:
 
 
 func _test_poc_tuning() -> void:
-	var tuning = POCTuningScript.new()
-	_expect(tuning.load_from_file(), "committed POC tuning JSON must load")
-	_expect(absf(tuning.number("flp", "maxVisualFps", 0.0) - 9.0) < 0.001, "FLP visual FPS must come from tuning data")
-	_expect(absf(tuning.number("neck", "impulse", 0.0) - 190.0) < 0.001, "neck impulse must come from tuning data")
+	var profiles := ["easy", "normal", "hard", "extreme"]
+	var perfect_windows: Dictionary = {}
+	var neck_impulses: Dictionary = {}
+	var layouts: Dictionary = {}
+
+	for profile in profiles:
+		var tuning = POCTuningScript.new()
+		_expect(tuning.load_profile(StringName(profile)), "%s tuning profile must load" % profile)
+		_expect(str(tuning.profile_id) == profile, "%s profile identity must survive merge" % profile)
+		perfect_windows[profile] = tuning.number("timing", "perfectWindowMs", 0.0)
+		neck_impulses[profile] = tuning.number("neck", "impulse", 0.0)
+		layouts[profile] = str(tuning.section("cue").get("layoutMode", ""))
+		_expect(absf(tuning.number("flp", "maxVisualFps", 0.0) - 9.0) < 0.001, "%s must inherit base FLP tuning" % profile)
+		_expect(absf(tuning.number("cue", "targetRadius", 0.0) - 42.0) < 0.001, "%s must inherit nested base cue values" % profile)
+		_expect(not tuning.section("feedback").is_empty(), "%s must inherit base feedback tuning" % profile)
+
+	_expect(float(perfect_windows["easy"]) > float(perfect_windows["normal"]), "Easy timing must be more generous than Normal")
+	_expect(float(perfect_windows["normal"]) > float(perfect_windows["hard"]), "Hard timing must be tighter than Normal")
+	_expect(float(perfect_windows["hard"]) > float(perfect_windows["extreme"]), "Extreme timing must be tighter than Hard")
+
+	for profile in profiles:
+		_expect(absf(float(neck_impulses[profile]) - 190.0) < 0.001, "%s must preserve identical neck impulse" % profile)
+
+	_expect(str(layouts["easy"]) == "centered", "Easy cue layout must remain centered")
+	_expect(str(layouts["normal"]) == "centered", "Normal cue layout must remain centered")
+	_expect(str(layouts["hard"]) == "directional", "Hard cue layout must exercise directional spatialization")
+	_expect(str(layouts["extreme"]) == "directional", "Extreme cue layout must exercise directional spatialization")
+	_expect(not POCTuningScript.is_valid_profile(&"nightmare"), "unknown profile IDs must be rejected by validation")
 
 	var tuned_neck = NeckMotionScript.new()
 	tuned_neck.configure({"impulse": 100.0, "simulationHz": 120.0})

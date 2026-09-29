@@ -30,8 +30,14 @@ var _next_cue_horizon_multiplier: float = DEFAULT_NEXT_CUE_HORIZON_MULTIPLIER
 func _ready() -> void:
 	set_process(false)
 
-func configure(chart_path: String, audio_path: String) -> bool:
-	tuning.load_from_file()
+func configure(
+	chart_path: String,
+	audio_path: String,
+	tuning_profile: StringName = POCTuning.DEFAULT_PROFILE
+) -> bool:
+	if not tuning.load_profile(tuning_profile):
+		push_error("HH tuning profile could not be loaded: %s" % str(tuning_profile))
+		return false
 	_apply_tuning()
 
 	chart = HHChartCompiler.load_chart(chart_path)
@@ -55,16 +61,23 @@ func configure(chart_path: String, audio_path: String) -> bool:
 	resolver = CandidateResolver.new(chart["events"])
 	return true
 
+func active_tuning_profile() -> StringName:
+	return tuning.profile_id
+
 func presentation_tuning() -> Dictionary:
 	return {
 		"flp": tuning.section("flp"),
-		"cue": tuning.section("cue")
+		"cue": tuning.section("cue"),
+		"feedback": tuning.section("feedback")
 	}
 
-func reload_tuning() -> void:
-	tuning.load_from_file()
+func reload_tuning() -> bool:
+	var loaded := tuning.reload()
+	if not loaded:
+		return false
 	_apply_tuning()
 	_emit_hud()
+	return true
 
 func start_run() -> void:
 	if chart.is_empty() or _stream == null or clock == null:
@@ -171,6 +184,8 @@ func _apply_tuning() -> void:
 	timing.candidate_lead = maxf(0.0, float(timing_values.get("candidateLeadMs", 1000.0)) / 1000.0)
 	timing.late_expiry = maxf(0.0, float(timing_values.get("lateExpiryMs", 240.0)) / 1000.0)
 
+	# North-star difficulty rule: the same neck is configured from base tuning for every profile.
+	# Difficulty overrides deliberately contain no neck section.
 	neck.configure(tuning.section("neck"))
 
 	var cue_values := tuning.section("cue")
@@ -214,6 +229,8 @@ func _emit_hud() -> void:
 	if scorer == null:
 		return
 	hud_changed.emit({
+		"tuning_profile": str(tuning.profile_id),
+		"chart_difficulty": str(chart.get("difficulty", "")),
 		"song_time": clock.song_time() if clock != null else 0.0,
 		"score": scorer.score,
 		"combo": scorer.combo,
@@ -247,6 +264,8 @@ func _finish() -> void:
 	_active = false
 	set_process(false)
 	var result := scorer.result(chart)
+	result["tuning_profile"] = str(tuning.profile_id)
+	result["chart_difficulty"] = str(chart.get("difficulty", ""))
 	result["calibration_ms"] = calibration_ms()
 	result["timing_diagnostics"] = diagnostics.snapshot()
 	run_finished.emit(result)

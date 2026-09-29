@@ -41,6 +41,33 @@ A chart has one authored difficulty classification.
 
 Do not modify neck physics, Motion Quality formulas, damping, impulse, or physical limits merely because the chart is Hard or Extreme.
 
+## Runtime tuning profiles vs authored difficulty
+
+The Godot POC exposes EASY / NORMAL / HARD / EXTREME **tuning profiles** so one validation chart can exercise timing/readability behavior quickly.
+
+This does not change the canonical rule that difficulty belongs to authored charts.
+
+The separation is:
+
+```text
+AUTHORED CHART DIFFICULTY
+density · techniques · trajectories · modifiers · rests · choreography
+                 +
+RUNTIME TUNING PROFILE
+timing tolerance · cue readability/presentation
+                 +
+USER / DEVICE CALIBRATION
+audio/input offset
+```
+
+During the POC, TempoRamp may be replayed with every tuning profile even though its chart metadata remains `Prototype`. This is explicitly a test harness.
+
+Hard rule:
+
+> **Difficulty profiles must not override neck physics.**
+
+Impulse, damping, return strength, physical limits, simulation rate and Motion Quality behavior are shared. Harder play must emerge from authored choreography, timing tolerance and readable presentation demands rather than an invisible change to the player's neck.
+
 ## What difficulty describes
 
 Difficulty is informed by a combination of:

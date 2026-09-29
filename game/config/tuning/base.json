@@ -31,5 +31,16 @@
     "nextAlpha": 0.28,
     "layoutMode": "centered",
     "directionalSpreadPx": 82
+  },
+  "feedback": {
+    "perfectPunch": 1.08,
+    "greatPunch": 1.055,
+    "goodPunch": 1.03,
+    "wellPunch": 1.015,
+    "missPunch": 0.985,
+    "holdSeconds": 0.16,
+    "fadeSeconds": 0.36,
+    "erikPunchSeconds": 0.12,
+    "hypePulse": 1.06
   }
 }

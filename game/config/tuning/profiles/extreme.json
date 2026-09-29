@@ -1,0 +1,19 @@
+{
+  "meta": {
+    "id": "extreme",
+    "label": "EXTREME",
+    "purpose": "POC high-demand timing plus wider directional cue spatialization"
+  },
+  "timing": {
+    "perfectWindowMs": 50,
+    "greatWindowMs": 95,
+    "goodWindowMs": 145,
+    "wellWindowMs": 190,
+    "lateExpiryMs": 190
+  },
+  "cue": {
+    "nextHorizonMultiplier": 1.75,
+    "layoutMode": "directional",
+    "directionalSpreadPx": 90
+  }
+}

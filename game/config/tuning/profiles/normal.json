@@ -1,0 +1,7 @@
+{
+  "meta": {
+    "id": "normal",
+    "label": "NORMAL",
+    "purpose": "POC baseline profile matching the initial Godot timing/readability"
+  }
+}

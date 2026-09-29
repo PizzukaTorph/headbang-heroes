@@ -1,0 +1,19 @@
+{
+  "meta": {
+    "id": "hard",
+    "label": "HARD",
+    "purpose": "POC tighter timing plus directional cue readability test"
+  },
+  "timing": {
+    "perfectWindowMs": 60,
+    "greatWindowMs": 115,
+    "goodWindowMs": 170,
+    "wellWindowMs": 215,
+    "lateExpiryMs": 215
+  },
+  "cue": {
+    "nextHorizonMultiplier": 2.0,
+    "layoutMode": "directional",
+    "directionalSpreadPx": 66
+  }
+}

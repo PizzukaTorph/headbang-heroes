@@ -43,6 +43,7 @@ This is a port of contracts and behavior, not a line-by-line C# translation.
 
 ~~~text
 Home
+→ select POC tuning profile
 → Play Tempo Ramp
 → gameplay/audio/chart
 → FLP Erik feedback
@@ -176,7 +177,11 @@ The architecture keeps those concerns outside the gameplay domain so they can be
 
 ## Tuning and diagnostics
 
-POC feel values are intentionally centralized in `game/config/poc_tuning.json` rather than scattered through GDScript constants. The current file covers timing, neck physics, FLP presentation and cue presentation.
+POC feel values are intentionally layered under `game/config/tuning/` rather than scattered through GDScript constants.
+
+`base.json` owns shared behavior. `profiles/easy|normal|hard|extreme.json` provide sparse overrides for timing/readability. User/device calibration remains separate in SongClock.
+
+The POC may run one validation chart through multiple tuning profiles, but chart difficulty remains authored content. Profiles never override neck physics.
 
 A debug run supports:
 - `F3` — toggle tuning telemetry;
@@ -189,3 +194,13 @@ Timing telemetry is observational only. It records consumed player inputs and ex
 - last judgment/error.
 
 Expired events are not inserted as synthetic zero-error samples, and the diagnostics never participate in judgment, score or progression.
+
+
+## Native feedback baseline
+
+The presentation now includes a deliberately small dependency-free game-feel layer:
+- judgment-specific feedback color/punch;
+- a short Erik presentation punch that never affects neck state;
+- HYPE pulse on gain.
+
+These values come from the shared feedback section in base tuning. They remain presentation-only and can later be replaced or expanded without affecting judgment/scoring.

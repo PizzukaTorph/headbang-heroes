@@ -10,6 +10,7 @@ signal reload_tuning_requested
 var erik: ErikView
 var cue_ring: CueRing
 var cue_label: Label
+var title_label: Label
 var score_label: Label
 var combo_label: Label
 var hype_label: Label
@@ -20,10 +21,15 @@ var debug_panel: PanelContainer
 var debug_label: Label
 var bang_button: Button
 var pause_button: Button
+
+var _feedback_tuning: Dictionary = {}
 var _feedback_tween: Tween
+var _erik_tween: Tween
+var _hype_tween: Tween
 var _debug_visible: bool = true
 var _current_cue_debug: Dictionary = {}
 var _next_cue_debug: Dictionary = {}
+var _last_hype: int = -1
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -35,6 +41,7 @@ func apply_tuning(values: Dictionary) -> void:
 		erik.apply_tuning(values.get("flp", {}))
 	if cue_ring != null:
 		cue_ring.apply_tuning(values.get("cue", {}))
+	_feedback_tuning = (values.get("feedback", {}) as Dictionary).duplicate(true)
 
 func update_cue(payload: Dictionary) -> void:
 	if payload.is_empty():
@@ -75,18 +82,26 @@ func update_cue(payload: Dictionary) -> void:
 			]
 		)
 
-	cue_label.text = "
-".join(lines)
+	cue_label.text = "\n".join(lines)
 	cue_ring.set_cues(current_event, next_event, song_time, approach_time, preview_horizon)
 
 func update_hud(state: Dictionary) -> void:
+	var profile := str(state.get("tuning_profile", "normal")).to_upper()
+	title_label.text = "HEADBANG HEROES · %s" % profile
+
 	score_label.text = "SCORE  %09d" % int(state.get("score", 0))
 	combo_label.text = "COMBO  %d   x%d" % [int(state.get("combo", 0)), int(state.get("multiplier", 1))]
+
+	var hype := int(state.get("hype", 0))
 	hype_label.text = "HYPE  %d/%d%s" % [
-		int(state.get("hype", 0)),
+		hype,
 		int(state.get("hype_max", 100)),
 		"   THE BANG!" if bool(state.get("the_bang", false)) else ("   READY" if bool(state.get("the_bang_ready", false)) else "")
 	]
+	if _last_hype >= 0 and hype > _last_hype:
+		_pulse_hype()
+	_last_hype = hype
+
 	time_label.text = "%06.2f s" % float(state.get("song_time", 0.0))
 	calibration_label.text = "CAL %+.0f ms  ·  OUT %.0f ms" % [
 		float(state.get("calibration_ms", 0.0)),
@@ -103,11 +118,11 @@ func show_judgment(outcome: Dictionary) -> void:
 	var judgment := str(outcome.get("judgment", ""))
 	var error_ms := float(outcome.get("error", 0.0)) * 1000.0
 	var mq := float(outcome.get("motion_quality", 0.0)) * 100.0
-	_show_feedback("%s  %+.0f ms
-MOTION %.0f%%" % [judgment, error_ms, mq])
+	_show_feedback("%s  %+.0f ms\nMOTION %.0f%%" % [judgment, error_ms, mq], judgment)
+	_punch_erik(judgment)
 
 func show_free_bang(_direction: StringName) -> void:
-	_show_feedback("BANG")
+	_show_feedback("BANG", "FREE")
 
 func _build_ui() -> void:
 	var background := ColorRect.new()
@@ -125,11 +140,11 @@ func _build_ui() -> void:
 	top.add_theme_constant_override("separation", 4)
 	add_child(top)
 
-	var title := Label.new()
-	title.text = "HEADBANG HEROES · GODOT POC"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 20)
-	top.add_child(title)
+	title_label = Label.new()
+	title_label.text = "HEADBANG HEROES · NORMAL"
+	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title_label.add_theme_font_size_override("font_size", 20)
+	top.add_child(title_label)
 
 	score_label = Label.new()
 	score_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -214,14 +229,10 @@ func _build_ui() -> void:
 	controls.anchor_bottom = 0.82
 	controls.add_theme_constant_override("separation", 8)
 	add_child(controls)
-	_add_direction_button(controls, "◀
-LEFT", &"left")
-	_add_direction_button(controls, "▲
-UP", &"up")
-	_add_direction_button(controls, "▼
-DOWN", &"down")
-	_add_direction_button(controls, "▶
-RIGHT", &"right")
+	_add_direction_button(controls, "◀\nLEFT", &"left")
+	_add_direction_button(controls, "▲\nUP", &"up")
+	_add_direction_button(controls, "▼\nDOWN", &"down")
+	_add_direction_button(controls, "▶\nRIGHT", &"right")
 
 	bang_button = Button.new()
 	bang_button.anchor_left = 0.12
@@ -330,26 +341,23 @@ func _update_debug(state: Dictionary) -> void:
 	var next_text := _cue_debug_text("NEXT", _next_cue_debug)
 
 	debug_label.text = (
-		"DEBUG · F3 hide · F4 reload tuning
-"
-		+ "t %.3f  cal %+.0fms  out %.0fms
-" % [
+		"DEBUG · %s profile · chart %s · F3 hide · F4 reload\n" % [
+			str(state.get("tuning_profile", "normal")).to_upper(),
+			str(state.get("chart_difficulty", ""))
+		]
+		+ "t %.3f  cal %+.0fms  out %.0fms\n" % [
 			float(state.get("song_time", 0.0)),
 			float(state.get("calibration_ms", 0.0)),
 			float(state.get("audio_latency_ms", 0.0))
 		]
-		+ "%s
-%s
-" % [now_text, next_text]
-		+ "neck H %+.1f° @ %+.1f°/s   V %+.1f° @ %+.1f°/s
-" % [
+		+ "%s\n%s\n" % [now_text, next_text]
+		+ "neck H %+.1f° @ %+.1f°/s   V %+.1f° @ %+.1f°/s\n" % [
 			float(neck.get("horizontal_angle", 0.0)),
 			float(neck.get("horizontal_velocity", 0.0)),
 			float(neck.get("vertical_angle", 0.0)),
 			float(neck.get("vertical_velocity", 0.0))
 		]
-		+ "FLP %02d  phase %.2f  travel %.2f°  cap %.1ffps
-" % [
+		+ "FLP %02d  phase %.2f  travel %.2f°  cap %.1ffps\n" % [
 			int(flp.get("frame", 0)),
 			float(flp.get("phase", 0.0)),
 			float(flp.get("angular_travel", 0.0)),
@@ -393,11 +401,68 @@ func _arrow_for_direction(direction: StringName) -> String:
 		&"down": return "▼"
 		_: return "•"
 
-func _show_feedback(text_value: String) -> void:
+func _show_feedback(text_value: String, kind: String) -> void:
 	if _feedback_tween != null and _feedback_tween.is_valid():
 		_feedback_tween.kill()
+
 	feedback_label.text = text_value
+	feedback_label.pivot_offset = feedback_label.size * 0.5
+	feedback_label.scale = Vector2.ONE * _feedback_punch(kind)
+	feedback_label.modulate = _feedback_color(kind)
 	feedback_label.modulate.a = 1.0
+
+	var hold := maxf(0.0, float(_feedback_tuning.get("holdSeconds", 0.16)))
+	var fade := maxf(0.05, float(_feedback_tuning.get("fadeSeconds", 0.36)))
+
 	_feedback_tween = create_tween()
-	_feedback_tween.tween_interval(0.18)
-	_feedback_tween.tween_property(feedback_label, "modulate:a", 0.0, 0.42)
+	_feedback_tween.tween_property(feedback_label, "scale", Vector2.ONE, 0.10).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_feedback_tween.tween_interval(hold)
+	_feedback_tween.tween_property(feedback_label, "modulate:a", 0.0, fade)
+
+func _punch_erik(judgment: String) -> void:
+	if erik == null:
+		return
+	if _erik_tween != null and _erik_tween.is_valid():
+		_erik_tween.kill()
+
+	var punch := _feedback_punch(judgment)
+	erik.pivot_offset = erik.size * 0.5
+	erik.scale = Vector2.ONE * punch
+	if judgment == "MISS":
+		erik.modulate = Color(1.0, 0.72, 0.72, 1.0)
+	else:
+		erik.modulate = Color.WHITE
+
+	var duration := maxf(0.05, float(_feedback_tuning.get("erikPunchSeconds", 0.12)))
+	_erik_tween = create_tween().set_parallel(true)
+	_erik_tween.tween_property(erik, "scale", Vector2.ONE, duration).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_erik_tween.tween_property(erik, "modulate", Color.WHITE, duration)
+
+func _pulse_hype() -> void:
+	if hype_label == null:
+		return
+	if _hype_tween != null and _hype_tween.is_valid():
+		_hype_tween.kill()
+	var pulse := maxf(1.0, float(_feedback_tuning.get("hypePulse", 1.06)))
+	hype_label.pivot_offset = hype_label.size * 0.5
+	hype_label.scale = Vector2.ONE * pulse
+	_hype_tween = create_tween()
+	_hype_tween.tween_property(hype_label, "scale", Vector2.ONE, 0.14).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+func _feedback_punch(kind: String) -> float:
+	match kind:
+		"PERFECT": return float(_feedback_tuning.get("perfectPunch", 1.08))
+		"GREAT": return float(_feedback_tuning.get("greatPunch", 1.055))
+		"GOOD": return float(_feedback_tuning.get("goodPunch", 1.03))
+		"WELL": return float(_feedback_tuning.get("wellPunch", 1.015))
+		"MISS": return float(_feedback_tuning.get("missPunch", 0.985))
+		_: return 1.0
+
+func _feedback_color(kind: String) -> Color:
+	match kind:
+		"PERFECT": return Color("#f5d76e")
+		"GREAT": return Color("#78ddff")
+		"GOOD": return Color("#8ce99a")
+		"WELL": return Color("#d4d0dc")
+		"MISS": return Color("#ff7272")
+		_: return Color(0.88, 0.85, 0.92, 1.0)

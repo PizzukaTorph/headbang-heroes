@@ -110,18 +110,36 @@ See docs/GODOT_PORT.md for the migration map and known validation gates.
 
 ## POC tuning lab
 
-The values most likely to change during feel iteration live in one file:
+Feel-sensitive values are layered instead of duplicated:
 
 ~~~text
-game/config/poc_tuning.json
+game/config/tuning/base.json
+        +
+game/config/tuning/profiles/easy.json
+game/config/tuning/profiles/normal.json
+game/config/tuning/profiles/hard.json
+game/config/tuning/profiles/extreme.json
+        +
+user/device calibration in SongClock
 ~~~
 
-It currently owns:
-- timing windows;
-- neck simulation/impulse/damping/limits;
-- FLP frame-travel mapping and visual FPS cap;
-- cue look-ahead/radii/preview alpha.
+The base file owns shared neck physics, FLP presentation, cue defaults and feedback feel. Difficulty/readability profiles override only the values that actually differ.
 
-In a debug run press **F4** to reload the file without restarting the project. Press **F3** to toggle the telemetry HUD.
+The POC Home screen can run the same TempoRamp fixture through EASY / NORMAL / HARD / EXTREME tuning profiles. This is a tuning harness, not automatic chart generation: production difficulty remains an authored chart property.
 
-The debug HUD shows authoritative song time, calibration/output latency, CURRENT/NEXT event ids, neck angle/velocity, FLP frame/phase, and timing bias statistics. Results also include mean signed timing bias, mean absolute timing error, and early/late counts.
+Current profile intent:
+
+- EASY: wider timing windows, centered cue, longer preview;
+- NORMAL: original Godot baseline;
+- HARD: tighter timing, directional cue layout;
+- EXTREME: tighter timing again, wider directional layout.
+
+Neck physics is intentionally identical across all four profiles.
+
+In a debug run:
+- **F3** toggles the telemetry HUD;
+- **F4** reloads the selected profile plus base tuning without restarting the run.
+
+The debug HUD shows authoritative song time, calibration/output latency, tuning profile vs chart difficulty, CURRENT/NEXT event ids, neck angle/velocity, FLP frame/phase, and timing bias statistics.
+
+Results include mean signed timing bias, mean absolute timing error, and early/late counts.
