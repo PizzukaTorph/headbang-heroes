@@ -67,11 +67,11 @@ func _exercise_profile(packed: PackedScene, profile: StringName) -> void:
 		if profile == &"normal":
 			var neck_before: Dictionary = gameplay_run.neck.presentation_state()
 			_expect(gameplay_view.erik.play_technique(&"half"), prefix + "Half technique animation must start")
-			await get_tree().create_timer(0.60).timeout
+			await create_timer(0.60).timeout
 			_expect(not gameplay_view.erik.is_playing_technique(), prefix + "Half technique animation must return to normal")
 			_expect(gameplay_run.neck.presentation_state() == neck_before, prefix + "technique presentation must not mutate neck state")
 			_expect(gameplay_view.erik.play_technique(&"deep"), prefix + "Deep technique animation must start")
-			await get_tree().create_timer(0.75).timeout
+			await create_timer(0.75).timeout
 			_expect(not gameplay_view.erik.is_playing_technique(), prefix + "Deep technique animation must return to normal")
 			_expect(not gameplay_view.erik.play_technique(&"unknown"), prefix + "unknown technique must fail safely")
 		gameplay_run.stop_run()
