@@ -111,9 +111,9 @@ func _update_start_button() -> void:
 		_start_button.text = "PLAY TEMPO RAMP · %s" % str(selected_tuning_profile).to_upper()
 
 func _start_technique_lab() -> void:
-	_start_game(TECHNIQUE_CHART_PATH)
+	_start_game(TECHNIQUE_CHART_PATH, 0.60)
 
-func _start_game(chart_path: String = CHART_PATH) -> void:
+func _start_game(chart_path: String = CHART_PATH, playback_speed: float = 1.0) -> void:
 	_clear_screen()
 	gameplay_view = GameplayView.new()
 	gameplay_view.name = "GameplayView"
@@ -139,7 +139,7 @@ func _start_game(chart_path: String = CHART_PATH) -> void:
 	gameplay_run.pause_changed.connect(gameplay_view.set_paused)
 	gameplay_run.run_finished.connect(_show_results)
 
-	if not gameplay_run.configure(chart_path, AUDIO_PATH, selected_tuning_profile):
+	if not gameplay_run.configure(chart_path, AUDIO_PATH, selected_tuning_profile, playback_speed):
 		_show_error("Could not load the included POC content/profile.")
 		return
 	gameplay_view.apply_tuning(gameplay_run.presentation_tuning())

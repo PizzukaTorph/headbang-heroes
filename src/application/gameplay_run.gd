@@ -37,7 +37,8 @@ func _ready() -> void:
 func configure(
 	chart_path: String,
 	audio_path: String,
-	tuning_profile: StringName = POCTuning.DEFAULT_PROFILE
+	tuning_profile: StringName = POCTuning.DEFAULT_PROFILE,
+	playback_speed: float = 1.0
 ) -> bool:
 	if not tuning.load_profile(tuning_profile):
 		push_error("HH tuning profile could not be loaded: %s" % str(tuning_profile))
@@ -56,6 +57,7 @@ func configure(
 
 	audio_player = AudioStreamPlayer.new()
 	audio_player.name = "SongPlayer"
+	audio_player.pitch_scale = clampf(playback_speed, 0.25, 1.0)
 	add_child(audio_player)
 	clock = SongClock.new(audio_player)
 	clock.name = "SongClock"
