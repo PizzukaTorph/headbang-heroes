@@ -179,8 +179,10 @@ func technique_gesture_sample(phase: StringName, position: Vector2) -> void:
 			var event := technique_resolver.active_event(now)
 			if not event.is_empty():
 				technique_gesture.begin(StringName(event.get("technique", "")), now, position)
+			_emit_hud()
 		&"update":
 			technique_gesture.update(position)
+			_emit_hud()
 		&"complete":
 			var intent := technique_gesture.complete(now, position)
 			if intent.is_empty():

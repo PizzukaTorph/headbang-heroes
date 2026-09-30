@@ -111,5 +111,13 @@ func debug_state() -> Dictionary:
 		"technique": _technique,
 		"travel_x": (_last_position.x - _start_position.x) / reference_pixels if _active else 0.0,
 		"travel_y": (_last_position.y - _start_position.y) / reference_pixels if _active else 0.0,
+		"progress": _progress(),
 		"coherence": (_positive_horizontal_progress / _path_length if _technique == &"half" else _positive_vertical_progress / _path_length) if _active and _path_length > 0.0 else 0.0
 	}
+
+func _progress() -> float:
+	if not _active:
+		return 0.0
+	var displacement := _last_position - _start_position
+	var normalized := displacement.x * half_direction / reference_pixels if _technique == &"half" else displacement.y / reference_pixels
+	return clampf(normalized, 0.0, 1.0)

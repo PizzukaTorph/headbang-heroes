@@ -117,6 +117,9 @@ func update_hud(state: Dictionary) -> void:
 
 	var neck_state: Dictionary = state.get("neck", {})
 	erik.apply_neck_state(neck_state, get_process_delta_time())
+	var gesture: Dictionary = state.get("gesture", {})
+	if technique_guide != null and technique_guide.visible:
+		technique_guide.set_progress(float(gesture.get("progress", 0.0)), bool(gesture.get("active", false)))
 	_update_debug(state)
 
 func show_judgment(outcome: Dictionary) -> void:
