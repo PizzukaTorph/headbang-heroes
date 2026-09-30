@@ -1,6 +1,7 @@
 extends Control
 
 const CHART_PATH := "res://game/assets/charts/lab-002-tempo-ramp.json"
+const TECHNIQUE_CHART_PATH := "res://game/assets/charts/lab-003-technique-lab.json"
 const AUDIO_PATH := "res://game/assets/audio/tempo_ramp.wav"
 const PROFILE_ORDER := [&"easy", &"normal", &"hard", &"extreme"]
 
@@ -9,6 +10,7 @@ var selected_tuning_profile: StringName = &"normal"
 var gameplay_view: GameplayView
 var gameplay_run: GameplayRun
 var _start_button: Button
+var _technique_button: Button
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -71,6 +73,12 @@ func _show_home() -> void:
 	_start_button.pressed.connect(_start_game)
 	stack.add_child(_start_button)
 
+	_technique_button = Button.new()
+	_technique_button.text = "PLAY TECHNIQUE LAB · %s" % str(selected_tuning_profile).to_upper()
+	_technique_button.custom_minimum_size.y = 58.0
+	_technique_button.pressed.connect(_start_technique_lab)
+	stack.add_child(_technique_button)
+
 	var explanation := Label.new()
 	explanation.text = "Profiles alter timing/readability only. Neck physics stays identical.\nProduction difficulty remains authored into each chart."
 	explanation.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -102,7 +110,10 @@ func _update_start_button() -> void:
 	if _start_button != null:
 		_start_button.text = "PLAY TEMPO RAMP · %s" % str(selected_tuning_profile).to_upper()
 
-func _start_game() -> void:
+func _start_technique_lab() -> void:
+	_start_game(TECHNIQUE_CHART_PATH)
+
+func _start_game(chart_path: String = CHART_PATH) -> void:
 	_clear_screen()
 	gameplay_view = GameplayView.new()
 	gameplay_view.name = "GameplayView"
@@ -117,15 +128,18 @@ func _start_game() -> void:
 	gameplay_view.pause_requested.connect(gameplay_run.toggle_pause)
 	gameplay_view.calibration_delta_requested.connect(_change_calibration)
 	gameplay_view.reload_tuning_requested.connect(_reload_tuning)
+	gameplay_view.technique_gesture_sample.connect(gameplay_run.technique_gesture_sample)
 
 	gameplay_run.cue_changed.connect(gameplay_view.update_cue)
 	gameplay_run.hud_changed.connect(gameplay_view.update_hud)
 	gameplay_run.judgment_resolved.connect(gameplay_view.show_judgment)
 	gameplay_run.free_bang.connect(gameplay_view.show_free_bang)
+	gameplay_run.technique_resolved.connect(gameplay_view.show_technique_result)
+	gameplay_run.technique_failed.connect(gameplay_view.show_technique_result)
 	gameplay_run.pause_changed.connect(gameplay_view.set_paused)
 	gameplay_run.run_finished.connect(_show_results)
 
-	if not gameplay_run.configure(CHART_PATH, AUDIO_PATH, selected_tuning_profile):
+	if not gameplay_run.configure(chart_path, AUDIO_PATH, selected_tuning_profile):
 		_show_error("Could not load the included POC content/profile.")
 		return
 	gameplay_view.apply_tuning(gameplay_run.presentation_tuning())

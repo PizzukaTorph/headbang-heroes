@@ -70,6 +70,10 @@ static func compile(data: Dictionary) -> Dictionary:
 			if technique.is_empty():
 				push_error("HH chart event %d has an unknown technique" % i)
 				return {}
+		var authored_duration := maxf(0.0, float(raw.get("duration", 0.0)))
+		if technique in [&"half", &"deep"] and authored_duration <= 0.0:
+			push_error("HH chart event %d technique window must have a positive duration" % i)
+			return {}
 		var default_trajectory := &"horizontal" if direction in [&"left", &"right"] else &"vertical"
 		var trajectory := default_trajectory
 		if raw.has("trajectory") and not str(raw["trajectory"]).strip_edges().is_empty():
@@ -94,7 +98,7 @@ static func compile(data: Dictionary) -> Dictionary:
 			"technique": technique,
 			"trajectory": trajectory,
 			"modifier": modifier,
-			"duration": maxf(0.0, float(raw.get("duration", 0.0))),
+			"duration": authored_duration,
 			"intensity": intensity,
 			"finisher_candidate": bool(raw.get("finisherCandidate", false))
 		})

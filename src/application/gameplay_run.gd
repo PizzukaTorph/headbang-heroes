@@ -5,6 +5,8 @@ signal cue_changed(cue: Dictionary)
 signal hud_changed(state: Dictionary)
 signal judgment_resolved(outcome: Dictionary)
 signal free_bang(direction: StringName)
+signal technique_resolved(result: Dictionary)
+signal technique_failed(result: Dictionary)
 signal run_finished(result: Dictionary)
 signal pause_changed(paused: bool)
 
@@ -12,6 +14,8 @@ const DEFAULT_NEXT_CUE_HORIZON_MULTIPLIER := 2.25
 
 var chart: Dictionary = {}
 var resolver: CandidateResolver
+var technique_resolver: TechniqueEventResolver
+var technique_gesture := TechniqueGestureRecognizer.new()
 var timing := TimingConfig.new()
 var neck := NeckMotionState.new()
 var scorer := RunScorer.new()
@@ -58,7 +62,16 @@ func configure(
 	add_child(clock)
 	clock.playback_finished.connect(_on_audio_finished)
 
-	resolver = CandidateResolver.new(chart["events"])
+	var classic_events: Array = []
+	var technique_events: Array = []
+	for event in chart["events"]:
+		if StringName((event as Dictionary).get("technique", "classic")) == &"classic":
+			classic_events.append(event)
+		else:
+			technique_events.append(event)
+	resolver = CandidateResolver.new(classic_events)
+	technique_resolver = TechniqueEventResolver.new(technique_events)
+	technique_gesture.configure(tuning.section("techniques"))
 	return true
 
 func active_tuning_profile() -> StringName:
@@ -68,7 +81,8 @@ func presentation_tuning() -> Dictionary:
 	return {
 		"flp": tuning.section("flp"),
 		"cue": tuning.section("cue"),
-		"feedback": tuning.section("feedback")
+		"feedback": tuning.section("feedback"),
+		"techniques": tuning.section("techniques")
 	}
 
 func reload_tuning() -> bool:
@@ -83,6 +97,8 @@ func start_run() -> void:
 	if chart.is_empty() or _stream == null or clock == null:
 		return
 	resolver.reset()
+	technique_resolver.reset()
+	technique_gesture.reset()
 	neck.reset()
 	scorer.reset()
 	diagnostics.reset()
@@ -154,6 +170,31 @@ func try_activate_the_bang() -> bool:
 	_emit_hud()
 	return activated
 
+func technique_gesture_sample(phase: StringName, position: Vector2) -> void:
+	if not _active or _finished or clock == null or technique_resolver == null:
+		return
+	var now := clock.song_time()
+	match phase:
+		&"start":
+			var event := technique_resolver.active_event(now)
+			if not event.is_empty():
+				technique_gesture.begin(StringName(event.get("technique", "")), now, position)
+		&"update":
+			technique_gesture.update(position)
+		&"complete":
+			var intent := technique_gesture.complete(now, position)
+			if intent.is_empty():
+				return
+			var result := technique_resolver.resolve(intent)
+			result["song_time"] = now
+			if bool(result.get("valid", false)):
+				var event: Dictionary = result["event"]
+				result["neck_snapshot"] = neck.apply_bang(StringName(event["direction"]), float(event.get("intensity", 1.0)))
+				technique_resolved.emit(result)
+			else:
+				technique_failed.emit(result)
+			_emit_hud()
+
 func _process(_delta: float) -> void:
 	if not _active or _finished:
 		return
@@ -167,12 +208,21 @@ func _process(_delta: float) -> void:
 	for expired_event in resolver.expire(now, timing):
 		var outcome := scorer.resolve_expired(expired_event)
 		judgment_resolved.emit(outcome)
+	for expired_technique in technique_resolver.expire(now):
+		technique_failed.emit({
+			"consumed": true,
+			"valid": false,
+			"kind": &"expired",
+			"reason": "window_expired",
+			"event": expired_technique,
+			"song_time": now
+		})
 
 	_emit_cues(now)
 	_emit_hud()
 
 	var last_event_time := _last_authored_event_time()
-	if resolver.all_resolved() and (now >= last_event_time + 0.75 or _audio_finished):
+	if resolver.all_resolved() and technique_resolver.all_resolved() and (now >= last_event_time + 0.75 or _audio_finished):
 		_finish()
 
 func _apply_tuning() -> void:
@@ -194,10 +244,28 @@ func _apply_tuning() -> void:
 		float(cue_values.get("nextHorizonMultiplier", DEFAULT_NEXT_CUE_HORIZON_MULTIPLIER))
 	)
 
+func _upcoming_events(now: float, lead_seconds: float, count: int) -> Array[Dictionary]:
+	var candidates: Array[Dictionary] = []
+	for item in resolver.upcoming_unresolved(now, lead_seconds, count):
+		candidates.append(item)
+	for item in technique_resolver.upcoming_unresolved(now, lead_seconds, count):
+		candidates.append(item)
+	candidates.sort_custom(_cue_before)
+	if candidates.size() > count:
+		candidates.resize(count)
+	return candidates
+
+static func _cue_before(a: Dictionary, b: Dictionary) -> bool:
+	var at := float((a["event"] as Dictionary)["time"])
+	var bt := float((b["event"] as Dictionary)["time"])
+	if not is_equal_approx(at, bt):
+		return at < bt
+	return str((a["event"] as Dictionary).get("id", "")) < str((b["event"] as Dictionary).get("id", ""))
+
 func _emit_cues(now: float) -> void:
 	var approach_time := float(chart.get("approach_time", 1.0))
 	var preview_horizon := approach_time * _next_cue_horizon_multiplier
-	var upcoming := resolver.upcoming_unresolved(now, preview_horizon, 2)
+	var upcoming := _upcoming_events(now, preview_horizon, 2)
 
 	if upcoming.is_empty():
 		cue_changed.emit({})
@@ -243,18 +311,24 @@ func _emit_hud() -> void:
 		"audio_latency_ms": (clock.output_latency_seconds() * 1000.0) if clock != null else 0.0,
 		"neck": neck.presentation_state(),
 		"neck_tuning": neck.tuning_snapshot(),
-		"timing_diagnostics": diagnostics.snapshot()
+		"timing_diagnostics": diagnostics.snapshot(),
+		"technique": technique_resolver.debug_state(clock.song_time() if clock != null else 0.0),
+		"gesture": technique_gesture.debug_state()
 	})
 
 func _last_authored_event_time() -> float:
 	var events: Array = chart.get("events", [])
 	if events.is_empty():
 		return 0.0
-	return float((events[events.size() - 1] as Dictionary)["time"])
+	var latest := 0.0
+	for event in events:
+		var item: Dictionary = event
+		latest = maxf(latest, float(item["time"]) + float(item.get("duration", 0.0)))
+	return latest
 
 func _on_audio_finished() -> void:
 	_audio_finished = true
-	if resolver != null and resolver.all_resolved():
+	if resolver != null and technique_resolver != null and resolver.all_resolved() and technique_resolver.all_resolved():
 		_finish()
 
 func _finish() -> void:

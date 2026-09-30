@@ -362,6 +362,47 @@ Current intent:
 
 MASTERED must not become an RPG stat that makes the physical execution automatically better.
 
+## Current POC contract: HALF and DEEP
+
+The playable POC supersedes the earlier Half depth-band wording above. The
+accepted gesture vocabulary for the current implementation is:
+
+```text
+CLASSIC     TAP
+HALF        → short horizontal swipe
+DEEP        ↓ long vertical downward swipe
+WHIPLASH    ⇆ reserved / not implemented
+WINDMILL    ⟳ reserved / not implemented
+```
+
+Half is recognized primarily by rightward horizontal travel, directional
+coherence, and limited vertical drift. Deep is recognized primarily by long
+downward travel, downward coherence, and limited horizontal drift. Thresholds
+are tuning data in `game/config/tuning/base.json`; the default Half direction
+is configurable so a future handedness/accessibility mirror does not change
+the semantic skill ID.
+
+Gesture direction identifies the skill, not the authored neck direction. An
+authored `DEEP` event can therefore resolve a left or right neck stroke. The
+runtime representation keeps both fields on the same compiled event:
+
+```json
+{"id":"tech-002","technique":"deep","directionName":"left","time":5.5,"duration":1.0}
+```
+
+Technique events originate from the dedicated `HH_TECHNIQUES` lane in the
+canonical MIDI model (or the equivalent compiled JSON fixture for this POC).
+They are authored occurrences, not BPM/difficulty-generated events. Their
+`time` starts the actionable window and their `duration` ends it. The
+authoritative technique timing sample is gesture completion, measured in
+SongClock time. CURRENT + NEXT remains the complete cue budget; the POC uses
+`→ HALF` and `↓ DEEP` glyphs without adding a third cue.
+
+The recognizer emits a semantic intent and does not score it. A valid intent
+then applies the associated authored direction through the existing continuous
+neck model. A malformed or out-of-window gesture fails without snapping or
+resetting the neck.
+
 ## Presentation
 
 Technique Skills may temporarily use the gameplay surface itself as a gesture area.

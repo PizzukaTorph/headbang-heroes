@@ -3,6 +3,8 @@ extends SceneTree
 const TimingConfigScript = preload("res://src/domain/timing_config.gd")
 const ChartCompilerScript = preload("res://src/domain/chart_compiler.gd")
 const CandidateResolverScript = preload("res://src/domain/candidate_resolver.gd")
+const TechniqueGestureScript = preload("res://src/domain/technique_gesture_recognizer.gd")
+const TechniqueResolverScript = preload("res://src/domain/technique_event_resolver.gd")
 const NeckMotionScript = preload("res://src/domain/neck_motion_state.gd")
 const MotionQualityScript = preload("res://src/domain/motion_quality.gd")
 const RunScorerScript = preload("res://src/domain/run_scorer.gd")
@@ -17,6 +19,7 @@ func _init() -> void:
 	_test_timing_boundaries()
 	_test_chart_compile()
 	_test_candidate_resolution()
+	_test_technique_gestures()
 	_test_neck_and_motion_quality()
 	_test_scoring()
 	_test_flp_frame_driver()
@@ -50,6 +53,11 @@ func _test_chart_compile() -> void:
 	_expect(not chart.is_empty(), "tempo-ramp chart must compile")
 	_expect(str(chart.get("chart_id", "")) == "lab-002-tempo-ramp", "chart identity must survive compilation")
 	_expect((chart.get("events", []) as Array).size() >= 40, "tempo-ramp fixture must contain the authored event set")
+	var technique_chart: Dictionary = ChartCompilerScript.load_chart("res://game/assets/charts/lab-003-technique-lab.json")
+	_expect(not technique_chart.is_empty(), "technique lab fixture must compile")
+	var technique_events: Array = technique_chart.get("events", [])
+	_expect(StringName((technique_events[1] as Dictionary).get("technique", "")) == &"half", "technique fixture must retain Half identity")
+	_expect(absf(float((technique_events[3] as Dictionary).get("duration", 0.0)) - 1.0) < 0.001, "technique fixture must retain authored gesture duration")
 
 func _test_candidate_resolution() -> void:
 	var cfg = TimingConfigScript.new()
@@ -69,6 +77,73 @@ func _test_candidate_resolution() -> void:
 	var resolver_wrong = CandidateResolverScript.new([{"id":"x", "time":2.0, "direction":&"left"}])
 	var wrong: Dictionary = resolver_wrong.resolve(&"right", 2.0, cfg)
 	_expect(StringName(wrong.get("judgment", "")) == &"MISS", "wrong direction in-window must consume as MISS")
+
+func _test_technique_gestures() -> void:
+	var tuning := {
+		"gestureReferencePx": 320.0,
+		"half": {"minHorizontalTravel": 0.25, "maxVerticalDrift": 0.20, "minCoherence": 0.75},
+		"deep": {"minVerticalTravel": 0.70, "maxHorizontalDrift": 0.20, "minCoherence": 0.75}
+	}
+	var half = TechniqueGestureScript.new()
+	half.configure(tuning)
+	half.begin(&"half", 1.0, Vector2.ZERO)
+	var half_intent: Dictionary = half.complete(1.4, Vector2(100.0, 8.0))
+	_expect(bool(half_intent.get("valid", false)), "rightward Half swipe must be recognized")
+
+	var short_half = TechniqueGestureScript.new()
+	short_half.configure(tuning)
+	short_half.begin(&"half", 1.0, Vector2.ZERO)
+	_expect(not bool(short_half.complete(1.2, Vector2(60.0, 0.0)).get("valid", false)), "short Half swipe must fail")
+
+	var vertical_half = TechniqueGestureScript.new()
+	vertical_half.configure(tuning)
+	vertical_half.begin(&"half", 1.0, Vector2.ZERO)
+	_expect(not bool(vertical_half.complete(1.2, Vector2(100.0, 100.0)).get("valid", false)), "vertical drift must fail Half")
+
+	var deep = TechniqueGestureScript.new()
+	deep.configure(tuning)
+	deep.begin(&"deep", 1.0, Vector2.ZERO)
+	var deep_intent: Dictionary = deep.complete(1.8, Vector2(12.0, 240.0))
+	_expect(bool(deep_intent.get("valid", false)), "long downward Deep swipe must be recognized")
+
+	var short_deep = TechniqueGestureScript.new()
+	short_deep.configure(tuning)
+	short_deep.begin(&"deep", 1.0, Vector2.ZERO)
+	_expect(not bool(short_deep.complete(1.2, Vector2(0.0, 160.0)).get("valid", false)), "short Deep swipe must fail")
+
+	var horizontal_deep = TechniqueGestureScript.new()
+	horizontal_deep.configure(tuning)
+	horizontal_deep.begin(&"deep", 1.0, Vector2.ZERO)
+	_expect(not bool(horizontal_deep.complete(1.2, Vector2(240.0, 10.0)).get("valid", false)), "horizontal swipe must fail Deep")
+
+	var resolver = TechniqueResolverScript.new([{"id":"tech-1", "time":2.0, "duration":1.0, "technique":&"deep", "direction":&"left"}])
+	var in_window: Dictionary = deep_intent.duplicate(true)
+	in_window["technique"] = &"deep"
+	in_window["completed_at"] = 2.5
+	in_window["valid"] = true
+	var resolved: Dictionary = resolver.resolve(in_window)
+	_expect(bool(resolved.get("valid", false)), "valid gesture completion inside authored window must resolve")
+	_expect(StringName((resolved.get("event", {}) as Dictionary).get("direction", "")) == &"left", "technique must preserve authored movement direction separately")
+
+	var late_resolver = TechniqueResolverScript.new([{"id":"tech-2", "time":2.0, "duration":1.0, "technique":&"deep", "direction":&"right"}])
+	var late: Dictionary = in_window.duplicate(true)
+	late["completed_at"] = 3.1
+	_expect(not bool(late_resolver.resolve(late).get("valid", false)), "completion outside authored window must fail")
+
+	var repeat_a = TechniqueGestureScript.new()
+	var repeat_b = TechniqueGestureScript.new()
+	repeat_a.configure(tuning)
+	repeat_b.configure(tuning)
+	for sample in [Vector2(0.0, 0.0), Vector2(40.0, 2.0), Vector2(96.0, 5.0)]:
+		if sample == Vector2.ZERO:
+			repeat_a.begin(&"half", 1.0, sample)
+			repeat_b.begin(&"half", 1.0, sample)
+		else:
+			repeat_a.update(sample)
+			repeat_b.update(sample)
+	var repeat_a_result: Dictionary = repeat_a.complete(1.4)
+	var repeat_b_result: Dictionary = repeat_b.complete(1.4)
+	_expect(repeat_a_result == repeat_b_result, "gesture recognition must be deterministic for the same samples")
 
 func _test_neck_and_motion_quality() -> void:
 	var neck = NeckMotionScript.new()

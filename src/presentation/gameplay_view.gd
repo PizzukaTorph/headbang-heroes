@@ -6,6 +6,7 @@ signal the_bang_requested
 signal pause_requested
 signal calibration_delta_requested(delta_ms: float)
 signal reload_tuning_requested
+signal technique_gesture_sample(phase: StringName, position: Vector2)
 
 var erik: ErikView
 var cue_ring: CueRing
@@ -64,23 +65,11 @@ func update_cue(payload: Dictionary) -> void:
 
 	if not current_event.is_empty():
 		var current_remaining := float(current_event.get("time", 0.0)) - song_time
-		lines.append(
-			"NOW  %s %s  %+.0f ms" % [
-				_arrow_for_direction(StringName(current_event.get("direction", ""))),
-				str(current_event.get("direction", "")).to_upper(),
-				current_remaining * 1000.0
-			]
-		)
+		lines.append(_cue_line("NOW", current_event, current_remaining))
 
 	if not next_event.is_empty():
 		var next_remaining := float(next_event.get("time", 0.0)) - song_time
-		lines.append(
-			"NEXT %s %s  %+.0f ms" % [
-				_arrow_for_direction(StringName(next_event.get("direction", ""))),
-				str(next_event.get("direction", "")).to_upper(),
-				next_remaining * 1000.0
-			]
-		)
+		lines.append(_cue_line("NEXT", next_event, next_remaining))
 
 	cue_label.text = "\n".join(lines)
 	cue_ring.set_cues(current_event, next_event, song_time, approach_time, preview_horizon)
@@ -123,6 +112,15 @@ func show_judgment(outcome: Dictionary) -> void:
 
 func show_free_bang(_direction: StringName) -> void:
 	_show_feedback("BANG", "FREE")
+
+func show_technique_result(result: Dictionary) -> void:
+	var event: Dictionary = result.get("event", {})
+	var intent: Dictionary = result.get("intent", {})
+	var technique := str(event.get("technique", intent.get("technique", "technique"))).to_upper()
+	if bool(result.get("valid", false)):
+		_show_feedback("%s  OK" % technique, "GREAT")
+	else:
+		_show_feedback("%s  FAIL\n%s" % [technique, str(result.get("reason", "gesture"))], "MISS")
 
 func _build_ui() -> void:
 	var background := ColorRect.new()
@@ -326,6 +324,19 @@ func _input(event: InputEvent) -> void:
 		KEY_F4:
 			reload_tuning_requested.emit()
 
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventScreenTouch:
+		var touch := event as InputEventScreenTouch
+		technique_gesture_sample.emit(&"start" if touch.pressed else &"complete", touch.position)
+	elif event is InputEventScreenDrag:
+		technique_gesture_sample.emit(&"update", (event as InputEventScreenDrag).position)
+	elif event is InputEventMouseButton:
+		var mouse_button := event as InputEventMouseButton
+		if mouse_button.button_index == MOUSE_BUTTON_LEFT:
+			technique_gesture_sample.emit(&"start" if mouse_button.pressed else &"complete", mouse_button.position)
+	elif event is InputEventMouseMotion and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+		technique_gesture_sample.emit(&"update", (event as InputEventMouseMotion).position)
+
 func set_paused(value: bool) -> void:
 	pause_button.text = "RESUME" if value else "PAUSE"
 
@@ -339,6 +350,8 @@ func _update_debug(state: Dictionary) -> void:
 
 	var now_text := _cue_debug_text("NOW", _current_cue_debug)
 	var next_text := _cue_debug_text("NEXT", _next_cue_debug)
+	var technique: Dictionary = state.get("technique", {})
+	var gesture: Dictionary = state.get("gesture", {})
 
 	debug_label.text = (
 		"DEBUG · %s profile · chart %s · F3 hide · F4 reload\n" % [
@@ -351,6 +364,14 @@ func _update_debug(state: Dictionary) -> void:
 			float(state.get("audio_latency_ms", 0.0))
 		]
 		+ "%s\n%s\n" % [now_text, next_text]
+		+ "tech %s %s  gesture %s  X %.2f Y %.2f C %.2f\n" % [
+			str(technique.get("current", "—")),
+			str(technique.get("current_id", "")),
+			str(gesture.get("active", false)),
+			float(gesture.get("travel_x", 0.0)),
+			float(gesture.get("travel_y", 0.0)),
+			float(gesture.get("coherence", 0.0))
+		]
 		+ "neck H %+.1f° @ %+.1f°/s   V %+.1f° @ %+.1f°/s\n" % [
 			float(neck.get("horizontal_angle", 0.0)),
 			float(neck.get("horizontal_velocity", 0.0)),
@@ -380,6 +401,7 @@ func _cue_debug_payload(event: Dictionary, song_time: float) -> Dictionary:
 	return {
 		"id": str(event.get("id", "")),
 		"direction": str(event.get("direction", "")),
+		"technique": str(event.get("technique", "classic")),
 		"remaining_ms": (float(event.get("time", 0.0)) - song_time) * 1000.0
 	}
 
@@ -389,9 +411,16 @@ func _cue_debug_text(prefix: String, cue: Dictionary) -> String:
 	return "%s %s %s %+.0fms" % [
 		prefix,
 		str(cue.get("id", "")),
-		str(cue.get("direction", "")).to_upper(),
+		str(cue.get("technique", "classic")).to_upper() + " " + str(cue.get("direction", "")).to_upper(),
 		float(cue.get("remaining_ms", 0.0))
 	]
+
+func _cue_line(prefix: String, event: Dictionary, remaining: float) -> String:
+	var technique := StringName(event.get("technique", "classic"))
+	if technique in [&"half", &"deep"]:
+		var glyph := "→" if technique == &"half" else "↓"
+		return "%s  %s %s · %s  %+.0f ms" % [prefix, glyph, str(technique).to_upper(), str(event.get("direction", "")).to_upper(), remaining * 1000.0]
+	return "%s  %s %s  %+.0f ms" % [prefix, _arrow_for_direction(StringName(event.get("direction", ""))), str(event.get("direction", "")).to_upper(), remaining * 1000.0]
 
 func _arrow_for_direction(direction: StringName) -> String:
 	match direction:
