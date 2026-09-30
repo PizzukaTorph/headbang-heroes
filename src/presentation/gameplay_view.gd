@@ -11,6 +11,7 @@ signal technique_gesture_sample(phase: StringName, position: Vector2)
 var erik: ErikView
 var cue_ring: CueRing
 var cue_label: Label
+var technique_prompt_label: Label
 var title_label: Label
 var score_label: Label
 var combo_label: Label
@@ -49,6 +50,7 @@ func update_cue(payload: Dictionary) -> void:
 		_current_cue_debug = {}
 		_next_cue_debug = {}
 		cue_label.text = ""
+		technique_prompt_label.text = ""
 		cue_ring.clear()
 		return
 
@@ -62,14 +64,18 @@ func update_cue(payload: Dictionary) -> void:
 	_next_cue_debug = _cue_debug_payload(next_event, song_time)
 
 	var lines: Array[String] = []
+	technique_prompt_label.text = ""
 
 	if not current_event.is_empty():
 		var current_remaining := float(current_event.get("time", 0.0)) - song_time
 		lines.append(_cue_line("NOW", current_event, current_remaining))
+		_set_technique_prompt(current_event)
 
 	if not next_event.is_empty():
 		var next_remaining := float(next_event.get("time", 0.0)) - song_time
 		lines.append(_cue_line("NEXT", next_event, next_remaining))
+		if not _is_technique_event(current_event) and _is_technique_event(next_event):
+			_set_technique_prompt(next_event)
 
 	cue_label.text = "\n".join(lines)
 	cue_ring.set_cues(current_event, next_event, song_time, approach_time, preview_horizon)
@@ -207,6 +213,18 @@ func _build_ui() -> void:
 	cue_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	cue_label.add_theme_font_size_override("font_size", 18)
 	add_child(cue_label)
+
+	technique_prompt_label = Label.new()
+	technique_prompt_label.anchor_left = 0.12
+	technique_prompt_label.anchor_right = 0.88
+	technique_prompt_label.anchor_top = 0.595
+	technique_prompt_label.anchor_bottom = 0.645
+	technique_prompt_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	technique_prompt_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	technique_prompt_label.add_theme_font_size_override("font_size", 24)
+	technique_prompt_label.modulate = Color("#ffd166")
+	technique_prompt_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(technique_prompt_label)
 
 	feedback_label = Label.new()
 	feedback_label.anchor_left = 0.05
@@ -421,6 +439,17 @@ func _cue_line(prefix: String, event: Dictionary, remaining: float) -> String:
 		var glyph := "→" if technique == &"half" else "↓"
 		return "%s  %s %s · %s  %+.0f ms" % [prefix, glyph, str(technique).to_upper(), str(event.get("direction", "")).to_upper(), remaining * 1000.0]
 	return "%s  %s %s  %+.0f ms" % [prefix, _arrow_for_direction(StringName(event.get("direction", ""))), str(event.get("direction", "")).to_upper(), remaining * 1000.0]
+
+func _set_technique_prompt(event: Dictionary) -> void:
+	var technique := StringName(event.get("technique", "classic"))
+	if technique == &"half":
+		technique_prompt_label.text = "GESTURE  →  HALF  ·  SWIPE RIGHT"
+	elif technique == &"deep":
+		technique_prompt_label.text = "GESTURE  ↓  DEEP  ·  SWIPE DOWN"
+
+func _is_technique_event(event: Dictionary) -> bool:
+	var technique := StringName(event.get("technique", "classic"))
+	return technique in [&"half", &"deep"]
 
 func _arrow_for_direction(direction: StringName) -> String:
 	match direction:
