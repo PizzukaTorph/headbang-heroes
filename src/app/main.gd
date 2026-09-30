@@ -111,7 +111,7 @@ func _update_start_button() -> void:
 		_start_button.text = "PLAY TEMPO RAMP · %s" % str(selected_tuning_profile).to_upper()
 
 func _start_technique_lab() -> void:
-	_start_game(TECHNIQUE_CHART_PATH, 0.60)
+	_start_game(TECHNIQUE_CHART_PATH, 0.40)
 
 func _start_game(chart_path: String = CHART_PATH, playback_speed: float = 1.0) -> void:
 	_clear_screen()

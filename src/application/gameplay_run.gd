@@ -179,6 +179,10 @@ func technique_gesture_sample(phase: StringName, position: Vector2) -> void:
 	match phase:
 		&"start":
 			var event := technique_resolver.active_event(now)
+			if event.is_empty():
+				var preview := technique_resolver.upcoming_unresolved(now, float(chart.get("approach_time", 1.0)), 1)
+				if not preview.is_empty():
+					event = (preview[0] as Dictionary)["event"]
 			if not event.is_empty():
 				technique_gesture.begin(StringName(event.get("technique", "")), now, position)
 			_emit_hud()
