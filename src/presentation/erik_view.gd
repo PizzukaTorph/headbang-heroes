@@ -44,6 +44,7 @@ func apply_tuning(values: Dictionary) -> void:
 
 func reset_pose() -> void:
 	frame_driver.reset()
+	scale = Vector2.ONE
 	_last_frame = -1
 	_set_frame(0)
 
@@ -78,6 +79,7 @@ func _set_frame(frame: int) -> void:
 	if safe_frame == _last_frame:
 		return
 	_last_frame = safe_frame
+	scale = Vector2.ONE
 	texture = frames[safe_frame]
 
 func _process(delta: float) -> void:
@@ -117,4 +119,18 @@ func _set_technique_frame(frame: int) -> void:
 	if selected.is_empty():
 		return
 	var safe_frame := clampi(frame, 0, selected.size() - 1)
+	_apply_technique_scale(selected[safe_frame])
 	texture = selected[safe_frame]
+
+func _apply_technique_scale(technique_texture: Texture2D) -> void:
+	if frames.is_empty() or technique_texture == null:
+		return
+	var classic_size := frames[0].get_size()
+	var technique_size := technique_texture.get_size()
+	if classic_size.y <= 0.0 or technique_size.x <= 0.0 or technique_size.y <= 0.0:
+		return
+	# Keep the technique's visible width comparable to the tall Classic artwork.
+	var classic_aspect := classic_size.x / classic_size.y
+	var technique_aspect := technique_size.x / technique_size.y
+	var visual_scale := clampf(classic_aspect / technique_aspect, 0.55, 1.0)
+	scale = Vector2.ONE * visual_scale
