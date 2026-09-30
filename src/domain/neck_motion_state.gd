@@ -8,6 +8,8 @@ const DEFAULT_RETURN_STRENGTH := 9.0
 const DEFAULT_MAX_ANGLE := 42.0
 const DEFAULT_MAX_VELOCITY := 360.0
 const DEFAULT_LIMIT_BOUNCE := -0.15
+const DEFAULT_MOMENTUM_CARRY := 0.15
+const DEFAULT_REVERSAL_BOOST := 80.0
 const MAX_ADVANCE_SECONDS := 0.25
 
 class AxisState:
@@ -26,10 +28,29 @@ class AxisState:
 		travel_since_inversion = 0.0
 		peak_speed_since_inversion = 0.0
 
-	func apply_impulse(sign_value: float, intensity: float, impulse: float, max_velocity: float) -> void:
+	func apply_launch(
+		sign_value: float,
+		intensity: float,
+		launch_velocity: float,
+		max_velocity: float,
+		momentum_carry: float,
+		reversal_boost: float
+	) -> void:
 		var sign_normalized := 1.0 if sign_value >= 0.0 else -1.0
-		velocity += sign_normalized * impulse * clampf(intensity, 0.0, 1.0)
-		velocity = clampf(velocity, -max_velocity, max_velocity)
+		var effective_intensity := clampf(intensity, 0.0, 1.0)
+		var launch := sign_normalized * launch_velocity * effective_intensity
+		var carried := velocity * momentum_carry
+		var launched_velocity := carried + launch
+
+		# Input owns the inversion: opposing momentum may be carried, but it can
+		# never leave a valid tap travelling in the previous direction.
+		if launched_velocity * sign_normalized <= 0.0:
+			launched_velocity = sign_normalized * maxf(
+				absf(launched_velocity) + reversal_boost * effective_intensity,
+				launch_velocity * effective_intensity
+			)
+
+		velocity = clampf(launched_velocity, -max_velocity, max_velocity)
 		peak_speed_since_inversion = maxf(peak_speed_since_inversion, absf(velocity))
 
 	func step(
@@ -63,6 +84,8 @@ var return_strength: float = DEFAULT_RETURN_STRENGTH
 var max_angle: float = DEFAULT_MAX_ANGLE
 var max_velocity: float = DEFAULT_MAX_VELOCITY
 var limit_bounce: float = DEFAULT_LIMIT_BOUNCE
+var momentum_carry: float = DEFAULT_MOMENTUM_CARRY
+var reversal_boost: float = DEFAULT_REVERSAL_BOOST
 
 func configure(values: Dictionary) -> void:
 	simulation_hz = maxf(30.0, float(values.get("simulationHz", DEFAULT_SIMULATION_HZ)))
@@ -73,6 +96,8 @@ func configure(values: Dictionary) -> void:
 	max_angle = maxf(1.0, float(values.get("maxAngle", DEFAULT_MAX_ANGLE)))
 	max_velocity = maxf(1.0, float(values.get("maxVelocity", DEFAULT_MAX_VELOCITY)))
 	limit_bounce = clampf(float(values.get("limitBounce", DEFAULT_LIMIT_BOUNCE)), -1.0, 1.0)
+	momentum_carry = clampf(float(values.get("momentumCarry", DEFAULT_MOMENTUM_CARRY)), 0.0, 1.0)
+	reversal_boost = maxf(0.0, float(values.get("reversalBoost", DEFAULT_REVERSAL_BOOST)))
 
 	# Keep the current tick aligned if tuning is hot-reloaded between runs.
 	elapsed = tick * step_seconds
@@ -129,7 +154,7 @@ func apply_bang(direction: StringName, intensity: float = 1.0) -> Dictionary:
 		_:
 			return snapshot
 	axis.begin_boundary()
-	axis.apply_impulse(launch_sign, intensity, impulse, max_velocity)
+	axis.apply_launch(launch_sign, intensity, impulse, max_velocity, momentum_carry, reversal_boost)
 	prepared = true
 	return snapshot
 
@@ -151,5 +176,7 @@ func tuning_snapshot() -> Dictionary:
 		"return_strength": return_strength,
 		"max_angle": max_angle,
 		"max_velocity": max_velocity,
-		"limit_bounce": limit_bounce
+		"limit_bounce": limit_bounce,
+		"momentum_carry": momentum_carry,
+		"reversal_boost": reversal_boost
 	}

@@ -75,11 +75,51 @@ func _test_neck_and_motion_quality() -> void:
 	var first: Dictionary = neck.apply_bang(&"left")
 	var first_quality: Dictionary = MotionQualityScript.evaluate(first)
 	_expect(bool(first_quality.get("was_setup", false)), "first bang must be setup/unprepared")
+	_expect(neck.horizontal.velocity > 0.0, "first left bang must launch left immediately")
 	neck.advance(0.20)
 	var second: Dictionary = neck.apply_bang(&"right")
 	var second_quality: Dictionary = MotionQualityScript.evaluate(second)
 	_expect(not bool(second_quality.get("was_setup", true)), "second bang must have preceding travel")
 	_expect(float(second_quality.get("quality", 0.0)) > 0.0, "prepared movement must produce inspectable Motion Quality")
+	_expect(neck.horizontal.velocity < 0.0, "opposite bang must immediately reverse velocity sign")
+	_expect(float(second.get("travel", 0.0)) > 0.0, "opposite bang must preserve pre-inversion travel evidence")
+	_expect(float(second.get("peak_speed", 0.0)) > 0.0, "opposite bang must preserve pre-inversion speed evidence")
+
+	var alternating_a = NeckMotionScript.new()
+	var alternating_b = NeckMotionScript.new()
+	for direction in [&"left", &"right", &"left", &"right"]:
+		alternating_a.apply_bang(direction)
+		alternating_b.apply_bang(direction)
+		alternating_a.advance(0.125)
+		alternating_b.advance(0.125)
+	_expect(absf(alternating_a.horizontal.displacement - alternating_b.horizontal.displacement) < 0.000001, "alternating taps must be deterministic")
+	_expect(absf(alternating_a.horizontal.velocity - alternating_b.horizontal.velocity) < 0.000001, "alternating velocity must be deterministic")
+
+	var continuous = NeckMotionScript.new()
+	continuous.apply_bang(&"left")
+	continuous.advance(0.15)
+	var angle_before_reversal: float = continuous.horizontal.displacement
+	continuous.apply_bang(&"right")
+	_expect(absf(continuous.horizontal.displacement - angle_before_reversal) < 0.000001, "tap reversal must not teleport angle")
+	_expect(continuous.horizontal.velocity < 0.0, "continuous angle state must launch right after reversal")
+
+	var bounded = NeckMotionScript.new()
+	bounded.configure({"maxVelocity": 120.0, "maxAngle": 18.0, "momentumCarry": 1.0, "reversalBoost": 200.0})
+	for direction in [&"left", &"right", &"left", &"right"]:
+		bounded.apply_bang(direction)
+		_expect(absf(bounded.horizontal.velocity) <= 120.000001, "launch velocity must respect max velocity")
+		bounded.advance(0.4)
+		_expect(absf(bounded.horizontal.displacement) <= 18.000001, "travel angle must respect max angle")
+
+	var fixed_step_a = NeckMotionScript.new()
+	var fixed_step_b = NeckMotionScript.new()
+	fixed_step_a.apply_bang(&"left")
+	fixed_step_b.apply_bang(&"left")
+	fixed_step_a.advance(0.2)
+	for _i in 20:
+		fixed_step_b.advance(0.01)
+	_expect(fixed_step_a.tick == fixed_step_b.tick, "fixed-step tick count must be independent of advance chunking")
+	_expect(absf(fixed_step_a.horizontal.displacement - fixed_step_b.horizontal.displacement) < 0.000001, "fixed-step displacement must be deterministic")
 
 func _test_scoring() -> void:
 	var scorer = RunScorerScript.new()

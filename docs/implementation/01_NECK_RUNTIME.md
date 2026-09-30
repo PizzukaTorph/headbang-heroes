@@ -141,6 +141,20 @@ The first relevant input from neutral is setup/unprepared:
 
 Do not fake a perfect/zero motion-quality sample inside the physics model.
 
+### Classic tap-to-tap launch invariant
+
+Classic headbang is tap-to-tap. Each semantic directional tap owns the
+inversion/launch into the next stroke; continuous neck physics governs the
+travel between taps.
+
+`apply_bang()` captures the arriving state first, then establishes a launch
+velocity in the requested direction. A configurable fraction of the previous
+velocity is carried for continuity. If that carried momentum would leave the
+new velocity with the old sign, a deterministic reversal boost guarantees the
+requested sign. Displacement is never snapped or teleported by input. The
+result is still passed through the configured maximum velocity and the normal
+fixed-step spring/damping simulation.
+
 ### Pre-inversion snapshot
 
 The runtime must be able to capture the arriving state/history immediately **before** applying the new inversion impulse.

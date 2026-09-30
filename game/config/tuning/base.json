@@ -14,7 +14,9 @@
     "returnStrength": 9.0,
     "maxAngle": 42,
     "maxVelocity": 360,
-    "limitBounce": -0.15
+    "limitBounce": -0.15,
+    "momentumCarry": 0.15,
+    "reversalBoost": 80.0
   },
   "flp": {
     "framesPerDegree": 0.12,
