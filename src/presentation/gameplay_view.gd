@@ -10,6 +10,7 @@ signal technique_gesture_sample(phase: StringName, position: Vector2)
 
 var erik: ErikView
 var cue_ring: CueRing
+var technique_guide: TechniqueGestureGuide
 var cue_label: Label
 var technique_prompt_label: Label
 var title_label: Label
@@ -52,6 +53,7 @@ func update_cue(payload: Dictionary) -> void:
 		cue_label.text = ""
 		technique_prompt_label.text = ""
 		cue_ring.clear()
+		technique_guide.clear()
 		return
 
 	var current_event: Dictionary = payload.get("current", {})
@@ -65,6 +67,14 @@ func update_cue(payload: Dictionary) -> void:
 
 	var lines: Array[String] = []
 	technique_prompt_label.text = ""
+	var guide_event: Dictionary = current_event if _is_technique_event(current_event) else next_event if _is_technique_event(next_event) else {}
+	if guide_event.is_empty():
+		technique_guide.clear()
+		cue_ring.visible = true
+	else:
+		cue_ring.visible = false
+		var guide_time := float(guide_event.get("time", 0.0)) - song_time
+		technique_guide.set_guide(StringName(guide_event.get("technique", "")), guide_event == current_event, guide_time)
 
 	if not current_event.is_empty():
 		var current_remaining := float(current_event.get("time", 0.0)) - song_time
@@ -203,6 +213,18 @@ func _build_ui() -> void:
 	cue_ring.offset_top = -155.0
 	cue_ring.offset_bottom = 155.0
 	add_child(cue_ring)
+
+	technique_guide = TechniqueGestureGuide.new()
+	technique_guide.anchor_left = 0.5
+	technique_guide.anchor_right = 0.5
+	technique_guide.anchor_top = 0.54
+	technique_guide.anchor_bottom = 0.54
+	technique_guide.offset_left = -160.0
+	technique_guide.offset_right = 160.0
+	technique_guide.offset_top = -160.0
+	technique_guide.offset_bottom = 160.0
+	technique_guide.visible = false
+	add_child(technique_guide)
 
 	cue_label = Label.new()
 	cue_label.anchor_left = 0.08
