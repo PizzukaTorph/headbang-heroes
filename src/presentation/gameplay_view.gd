@@ -33,6 +33,7 @@ var _debug_visible: bool = true
 var _current_cue_debug: Dictionary = {}
 var _next_cue_debug: Dictionary = {}
 var _last_hype: int = -1
+var _mouse_gesture_active: bool = false
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -339,6 +340,22 @@ func _on_direction_pressed(direction: StringName) -> void:
 	bang_requested.emit(direction)
 
 func _input(event: InputEvent) -> void:
+	if event is InputEventMouseButton:
+		var mouse_button := event as InputEventMouseButton
+		if mouse_button.button_index == MOUSE_BUTTON_LEFT and technique_guide != null and technique_guide.visible:
+			if mouse_button.pressed and technique_guide.get_global_rect().has_point(mouse_button.position):
+				_mouse_gesture_active = true
+				technique_gesture_sample.emit(&"start", mouse_button.position)
+				get_viewport().set_input_as_handled()
+			elif not mouse_button.pressed and _mouse_gesture_active:
+				_mouse_gesture_active = false
+				technique_gesture_sample.emit(&"complete", mouse_button.position)
+				get_viewport().set_input_as_handled()
+			return
+	if event is InputEventMouseMotion and _mouse_gesture_active:
+		technique_gesture_sample.emit(&"update", (event as InputEventMouseMotion).position)
+		get_viewport().set_input_as_handled()
+		return
 	if event is not InputEventKey:
 		return
 	var key := event as InputEventKey
@@ -373,12 +390,6 @@ func _unhandled_input(event: InputEvent) -> void:
 		technique_gesture_sample.emit(&"start" if touch.pressed else &"complete", touch.position)
 	elif event is InputEventScreenDrag:
 		technique_gesture_sample.emit(&"update", (event as InputEventScreenDrag).position)
-	elif event is InputEventMouseButton:
-		var mouse_button := event as InputEventMouseButton
-		if mouse_button.button_index == MOUSE_BUTTON_LEFT:
-			technique_gesture_sample.emit(&"start" if mouse_button.pressed else &"complete", mouse_button.position)
-	elif event is InputEventMouseMotion and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
-		technique_gesture_sample.emit(&"update", (event as InputEventMouseMotion).position)
 
 func set_paused(value: bool) -> void:
 	pause_button.text = "RESUME" if value else "PAUSE"
