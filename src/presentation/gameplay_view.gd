@@ -42,7 +42,7 @@ func _ready() -> void:
 
 func apply_tuning(values: Dictionary) -> void:
 	if erik != null:
-		erik.apply_tuning(values.get("flp", {}))
+		erik.apply_tuning(values)
 	if cue_ring != null:
 		cue_ring.apply_tuning(values.get("cue", {}))
 	_feedback_tuning = (values.get("feedback", {}) as Dictionary).duplicate(true)
@@ -138,6 +138,7 @@ func show_technique_result(result: Dictionary) -> void:
 	var intent: Dictionary = result.get("intent", {})
 	var technique := str(event.get("technique", intent.get("technique", "technique"))).to_upper()
 	if bool(result.get("valid", false)):
+		erik.play_technique(StringName(event.get("technique", "")))
 		_show_feedback("%s  OK" % technique, "GREAT")
 	else:
 		_show_feedback("%s  FAIL\n%s" % [technique, str(result.get("reason", "gesture"))], "MISS")

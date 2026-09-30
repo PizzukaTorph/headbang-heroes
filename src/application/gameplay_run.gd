@@ -84,7 +84,8 @@ func presentation_tuning() -> Dictionary:
 		"flp": tuning.section("flp"),
 		"cue": tuning.section("cue"),
 		"feedback": tuning.section("feedback"),
-		"techniques": tuning.section("techniques")
+		"techniques": tuning.section("techniques"),
+		"techniqueAnimation": tuning.section("techniqueAnimation")
 	}
 
 func reload_tuning() -> bool:
