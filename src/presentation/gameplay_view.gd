@@ -344,7 +344,9 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		var mouse_button := event as InputEventMouseButton
 		if mouse_button.button_index == MOUSE_BUTTON_LEFT and technique_guide != null and technique_guide.visible:
-			if mouse_button.pressed and technique_guide.get_global_rect().has_point(mouse_button.position):
+			var viewport_size := get_viewport_rect().size
+			var in_gameplay_area := mouse_button.position.y >= viewport_size.y * 0.18 and mouse_button.position.y <= viewport_size.y * 0.72
+			if mouse_button.pressed and in_gameplay_area:
 				_mouse_gesture_active = true
 				technique_gesture_sample.emit(&"start", mouse_button.position)
 				get_viewport().set_input_as_handled()

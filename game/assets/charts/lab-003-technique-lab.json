@@ -9,9 +9,9 @@
   "technique": "classic",
   "events": [
     {"id": "classic-000", "time": 2.0, "directionName": "left", "technique": "classic"},
-    {"id": "tech-001", "time": 3.0, "duration": 0.75, "directionName": "right", "technique": "half"},
+    {"id": "tech-001", "time": 3.0, "duration": 2.5, "directionName": "right", "technique": "half"},
     {"id": "classic-001", "time": 4.2, "directionName": "right", "technique": "classic"},
-    {"id": "tech-002", "time": 5.5, "duration": 1.0, "directionName": "left", "technique": "deep"},
-    {"id": "classic-002", "time": 7.2, "directionName": "left", "technique": "classic"}
+    {"id": "tech-002", "time": 6.5, "duration": 3.5, "directionName": "left", "technique": "deep"},
+    {"id": "classic-002", "time": 11.0, "directionName": "left", "technique": "classic"}
   ]
 }
