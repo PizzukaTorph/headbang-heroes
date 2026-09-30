@@ -39,7 +39,7 @@ A chart has one authored difficulty classification.
 
 > **Higher difficulty does not make the neck artificially harder to control. It asks the player to control the same neck through harder choreography.**
 
-Do not modify neck physics, Motion Quality formulas, damping, impulse, or physical limits merely because the chart is Hard or Extreme.
+Do not modify neck physics, Motion Quality formulas, stroke duration, target angle, or physical limits merely because the chart is Hard or Extreme.
 
 ## Runtime tuning profiles vs authored difficulty
 
@@ -66,7 +66,7 @@ Hard rule:
 
 > **Difficulty profiles must not override neck physics.**
 
-Impulse, damping, return strength, physical limits, simulation rate and Motion Quality behavior are shared. Harder play must emerge from authored choreography, timing tolerance and readable presentation demands rather than an invisible change to the player's neck.
+Stroke duration, target angle, physical limits, simulation rate and Motion Quality behavior are shared. Harder play must emerge from authored choreography, timing tolerance and readable presentation demands rather than an invisible change to the player's neck.
 
 ## What difficulty describes
 

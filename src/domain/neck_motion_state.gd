@@ -2,14 +2,10 @@ class_name NeckMotionState
 extends RefCounted
 
 const DEFAULT_SIMULATION_HZ := 120.0
-const DEFAULT_IMPULSE := 190.0
-const DEFAULT_DAMPING := 5.5
-const DEFAULT_RETURN_STRENGTH := 9.0
+const DEFAULT_STROKE_DURATION := 0.32
+const DEFAULT_TARGET_ANGLE := 36.0
 const DEFAULT_MAX_ANGLE := 42.0
 const DEFAULT_MAX_VELOCITY := 360.0
-const DEFAULT_LIMIT_BOUNCE := -0.15
-const DEFAULT_MOMENTUM_CARRY := 0.15
-const DEFAULT_REVERSAL_BOOST := 80.0
 const MAX_ADVANCE_SECONDS := 0.25
 
 class AxisState:
@@ -17,58 +13,59 @@ class AxisState:
 	var velocity: float = 0.0
 	var travel_since_inversion: float = 0.0
 	var peak_speed_since_inversion: float = 0.0
+	var stroke_target: float = 0.0
+	var stroke_progress: float = 1.0
+	var stroke_active: bool = false
+	var _stroke_start: float = 0.0
 
 	func reset() -> void:
 		displacement = 0.0
 		velocity = 0.0
 		travel_since_inversion = 0.0
 		peak_speed_since_inversion = 0.0
+		stroke_target = 0.0
+		stroke_progress = 1.0
+		stroke_active = false
+		_stroke_start = 0.0
 
 	func begin_boundary() -> void:
 		travel_since_inversion = 0.0
 		peak_speed_since_inversion = 0.0
 
-	func apply_launch(
-		sign_value: float,
-		intensity: float,
-		launch_velocity: float,
-		max_velocity: float,
-		momentum_carry: float,
-		reversal_boost: float
-	) -> void:
+	func begin_stroke(sign_value: float, intensity: float, target_angle: float, stroke_duration: float, max_velocity: float) -> void:
 		var sign_normalized := 1.0 if sign_value >= 0.0 else -1.0
 		var effective_intensity := clampf(intensity, 0.0, 1.0)
-		var launch := sign_normalized * launch_velocity * effective_intensity
-		var carried := velocity * momentum_carry
-		var launched_velocity := carried + launch
-
-		# Input owns the inversion: opposing momentum may be carried, but it can
-		# never leave a valid tap travelling in the previous direction.
-		if launched_velocity * sign_normalized <= 0.0:
-			launched_velocity = sign_normalized * maxf(
-				absf(launched_velocity) + reversal_boost * effective_intensity,
-				launch_velocity * effective_intensity
-			)
-
-		velocity = clampf(launched_velocity, -max_velocity, max_velocity)
+		_stroke_start = displacement
+		stroke_target = sign_normalized * target_angle * effective_intensity
+		stroke_progress = 0.0
+		stroke_active = true
+		velocity = sign_normalized * minf(max_velocity, target_angle * effective_intensity / (stroke_duration * 0.5))
 		peak_speed_since_inversion = maxf(peak_speed_since_inversion, absf(velocity))
 
-	func step(
-		step_seconds: float,
-		return_strength: float,
-		damping: float,
-		max_angle: float,
-		limit_bounce: float
-	) -> void:
+	func step(step_seconds: float, stroke_duration: float, max_angle: float, max_velocity: float) -> void:
+		if not stroke_active:
+			velocity = 0.0
+			return
+
 		var previous := displacement
-		velocity += -displacement * return_strength * step_seconds
-		velocity *= exp(-damping * step_seconds)
-		displacement += velocity * step_seconds
-		if absf(displacement) > max_angle:
-			displacement = clampf(displacement, -max_angle, max_angle)
-			velocity *= limit_bounce
+		stroke_progress = minf(1.0, stroke_progress + step_seconds / stroke_duration)
+		var desired: float
+		if stroke_progress <= 0.5:
+			# First half: commit toward the direction of this tap.
+			desired = lerpf(_stroke_start, stroke_target, stroke_progress * 2.0)
+		else:
+			# Second half: complete the stroke by recovering toward centre.
+			desired = lerpf(stroke_target, 0.0, (stroke_progress - 0.5) * 2.0)
+
+		desired = clampf(desired, -max_angle, max_angle)
+		displacement = move_toward(previous, desired, max_velocity * step_seconds)
+		velocity = (displacement - previous) / step_seconds
 		travel_since_inversion += absf(displacement - previous)
 		peak_speed_since_inversion = maxf(peak_speed_since_inversion, absf(velocity))
+
+		if stroke_progress >= 1.0:
+			stroke_active = false
+			velocity = 0.0
 
 var horizontal := AxisState.new()
 var vertical := AxisState.new()
@@ -78,26 +75,18 @@ var prepared: bool = false
 
 var simulation_hz: float = DEFAULT_SIMULATION_HZ
 var step_seconds: float = 1.0 / DEFAULT_SIMULATION_HZ
-var impulse: float = DEFAULT_IMPULSE
-var damping: float = DEFAULT_DAMPING
-var return_strength: float = DEFAULT_RETURN_STRENGTH
+var stroke_duration: float = DEFAULT_STROKE_DURATION
+var target_angle: float = DEFAULT_TARGET_ANGLE
 var max_angle: float = DEFAULT_MAX_ANGLE
 var max_velocity: float = DEFAULT_MAX_VELOCITY
-var limit_bounce: float = DEFAULT_LIMIT_BOUNCE
-var momentum_carry: float = DEFAULT_MOMENTUM_CARRY
-var reversal_boost: float = DEFAULT_REVERSAL_BOOST
 
 func configure(values: Dictionary) -> void:
 	simulation_hz = maxf(30.0, float(values.get("simulationHz", DEFAULT_SIMULATION_HZ)))
 	step_seconds = 1.0 / simulation_hz
-	impulse = maxf(1.0, float(values.get("impulse", DEFAULT_IMPULSE)))
-	damping = maxf(0.0, float(values.get("damping", DEFAULT_DAMPING)))
-	return_strength = maxf(0.0, float(values.get("returnStrength", DEFAULT_RETURN_STRENGTH)))
+	stroke_duration = maxf(0.05, float(values.get("strokeDuration", DEFAULT_STROKE_DURATION)))
 	max_angle = maxf(1.0, float(values.get("maxAngle", DEFAULT_MAX_ANGLE)))
+	target_angle = clampf(float(values.get("targetAngle", DEFAULT_TARGET_ANGLE)), 1.0, max_angle)
 	max_velocity = maxf(1.0, float(values.get("maxVelocity", DEFAULT_MAX_VELOCITY)))
-	limit_bounce = clampf(float(values.get("limitBounce", DEFAULT_LIMIT_BOUNCE)), -1.0, 1.0)
-	momentum_carry = clampf(float(values.get("momentumCarry", DEFAULT_MOMENTUM_CARRY)), 0.0, 1.0)
-	reversal_boost = maxf(0.0, float(values.get("reversalBoost", DEFAULT_REVERSAL_BOOST)))
 
 	# Keep the current tick aligned if tuning is hot-reloaded between runs.
 	elapsed = tick * step_seconds
@@ -116,8 +105,8 @@ func advance(authoritative_delta: float) -> int:
 	var target_tick := int(floor(elapsed / step_seconds + 0.000000001))
 	var steps := 0
 	while tick < target_tick:
-		horizontal.step(step_seconds, return_strength, damping, max_angle, limit_bounce)
-		vertical.step(step_seconds, return_strength, damping, max_angle, limit_bounce)
+		horizontal.step(step_seconds, stroke_duration, max_angle, max_velocity)
+		vertical.step(step_seconds, stroke_duration, max_angle, max_velocity)
 		tick += 1
 		steps += 1
 	return steps
@@ -130,6 +119,9 @@ func capture(direction: StringName) -> Dictionary:
 		"velocity": axis.velocity,
 		"travel": axis.travel_since_inversion,
 		"peak_speed": axis.peak_speed_since_inversion,
+		"stroke_target": axis.stroke_target,
+		"stroke_progress": axis.stroke_progress,
+		"stroke_active": axis.stroke_active,
 		"prepared": prepared,
 		"tick": tick
 	}
@@ -154,7 +146,7 @@ func apply_bang(direction: StringName, intensity: float = 1.0) -> Dictionary:
 		_:
 			return snapshot
 	axis.begin_boundary()
-	axis.apply_launch(launch_sign, intensity, impulse, max_velocity, momentum_carry, reversal_boost)
+	axis.begin_stroke(launch_sign, intensity, target_angle, stroke_duration, max_velocity)
 	prepared = true
 	return snapshot
 
@@ -164,6 +156,8 @@ func presentation_state() -> Dictionary:
 		"vertical_angle": vertical.displacement,
 		"horizontal_velocity": horizontal.velocity,
 		"vertical_velocity": vertical.velocity,
+		"horizontal_stroke_active": horizontal.stroke_active,
+		"vertical_stroke_active": vertical.stroke_active,
 		"prepared": prepared,
 		"tick": tick
 	}
@@ -171,12 +165,8 @@ func presentation_state() -> Dictionary:
 func tuning_snapshot() -> Dictionary:
 	return {
 		"simulation_hz": simulation_hz,
-		"impulse": impulse,
-		"damping": damping,
-		"return_strength": return_strength,
+		"stroke_duration": stroke_duration,
+		"target_angle": target_angle,
 		"max_angle": max_angle,
-		"max_velocity": max_velocity,
-		"limit_bounce": limit_bounce,
-		"momentum_carry": momentum_carry,
-		"reversal_boost": reversal_boost
+		"max_velocity": max_velocity
 	}

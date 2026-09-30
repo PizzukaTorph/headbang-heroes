@@ -76,14 +76,19 @@ Extension rule:
 
 ## Classic Bang contract
 
-A tap identifies the inversion point, not the destination.
+Classic is tap-to-headbang: every tap immediately starts a new headbang stroke.
+A new tap can interrupt the previous stroke and starts the next one from the
+current neck pose.
 
-- LEFT -> invert/commit LEFT -> launch RIGHT
-- RIGHT -> invert/commit RIGHT -> launch LEFT
-- UP -> invert/commit UP -> launch DOWN
-- DOWN -> invert/commit DOWN -> launch UP
+- LEFT -> start a LEFT stroke
+- RIGHT -> start a RIGHT stroke
+- UP -> start an UP stroke
+- DOWN -> start a DOWN stroke
 
-Inversion can happen anywhere in travel. Early inversion produces weak travel; prepared inversion produces stronger motion; late inversion travels farther toward limits. Anti-spam should emerge from poor physical travel/momentum rather than arbitrary cooldowns.
+The stroke target and progression remain continuous and authoritative; input
+does not teleport the angle. Anti-spam should emerge from reduced travel and
+preparation evidence, not an arbitrary cooldown. The first action from neutral
+is still a setup action because no preceding travel exists to evaluate.
 
 The first action from neutral is a setup action. It can be rhythmically valid, but there is no preceding travel to judge with normal Motion Quality semantics.
 

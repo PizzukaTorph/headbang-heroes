@@ -65,7 +65,9 @@ Touch coordinates are never chart semantics. Domain matching receives a semantic
 
 ## Neck simulation
 
-The port keeps a deterministic fixed-step spring/damper simulation at 120 Hz baseline.
+The port keeps a deterministic fixed-step target-driven stroke simulation at
+120 Hz baseline. Each Classic tap starts a new interruptible stroke from the
+current pose; the render loop never owns the movement.
 
 - render delta only causes the application layer to ask how much authoritative song-time elapsed;
 - state advances in fixed ticks;

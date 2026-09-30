@@ -29,7 +29,7 @@ This is a port of contracts and behavior, not a line-by-line C# translation.
 - bounded unresolved candidate matching
 - wrong-direction consumed MISS
 - event expiry
-- fixed 120 Hz spring/damper neck simulation
+- fixed 120 Hz interruptible stroke-based neck simulation
 - first-bang setup semantics
 - event-local Motion Quality evidence
 - combo/multiplier

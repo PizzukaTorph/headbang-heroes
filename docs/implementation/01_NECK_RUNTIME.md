@@ -113,7 +113,7 @@ Use the minimum state actually required, but the domain model should be able to 
 - displacement/angle or trajectory components;
 - velocity;
 - inversion/launch direction/state;
-- damping/recovery;
+- interruptible stroke progression;
 - physical limits;
 - prepared/unprepared/setup status;
 - event-local motion history.
@@ -122,13 +122,9 @@ Do not expose Unity scene transforms as canonical state.
 
 ### Input contract
 
-For Classic Bang:
-- LEFT means inversion/commit at LEFT and launch RIGHT;
-- RIGHT means inversion/commit at RIGHT and launch LEFT;
-- UP means inversion/commit at UP and launch DOWN;
-- DOWN means inversion/commit at DOWN and launch UP.
-
-An inversion request is accepted anywhere in travel. Do not gate it on reaching an expected pose/side.
+For Classic Bang, each directional tap starts a stroke toward that direction.
+A new stroke request is accepted anywhere in travel and interrupts the previous
+stroke from the current pose. Do not gate it on reaching an expected pose/side.
 
 Every valid semantic physical input changes neck motion, including inputs that later become early/late/wrong/MISS/no-match in other systems.
 
@@ -143,21 +139,19 @@ Do not fake a perfect/zero motion-quality sample inside the physics model.
 
 ### Classic tap-to-tap launch invariant
 
-Classic headbang is tap-to-tap. Each semantic directional tap owns the
-inversion/launch into the next stroke; continuous neck physics governs the
-travel between taps.
+Classic headbang is tap-to-tap. Each semantic directional tap owns the start
+of the next stroke; the fixed-step model governs the continuous travel.
 
-`apply_bang()` captures the arriving state first, then establishes a launch
-velocity in the requested direction. A configurable fraction of the previous
-velocity is carried for continuity. If that carried momentum would leave the
-new velocity with the old sign, a deterministic reversal boost guarantees the
-requested sign. Displacement is never snapped or teleported by input. The
-result is still passed through the configured maximum velocity and the normal
-fixed-step spring/damping simulation.
+`apply_bang()` captures the arriving state first, then starts a target-driven
+stroke from the current pose. The first half travels toward the configured
+target angle and the second half recovers toward centre. A new tap restarts
+that progression immediately. Displacement is never snapped or teleported by
+input; the fixed-step model remains authoritative and clamps travel speed and
+angle limits.
 
 ### Pre-inversion snapshot
 
-The runtime must be able to capture the arriving state/history immediately **before** applying the new inversion impulse.
+The runtime must be able to capture the arriving state/history immediately **before** starting the new stroke.
 
 This is required by canonical event resolution ordering:
 
@@ -176,7 +170,7 @@ Remove the M0 assumption that a run-global peak amplitude is valid Motion Qualit
 
 Provide bounded/local history sufficient for later evaluation of concepts such as:
 - travel/amplitude since relevant inversion/setup boundary;
-- incoming velocity/momentum;
+- incoming velocity and stroke progress;
 - continuity;
 - inversion preparation.
 
@@ -263,8 +257,7 @@ NeckMotionSnapshot
 
 NeckMotionConfig
 - simulation step
-- impulse/launch tuning
-- damping/recovery tuning
+- stroke duration/target-angle tuning
 - physical limits
 - other physical tuning values
 ```
@@ -297,11 +290,11 @@ Given the same initial state, semantic input sequence and authoritative elapsed 
 - number/order of authoritative simulation ticks must not depend on render FPS.
 
 ### Classic inversion semantics
-- LEFT launches RIGHT;
-- RIGHT launches LEFT;
-- UP launches DOWN;
-- DOWN launches UP;
-- inversion before reaching a side is accepted and reverses/redirects motion;
+- LEFT starts a LEFT stroke;
+- RIGHT starts a RIGHT stroke;
+- UP starts an UP stroke;
+- DOWN starts a DOWN stroke;
+- a new tap during travel interrupts and retargets the current stroke;
 - no authored pose snap occurs.
 
 ### Anti-spam through physics
@@ -322,7 +315,7 @@ With no subsequent input:
 - no fake preceding-travel history is created.
 
 ### Pre-inversion snapshot
-- snapshot captures state before impulse;
+- snapshot captures state before the new stroke;
 - applying bang cannot mutate the captured snapshot/history;
 - downstream evaluation can distinguish incoming motion from outgoing motion.
 

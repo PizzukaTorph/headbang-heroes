@@ -9,14 +9,10 @@
   },
   "neck": {
     "simulationHz": 120,
-    "impulse": 190,
-    "damping": 5.5,
-    "returnStrength": 9.0,
+    "strokeDuration": 0.32,
+    "targetAngle": 36.0,
     "maxAngle": 42,
-    "maxVelocity": 360,
-    "limitBounce": -0.15,
-    "momentumCarry": 0.15,
-    "reversalBoost": 80.0
+    "maxVelocity": 360
   },
   "flp": {
     "framesPerDegree": 0.12,

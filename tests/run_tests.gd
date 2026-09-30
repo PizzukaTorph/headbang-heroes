@@ -76,12 +76,14 @@ func _test_neck_and_motion_quality() -> void:
 	var first_quality: Dictionary = MotionQualityScript.evaluate(first)
 	_expect(bool(first_quality.get("was_setup", false)), "first bang must be setup/unprepared")
 	_expect(neck.horizontal.velocity > 0.0, "first left bang must launch left immediately")
+	_expect(neck.horizontal.stroke_active, "first tap must start an active stroke")
 	neck.advance(0.20)
 	var second: Dictionary = neck.apply_bang(&"right")
 	var second_quality: Dictionary = MotionQualityScript.evaluate(second)
 	_expect(not bool(second_quality.get("was_setup", true)), "second bang must have preceding travel")
 	_expect(float(second_quality.get("quality", 0.0)) > 0.0, "prepared movement must produce inspectable Motion Quality")
 	_expect(neck.horizontal.velocity < 0.0, "opposite bang must immediately reverse velocity sign")
+	_expect(neck.horizontal.stroke_target < 0.0, "opposite tap must retarget the next stroke")
 	_expect(float(second.get("travel", 0.0)) > 0.0, "opposite bang must preserve pre-inversion travel evidence")
 	_expect(float(second.get("peak_speed", 0.0)) > 0.0, "opposite bang must preserve pre-inversion speed evidence")
 
@@ -102,9 +104,18 @@ func _test_neck_and_motion_quality() -> void:
 	continuous.apply_bang(&"right")
 	_expect(absf(continuous.horizontal.displacement - angle_before_reversal) < 0.000001, "tap reversal must not teleport angle")
 	_expect(continuous.horizontal.velocity < 0.0, "continuous angle state must launch right after reversal")
+	_expect(continuous.horizontal.stroke_active, "opposite tap must interrupt and restart the stroke")
+
+	var same_direction = NeckMotionScript.new()
+	same_direction.apply_bang(&"left")
+	same_direction.advance(0.08)
+	var same_direction_progress: float = same_direction.horizontal.stroke_progress
+	same_direction.apply_bang(&"left")
+	_expect(same_direction.horizontal.stroke_target > 0.0, "same-direction tap must retain its target")
+	_expect(same_direction.horizontal.stroke_progress < same_direction_progress, "same-direction tap must restart stroke progression")
 
 	var bounded = NeckMotionScript.new()
-	bounded.configure({"maxVelocity": 120.0, "maxAngle": 18.0, "momentumCarry": 1.0, "reversalBoost": 200.0})
+	bounded.configure({"maxVelocity": 120.0, "maxAngle": 18.0, "targetAngle": 18.0, "strokeDuration": 0.08})
 	for direction in [&"left", &"right", &"left", &"right"]:
 		bounded.apply_bang(direction)
 		_expect(absf(bounded.horizontal.velocity) <= 120.000001, "launch velocity must respect max velocity")
@@ -162,7 +173,7 @@ func _test_flp_frame_driver() -> void:
 func _test_poc_tuning() -> void:
 	var profiles := ["easy", "normal", "hard", "extreme"]
 	var perfect_windows: Dictionary = {}
-	var neck_impulses: Dictionary = {}
+	var neck_stroke_durations: Dictionary = {}
 	var layouts: Dictionary = {}
 
 	for profile in profiles:
@@ -170,7 +181,7 @@ func _test_poc_tuning() -> void:
 		_expect(tuning.load_profile(StringName(profile)), "%s tuning profile must load" % profile)
 		_expect(str(tuning.profile_id) == profile, "%s profile identity must survive merge" % profile)
 		perfect_windows[profile] = tuning.number("timing", "perfectWindowMs", 0.0)
-		neck_impulses[profile] = tuning.number("neck", "impulse", 0.0)
+		neck_stroke_durations[profile] = tuning.number("neck", "strokeDuration", 0.0)
 		layouts[profile] = str(tuning.section("cue").get("layoutMode", ""))
 		_expect(absf(tuning.number("flp", "maxVisualFps", 0.0) - 9.0) < 0.001, "%s must inherit base FLP tuning" % profile)
 		_expect(absf(tuning.number("cue", "targetRadius", 0.0) - 42.0) < 0.001, "%s must inherit nested base cue values" % profile)
@@ -181,7 +192,7 @@ func _test_poc_tuning() -> void:
 	_expect(float(perfect_windows["hard"]) > float(perfect_windows["extreme"]), "Extreme timing must be tighter than Hard")
 
 	for profile in profiles:
-		_expect(absf(float(neck_impulses[profile]) - 190.0) < 0.001, "%s must preserve identical neck impulse" % profile)
+		_expect(absf(float(neck_stroke_durations[profile]) - 0.32) < 0.001, "%s must preserve identical neck stroke duration" % profile)
 
 	_expect(str(layouts["easy"]) == "centered", "Easy cue layout must remain centered")
 	_expect(str(layouts["normal"]) == "centered", "Normal cue layout must remain centered")
@@ -190,10 +201,12 @@ func _test_poc_tuning() -> void:
 	_expect(not POCTuningScript.is_valid_profile(&"nightmare"), "unknown profile IDs must be rejected by validation")
 
 	var tuned_neck = NeckMotionScript.new()
-	tuned_neck.configure({"impulse": 100.0, "simulationHz": 120.0})
+	tuned_neck.configure({"strokeDuration": 0.20, "targetAngle": 30.0, "simulationHz": 120.0})
 	tuned_neck.apply_bang(&"left")
 	var state: Dictionary = tuned_neck.presentation_state()
-	_expect(absf(float(state.get("horizontal_velocity", 0.0)) - 100.0) < 0.001, "neck tuning must alter launch impulse without changing algorithm")
+	_expect(absf(tuned_neck.stroke_duration - 0.20) < 0.001, "neck tuning must alter stroke duration")
+	_expect(absf(tuned_neck.target_angle - 30.0) < 0.001, "neck tuning must alter stroke target")
+	_expect(float(state.get("horizontal_velocity", 0.0)) > 0.0, "tuned stroke must launch immediately")
 
 	var driver = FLPFrameDriverScript.new(16)
 	driver.configure({"maxVisualFps": 5.0})

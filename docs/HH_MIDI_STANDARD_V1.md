@@ -151,10 +151,10 @@ The direction names describe the authored **inversion/commit point**.
 For Classic semantics:
 
 ```text
-36 / LEFT  → invert/commit LEFT  → launch RIGHT
-35 / RIGHT → invert/commit RIGHT → launch LEFT
-41 / UP    → invert/commit UP    → launch DOWN
-45 / DOWN  → invert/commit DOWN  → launch UP
+36 / LEFT  → start LEFT headbang stroke
+35 / RIGHT → start RIGHT headbang stroke
+41 / UP    → start UP headbang stroke
+45 / DOWN  → start DOWN headbang stroke
 ```
 
 The compiler derives trajectory where unambiguous:

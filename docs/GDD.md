@@ -100,16 +100,17 @@ New gameplay mechanics should extend this vocabulary without changing the semant
 
 ## 6. Classic Bang
 
-Classic Bang establishes the basic inversion/launch grammar.
+Classic Bang is tap-to-headbang: every tap immediately starts a new headbang
+stroke from the current neck pose.
 
-- LEFT input = invert/commit on LEFT and launch RIGHT
-- RIGHT input = invert/commit on RIGHT and launch LEFT
-- UP input = invert/commit on UP and launch DOWN
-- DOWN input = invert/commit on DOWN and launch UP
+- LEFT input = start a LEFT stroke
+- RIGHT input = start a RIGHT stroke
+- UP input = start an UP stroke
+- DOWN input = start a DOWN stroke
 
-The authored beat corresponds to the inversion/commit point.
-
-Inversion may occur anywhere in travel. Early inversion naturally produces small/weak movement, well-prepared inversion produces stronger flow, and late inversion allows travel toward physical limits.
+The authored beat starts the stroke. A later tap may interrupt the current
+stroke at any point and starts the next one without teleporting the angle.
+Early/repeated taps naturally reduce useful travel and Motion Quality evidence.
 
 Rapid spam should fail primarily because repeated early inversions prevent useful amplitude/momentum from developing, not because of an arbitrary cooldown.
 

@@ -58,7 +58,7 @@ func _exercise_profile(packed: PackedScene, profile: StringName) -> void:
 		_expect(gameplay_run.clock != null, prefix + "authoritative SongClock must exist")
 		_expect(gameplay_run.resolver != null, prefix + "candidate resolver must exist")
 		_expect(gameplay_run.active_tuning_profile() == profile, prefix + "selected tuning profile must reach GameplayRun")
-		_expect(absf(gameplay_run.neck.impulse - 190.0) < 0.001, prefix + "neck physics must be identical across difficulty profiles")
+		_expect(absf(gameplay_run.neck.stroke_duration - 0.32) < 0.001, prefix + "neck stroke duration must be identical across difficulty profiles")
 
 		var expected_layout := &"directional" if profile in [&"hard", &"extreme"] else &"centered"
 		_expect(gameplay_view.cue_ring.cue_layout_mode == expected_layout, prefix + "cue layout profile must reach renderer")
