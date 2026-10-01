@@ -16,6 +16,7 @@ var frames: Array[Texture2D] = []
 var technique_frames: Dictionary = {}
 var technique_fps: Dictionary = {}
 var technique_playing: StringName = &""
+var _technique_scrubbed: bool = false
 var frame_driver := FLPFrameDriver.new(FRAME_COUNT)
 var _last_frame: int = -1
 var _technique_elapsed: float = 0.0
@@ -44,6 +45,8 @@ func apply_tuning(values: Dictionary) -> void:
 
 func reset_pose() -> void:
 	frame_driver.reset()
+	technique_playing = &""
+	_technique_scrubbed = false
 	scale = Vector2.ONE
 	_last_frame = -1
 	_set_frame(0)
@@ -61,6 +64,7 @@ func play_technique(technique: StringName) -> bool:
 	if selected.is_empty():
 		return false
 	technique_playing = technique
+	_technique_scrubbed = false
 	_technique_elapsed = 0.0
 	_last_frame = -1
 	_set_technique_frame(0)
@@ -71,15 +75,17 @@ func scrub_technique(technique: StringName, progress: float) -> bool:
 	if selected.is_empty():
 		return false
 	technique_playing = technique
+	_technique_scrubbed = true
 	_technique_elapsed = 0.0
 	_last_frame = -1
 	_set_technique_frame(roundi(clampf(progress, 0.0, 1.0) * float(selected.size() - 1)))
 	return true
 
 func end_technique() -> void:
-	if technique_playing == &"":
+	if technique_playing == &"" or not _technique_scrubbed:
 		return
 	technique_playing = &""
+	_technique_scrubbed = false
 	_technique_elapsed = 0.0
 	_last_frame = -1
 	_set_frame(frame_driver.current_frame)
@@ -109,6 +115,7 @@ func _process(delta: float) -> void:
 	var frame := int(floor(_technique_elapsed * fps))
 	if frame >= selected.size():
 		technique_playing = &""
+		_technique_scrubbed = false
 		_technique_elapsed = 0.0
 		_last_frame = -1
 		_set_frame(frame_driver.current_frame)
