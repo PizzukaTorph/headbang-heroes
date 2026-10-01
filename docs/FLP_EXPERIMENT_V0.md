@@ -273,6 +273,22 @@ Use one fixed upper-body 3/4 gameplay presentation.
 
 Avoid per-animation camera changes.
 
+### Classic vs Technique framing
+
+Frame-authored Technique Skills should be composed expecting a wider/full-body
+presentation than the Classic gameplay crop.
+
+Production expectation:
+- Classic frames optimize head/neck/upper-body readability;
+- Technique frames keep the complete silhouette usable;
+- extreme hair motion must remain inside the Technique framing envelope;
+- the stable lower-body / waist anchor remains mandatory even though the
+  presentation camera pulls back;
+- asset authors must not bake the camera transition into the sprite sequence.
+
+The camera/framing transition belongs to runtime presentation. Sprite frames
+describe character motion only.
+
 ### Stable canvas and alignment
 
 Eventually define:

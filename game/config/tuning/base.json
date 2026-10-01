@@ -37,6 +37,11 @@
     "whiplashFps": 12.0,
     "windmillFps": 12.0
   },
+  "techniqueCamera": {
+    "specialScale": 0.82,
+    "pullBackSeconds": 0.13,
+    "returnSeconds": 0.20
+  },
   "flp": {
     "framesPerDegree": 0.12,
     "maxVisualFps": 9.0,

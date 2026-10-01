@@ -469,6 +469,36 @@ The recovery path should not automatically be produced by reversing the approach
 frames. Hair, shoulders, head and torso may settle through distinct authored
 poses so the move feels heavy rather than mechanically mirrored.
 
+### Technique framing signature
+
+Classic and Technique Skills intentionally use different avatar framing.
+
+```text
+CLASSIC
+close gameplay framing
+→ head / neck / upper-body readability
+
+TECHNIQUE SKILL
+quick pull-back
+→ full-character silhouette
+→ heavy technique performance
+→ soft return to Classic framing
+```
+
+The initial pull-back target is approximately 100–150 ms. The current POC
+default is 130 ms, followed by a softer ~200 ms return. Exact values are tuning
+data and may change after device playtesting.
+
+The framing change begins when the Technique Skill becomes actively performable,
+or immediately when an allowed early gesture begins. It remains a presentation
+effect only: SongClock, gesture sampling, timing windows, NeckMotionState and
+scoring are unchanged.
+
+For the POC, the pull-back is implemented on the avatar presentation stage only.
+HUD, CURRENT/NEXT cues and gesture guides remain at a stable screen scale. This
+preserves rhythm readability while making the full-body silhouette a recognizable
+visual signature of Technique Skills.
+
 Hard rules:
 
 - gameplay state and timing remain authoritative outside presentation;

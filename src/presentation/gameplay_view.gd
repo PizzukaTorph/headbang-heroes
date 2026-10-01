@@ -8,6 +8,7 @@ signal calibration_delta_requested(delta_ms: float)
 signal reload_tuning_requested
 signal technique_gesture_sample(phase: StringName, position: Vector2)
 
+var erik_stage: Control
 var erik: ErikView
 var cue_ring: CueRing
 var technique_guide: TechniqueGestureGuide
@@ -26,14 +27,17 @@ var bang_button: Button
 var pause_button: Button
 
 var _feedback_tuning: Dictionary = {}
+var _technique_camera_tuning: Dictionary = {}
 var _feedback_tween: Tween
 var _erik_tween: Tween
 var _hype_tween: Tween
+var _technique_camera_tween: Tween
 var _debug_visible: bool = true
 var _current_cue_debug: Dictionary = {}
 var _next_cue_debug: Dictionary = {}
 var _last_hype: int = -1
 var _mouse_gesture_active: bool = false
+var _technique_framing_active: bool = false
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -48,6 +52,7 @@ func apply_tuning(values: Dictionary) -> void:
 	if technique_guide != null:
 		technique_guide.apply_tuning(values.get("techniques", {}))
 	_feedback_tuning = (values.get("feedback", {}) as Dictionary).duplicate(true)
+	_technique_camera_tuning = (values.get("techniqueCamera", {}) as Dictionary).duplicate(true)
 
 func update_cue(payload: Dictionary) -> void:
 	if payload.is_empty():
@@ -122,6 +127,13 @@ func update_hud(state: Dictionary) -> void:
 	erik.apply_neck_state(neck_state, get_process_delta_time())
 	var gesture: Dictionary = state.get("gesture", {})
 	var technique_state: Dictionary = state.get("technique", {})
+	var special_framing := (
+		bool(gesture.get("active", false))
+		or bool(technique_state.get("active", false))
+		or bool(technique_state.get("active_window", false))
+		or erik.is_playing_technique()
+	)
+	_set_technique_framing(special_framing)
 	if technique_guide != null and technique_guide.visible:
 		technique_guide.set_progress(float(gesture.get("progress", 0.0)), bool(gesture.get("active", false)))
 	if bool(gesture.get("active", false)) and StringName(gesture.get("technique", "")) in [&"half", &"deep"]:
@@ -188,12 +200,17 @@ func _build_ui() -> void:
 	hype_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	top.add_child(hype_label)
 
+	erik_stage = Control.new()
+	erik_stage.anchor_left = 0.04
+	erik_stage.anchor_right = 0.96
+	erik_stage.anchor_top = 0.17
+	erik_stage.anchor_bottom = 0.59
+	erik_stage.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(erik_stage)
+
 	erik = ErikView.new()
-	erik.anchor_left = 0.04
-	erik.anchor_right = 0.96
-	erik.anchor_top = 0.17
-	erik.anchor_bottom = 0.59
-	add_child(erik)
+	erik.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	erik_stage.add_child(erik)
 
 	debug_panel = PanelContainer.new()
 	debug_panel.anchor_left = 0.025
@@ -506,6 +523,29 @@ func _arrow_for_direction(direction: StringName) -> String:
 		&"up": return "▲"
 		&"down": return "▼"
 		_: return "•"
+
+func _set_technique_framing(active: bool) -> void:
+	if erik_stage == null or _technique_framing_active == active:
+		return
+	_technique_framing_active = active
+
+	if _technique_camera_tween != null and _technique_camera_tween.is_valid():
+		_technique_camera_tween.kill()
+
+	erik_stage.pivot_offset = erik_stage.size * 0.5
+	var special_scale := clampf(float(_technique_camera_tuning.get("specialScale", 0.82)), 0.60, 1.0)
+	var target_scale := Vector2.ONE * special_scale if active else Vector2.ONE
+	var duration := (
+		maxf(0.05, float(_technique_camera_tuning.get("pullBackSeconds", 0.13)))
+		if active
+		else maxf(0.05, float(_technique_camera_tuning.get("returnSeconds", 0.20)))
+	)
+
+	_technique_camera_tween = create_tween()
+	_technique_camera_tween.tween_property(erik_stage, "scale", target_scale, duration).set_trans(Tween.TRANS_QUAD).set_ease(
+		Tween.EASE_OUT if active else Tween.EASE_IN_OUT
+	)
+
 
 func _show_feedback(text_value: String, kind: String) -> void:
 	if _feedback_tween != null and _feedback_tween.is_valid():

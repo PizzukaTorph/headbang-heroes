@@ -23,6 +23,23 @@ The visual north star is dark, adult, exaggerated metal-animation energy, while 
 - dark/static layered venue art with restrained motion/FX
 - rhythm information always wins contrast/readability priority
 
+## Performance framing language
+
+Headbang Heroes deliberately distinguishes baseline rhythm from Technique Skills
+through framing:
+
+- **Classic:** tighter gameplay framing; head, neck and upper body dominate.
+- **Technique Skill:** rapid camera-style pull-back; full silhouette becomes
+  visible for the authored performance.
+- **Return:** soft settle back into the Classic crop.
+
+Initial transition target is 100–150 ms outward and roughly 200 ms back. The
+effect must feel like a performance accent, never like a UI zoom or a gameplay
+timing signal.
+
+The avatar may change framing; rhythm UI does not. CURRENT/NEXT, gesture guides,
+score, combo and HYPE remain stable in screen space.
+
 ## Character escalation
 
 **IDLE → BANG → COMBO → HIGH HYPE → MAX HYPE / POSSESSED**

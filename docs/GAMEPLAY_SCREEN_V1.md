@@ -23,6 +23,37 @@ Portrait screen with four visual layers:
 
 The avatar is the primary visual focus.
 
+## Technique Skill framing
+
+Standard / Classic play uses the normal close gameplay framing, prioritizing
+head, neck and upper-body motion.
+
+When an authored Technique Skill becomes active, the avatar presentation performs
+a brief pull-back so the complete character silhouette can read. Initial timing
+target:
+
+```text
+Technique enters active performance
+        ↓
+100–150 ms pull-back
+        ↓
+full-character technique framing
+        ↓
+technique ends / resolves
+        ↓
+soft ~200 ms return to Classic framing
+```
+
+This is an HH presentation signature, not a gameplay mechanic.
+
+POC implementation rules:
+- transform the avatar presentation layer, not the HUD;
+- CURRENT/NEXT and gesture guides keep stable screen-space size;
+- no timing/scoring/input behavior depends on camera/framing completion;
+- entering or leaving the framing mode must not snap Erik's pose;
+- full-character Technique framing must preserve the lower-body anchor and keep
+  hair/extreme silhouettes inside the usable portrait playfield.
+
 ## Background
 
 Use layered static 2D venue art with restrained parallax/lighting/crowd/haze reactions.
