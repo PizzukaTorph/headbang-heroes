@@ -93,7 +93,19 @@ func _test_technique_gestures() -> void:
 			"minCoherence": 0.72,
 			"releaseGraceMs": 250
 		},
-		"deep": {"minVerticalTravel": 0.70, "maxHorizontalDrift": 0.20, "minCoherence": 0.75}
+		"deep": {"minVerticalTravel": 0.70, "maxHorizontalDrift": 0.20, "minCoherence": 0.75},
+		"whiplash": {
+			"minOutboundTravel": 0.34,
+			"minReturnTravel": 0.32,
+			"reversalDeadzone": 0.06,
+			"maxVerticalDrift": 0.22
+		},
+		"windmill": {
+			"minTurns": 0.85,
+			"minSpan": 0.34,
+			"minPathTravel": 1.30,
+			"minAngularCoherence": 0.62
+		}
 	}
 	var half = TechniqueGestureScript.new()
 	half.configure(tuning)
@@ -158,6 +170,34 @@ func _test_technique_gestures() -> void:
 	horizontal_deep.configure(tuning)
 	horizontal_deep.begin(&"deep", 1.0, Vector2.ZERO)
 	_expect(not bool(horizontal_deep.complete(1.2, Vector2(240.0, 10.0)).get("valid", false)), "horizontal swipe must fail Deep")
+
+	var whiplash = TechniqueGestureScript.new()
+	whiplash.configure(tuning)
+	whiplash.begin(&"whiplash", 2.0, Vector2.ZERO)
+	whiplash.update(Vector2(120.0, 2.0), 2.20)
+	whiplash.update(Vector2(60.0, 3.0), 2.30)
+	var whiplash_intent: Dictionary = whiplash.complete(2.45, Vector2(-10.0, 4.0))
+	_expect(bool(whiplash_intent.get("valid", false)), "Whiplash must recognize outbound travel plus reversal")
+	_expect(bool(whiplash_intent.get("whiplash_reversal", false)), "Whiplash must expose reversal evidence")
+	var whiplash_resolver = TechniqueResolverScript.new([{"id":"whip-1", "time":2.0, "duration":0.5, "technique":&"whiplash", "direction":&"right"}])
+	var resolved_whiplash: Dictionary = whiplash_resolver.resolve(whiplash_intent)
+	_expect(bool(resolved_whiplash.get("valid", false)), "Whiplash timing must resolve from reversal anchor")
+
+	var windmill = TechniqueGestureScript.new()
+	windmill.configure(tuning)
+	var wc := Vector2(200.0, 200.0)
+	var wr := 70.0
+	windmill.begin(&"windmill", 3.0, wc + Vector2(wr, 0.0))
+	for step in range(1, 17):
+		var angle := TAU * float(step) / 16.0
+		windmill.update(wc + Vector2(cos(angle), sin(angle)) * wr, 3.0 + float(step) * 0.04)
+	var windmill_intent: Dictionary = windmill.complete(3.70)
+	_expect(bool(windmill_intent.get("valid", false)), "Windmill must recognize a coherent circular gesture")
+	_expect(float(windmill_intent.get("windmill_turns", 0.0)) >= 0.85, "Windmill must expose accumulated turns")
+	_expect(StringName(windmill_intent.get("rotation_direction", "")) != &"", "Windmill must expose rotation direction")
+	var windmill_resolver = TechniqueResolverScript.new([{"id":"wind-1", "time":3.0, "duration":1.0, "technique":&"windmill", "direction":&"right"}])
+	var resolved_windmill: Dictionary = windmill_resolver.resolve(windmill_intent)
+	_expect(bool(resolved_windmill.get("valid", false)), "Windmill must resolve from first completed rotation anchor")
 
 	var resolver = TechniqueResolverScript.new([{"id":"tech-1", "time":2.0, "duration":1.0, "technique":&"deep", "direction":&"left"}])
 	var in_window: Dictionary = deep_intent.duplicate(true)

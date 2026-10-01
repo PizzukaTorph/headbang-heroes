@@ -107,7 +107,7 @@ func _set_frame(frame: int) -> void:
 	texture = frames[safe_frame]
 
 func _process(delta: float) -> void:
-	if technique_playing == &"":
+	if technique_playing == &"" or _technique_scrubbed:
 		return
 	var selected: Array = technique_frames.get(technique_playing, [])
 	var fps := float(technique_fps.get(technique_playing, DEFAULT_TECHNIQUE_FPS))

@@ -309,6 +309,78 @@ A training sequence should first demonstrate the Half depth target slowly, then 
 
 Mastery remains recognition/progression metadata and must not make Half easier through hidden gameplay stats.
 
+## Technique Skill: Whiplash
+
+### Status
+
+**Accepted POC contract.** Thresholds remain provisional until mobile playtesting.
+
+Whiplash is the explosive reversal Technique Skill.
+
+```text
+commit outward
+    ↓
+reach sufficient excursion
+    ↓
+SNAP direction back
+    ↓
+complete return travel
+```
+
+The POC gesture is a horizontal out-and-back drag. The first meaningful
+direction may be left or right; the defining semantic is the reversal.
+
+Authoritative timing is the first accepted reversal after sufficient outbound
+travel. Release is not the timing anchor.
+
+Required evidence:
+- outbound travel;
+- reversal detected;
+- reversal timestamp;
+- return travel;
+- orthogonal drift;
+- completion/release.
+
+Execution and timing remain separate.
+
+Tutorial phrase:
+
+> **Commit. Then snap it back.**
+
+## Technique Skill: Windmill
+
+### Status
+
+**Accepted POC contract.** Final authored clockwise/counter-clockwise
+requirements remain deferred.
+
+Windmill is a continuous circular neck-performance Technique Skill.
+
+The player draws one coherent circle on the gameplay surface. The POC accepts
+either rotational direction and reports the detected direction as evidence.
+
+The recognizer measures:
+- accumulated signed angular travel;
+- completed turns;
+- angular coherence;
+- horizontal and vertical span;
+- total path travel;
+- detected rotational direction.
+
+Authoritative timing is the first moment the required circular travel is
+completed with sufficient two-axis span. Release is not the timing anchor.
+
+Windmill must never be represented as a burst of fake cardinal hit events.
+During the gesture, both horizontal and vertical NeckMotionState axes follow
+the player's circular motion.
+
+Tutorial phrase:
+
+> **Draw the circle. Keep it moving.**
+
+For the POC, rotational direction is observed but not yet an authored pass/fail
+requirement. Final MIDI rotational-direction mapping is an MVP authoring task.
+
 ## Frequency / musical role
 
 Technique Skills are special moments, not the default input stream.
@@ -370,10 +442,10 @@ above. The accepted gesture vocabulary is:
 
 ```text
 CLASSIC     TAP
-HALF        → short horizontal swipe
+HALF        → controlled partial-range swipe
 DEEP        ↓ long vertical downward swipe
-WHIPLASH    ⇆ reserved / not implemented
-WINDMILL    ⟳ reserved / not implemented
+WHIPLASH    ⇆ outbound + explosive reversal
+WINDMILL    ⟳ coherent circular gesture
 ```
 
 Half is a continuous controlled partial-range gesture. The recognizer exposes
@@ -383,6 +455,9 @@ tuning data in `game/config/tuning/base.json`; the default Half direction is
 configurable so a future handedness/accessibility mirror does not change the
 semantic skill ID. Deep remains the current long downward-travel POC and uses
 the shared continuous evidence path without receiving a full V2 redesign yet.
+Whiplash recognizes an outbound horizontal excursion followed by a committed
+reversal. Windmill recognizes coherent circular travel and drives both neck axes
+while the gesture is active.
 
 Gesture direction identifies the skill, not the authored neck direction. An
 authored `DEEP` event can therefore resolve a left or right neck stroke. The
@@ -401,7 +476,8 @@ measured in SongClock time; release is a separate completion signal with a
 resolver-owned tuned grace period. The same grace value governs event expiry,
 so a gesture that entered the band on time cannot expire before its legal
 release window closes. CURRENT + NEXT remains the complete cue budget; the POC uses
-`→ HALF` and `↓ DEEP` glyphs without adding a third cue.
+`→ HALF`, `↓ DEEP`, `⇆ WHIPLASH` and `⟳ WINDMILL` glyphs without adding a
+third cue.
 
 The recognizer emits continuous evidence and a semantic intent; it does not
 score it. The application continuously sends normalized technique progress to

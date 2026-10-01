@@ -136,7 +136,7 @@ func update_hud(state: Dictionary) -> void:
 	_set_technique_framing(special_framing)
 	if technique_guide != null and technique_guide.visible:
 		technique_guide.set_progress(float(gesture.get("progress", 0.0)), bool(gesture.get("active", false)))
-	if bool(gesture.get("active", false)) and StringName(gesture.get("technique", "")) in [&"half", &"deep"]:
+	if bool(gesture.get("active", false)) and StringName(gesture.get("technique", "")) in [&"half", &"deep", &"whiplash", &"windmill"]:
 		erik.scrub_technique(StringName(gesture.get("technique", "")), float(gesture.get("progress", 0.0)))
 	elif not bool(technique_state.get("active", false)):
 		erik.end_technique()
@@ -157,9 +157,6 @@ func show_technique_result(result: Dictionary) -> void:
 	var intent: Dictionary = result.get("intent", {})
 	var technique := str(event.get("technique", intent.get("technique", "technique"))).to_upper()
 	if bool(result.get("valid", false)):
-		# HALF/DEEP are scrubbed by live gesture evidence; future techniques may autoplay here.
-		if technique not in ["HALF", "DEEP"]:
-			erik.play_technique(StringName(event.get("technique", "")))
 		_show_feedback("%s  OK" % technique, "GREAT")
 	else:
 		_show_feedback("%s  FAIL\n%s" % [technique, str(result.get("reason", "gesture"))], "MISS")
@@ -500,8 +497,12 @@ func _cue_debug_text(prefix: String, cue: Dictionary) -> String:
 
 func _cue_line(prefix: String, event: Dictionary, remaining: float) -> String:
 	var technique := StringName(event.get("technique", "classic"))
-	if technique in [&"half", &"deep"]:
-		var glyph := "→" if technique == &"half" else "↓"
+	if technique in [&"half", &"deep", &"whiplash", &"windmill"]:
+		var glyph := "→"
+		match technique:
+			&"deep": glyph = "↓"
+			&"whiplash": glyph = "⇆"
+			&"windmill": glyph = "⟳"
 		return "%s  %s %s · %s  %+.0f ms" % [prefix, glyph, str(technique).to_upper(), str(event.get("direction", "")).to_upper(), remaining * 1000.0]
 	return "%s  %s %s  %+.0f ms" % [prefix, _arrow_for_direction(StringName(event.get("direction", ""))), str(event.get("direction", "")).to_upper(), remaining * 1000.0]
 
@@ -511,10 +512,14 @@ func _set_technique_prompt(event: Dictionary) -> void:
 		technique_prompt_label.text = "GESTURE  →  HALF  ·  SWIPE RIGHT"
 	elif technique == &"deep":
 		technique_prompt_label.text = "GESTURE  ↓  DEEP  ·  SWIPE DOWN"
+	elif technique == &"whiplash":
+		technique_prompt_label.text = "GESTURE  ⇆  WHIPLASH  ·  OUT + SNAP BACK"
+	elif technique == &"windmill":
+		technique_prompt_label.text = "GESTURE  ⟳  WINDMILL  ·  DRAW A CIRCLE"
 
 func _is_technique_event(event: Dictionary) -> bool:
 	var technique := StringName(event.get("technique", "classic"))
-	return technique in [&"half", &"deep"]
+	return technique in [&"half", &"deep", &"whiplash", &"windmill"]
 
 func _arrow_for_direction(direction: StringName) -> String:
 	match direction:

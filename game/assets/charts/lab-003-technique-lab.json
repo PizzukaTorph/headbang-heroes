@@ -14,7 +14,11 @@
     {"id": "half-timed-003", "time": 9.2, "duration": 1.5, "directionName": "right", "technique": "half"},
     {"id": "classic-001", "time": 11.5, "directionName": "right", "technique": "classic"},
     {"id": "classic-002", "time": 12.5, "directionName": "left", "technique": "classic"},
-    {"id": "tech-004", "time": 14.0, "duration": 3.0, "directionName": "left", "technique": "deep"},
-    {"id": "classic-003", "time": 18.0, "directionName": "left", "technique": "classic"}
+    {"id": "deep-004", "time": 14.0, "duration": 3.0, "directionName": "left", "technique": "deep"},
+    {"id": "classic-003", "time": 18.0, "directionName": "left", "technique": "classic"},
+    {"id": "whiplash-005", "time": 19.5, "duration": 2.5, "directionName": "right", "technique": "whiplash"},
+    {"id": "classic-004", "time": 23.0, "directionName": "right", "technique": "classic"},
+    {"id": "windmill-006", "time": 24.5, "duration": 3.5, "directionName": "right", "technique": "windmill", "trajectory": "circular"},
+    {"id": "classic-005", "time": 29.0, "directionName": "left", "technique": "classic"}
   ]
 }

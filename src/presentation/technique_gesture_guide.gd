@@ -14,7 +14,7 @@ func _ready() -> void:
 	queue_redraw()
 
 func set_guide(next_technique: StringName, is_active: bool, remaining: float) -> void:
-	technique = next_technique if next_technique in [&"half", &"deep"] else &""
+	technique = next_technique if next_technique in [&"half", &"deep", &"whiplash", &"windmill"] else &""
 	active = is_active
 	remaining_seconds = remaining
 	progress = 0.0
@@ -25,11 +25,7 @@ func apply_tuning(values: Dictionary) -> void:
 	var half: Dictionary = values.get("half", {})
 	half_target_min = clampf(float(half.get("targetMin", half_target_min)), 0.0, 1.0)
 	half_target_max = clampf(float(half.get("targetMax", half_target_max)), half_target_min, 1.0)
-	half_fail_overshoot = clampf(
-		float(half.get("failOvershoot", half_fail_overshoot)),
-		half_target_max,
-		1.0
-	)
+	half_fail_overshoot = clampf(float(half.get("failOvershoot", half_fail_overshoot)), half_target_max, 1.0)
 	queue_redraw()
 
 func set_progress(value: float, is_active: bool) -> void:
@@ -50,35 +46,59 @@ func _draw() -> void:
 	var center := size * 0.5
 	var color := Color("#ffd166") if active else Color(1.0, 0.82, 0.40, 0.50)
 	var dim := Color(1.0, 1.0, 1.0, 0.24)
-	if technique == &"half":
-		var start := center + Vector2(-95.0, 0.0)
-		var target := center + Vector2(95.0, 0.0)
-		draw_line(start, target, dim, 5.0, true)
-		var band_start := start.lerp(target, half_target_min)
-		var band_end := start.lerp(target, half_target_max)
-		var overshoot_start := start.lerp(target, half_fail_overshoot)
-		draw_rect(Rect2(Vector2(band_start.x, center.y - 22.0), Vector2(band_end.x - band_start.x, 44.0)), Color(1.0, 0.82, 0.40, 0.20))
-		draw_rect(Rect2(Vector2(overshoot_start.x, center.y - 16.0), Vector2(target.x - overshoot_start.x, 32.0)), Color(1.0, 0.35, 0.30, 0.16))
-		draw_line(Vector2(band_start.x, center.y - 28.0), Vector2(band_start.x, center.y + 28.0), color, 3.0, true)
-		draw_line(Vector2(band_end.x, center.y - 28.0), Vector2(band_end.x, center.y + 28.0), color, 3.0, true)
-		draw_line(Vector2(overshoot_start.x, center.y - 21.0), Vector2(overshoot_start.x, center.y + 21.0), Color(1.0, 0.45, 0.40, 0.80), 2.0, true)
-		draw_circle(start, 12.0, dim)
-		draw_circle(target, 15.0, color, false, 5.0, true)
-		draw_line(target, target + Vector2(-22.0, -15.0), color, 7.0, true)
-		draw_line(target, target + Vector2(-22.0, 15.0), color, 7.0, true)
-		var marker := start.lerp(target, progress)
-		draw_line(start, marker, color, 9.0, true)
-		draw_circle(marker, 13.0, Color.WHITE if active else color)
-		draw_string(ThemeDB.fallback_font, center + Vector2(-50.0, 58.0), "HALF  →", HORIZONTAL_ALIGNMENT_CENTER, 100.0, 25, color)
-	else:
-		var start := center + Vector2(0.0, -105.0)
-		var target := center + Vector2(0.0, 105.0)
-		draw_line(start, target, dim, 5.0, true)
-		draw_circle(start, 12.0, dim)
-		draw_circle(target, 15.0, color, false, 5.0, true)
-		draw_line(target, target + Vector2(-15.0, -22.0), color, 7.0, true)
-		draw_line(target, target + Vector2(15.0, -22.0), color, 7.0, true)
-		var marker := start.lerp(target, progress)
-		draw_line(start, marker, color, 9.0, true)
-		draw_circle(marker, 13.0, Color.WHITE if active else color)
-		draw_string(ThemeDB.fallback_font, center + Vector2(-50.0, 145.0), "DEEP  ↓", HORIZONTAL_ALIGNMENT_CENTER, 100.0, 25, color)
+	match technique:
+		&"half": _draw_half(center, color, dim)
+		&"deep": _draw_deep(center, color, dim)
+		&"whiplash": _draw_whiplash(center, color, dim)
+		&"windmill": _draw_windmill(center, color, dim)
+
+func _draw_half(center: Vector2, color: Color, dim: Color) -> void:
+	var start := center + Vector2(-95.0, 0.0)
+	var target := center + Vector2(95.0, 0.0)
+	draw_line(start, target, dim, 5.0, true)
+	var band_start := start.lerp(target, half_target_min)
+	var band_end := start.lerp(target, half_target_max)
+	var overshoot_start := start.lerp(target, half_fail_overshoot)
+	draw_rect(Rect2(Vector2(band_start.x, center.y - 22.0), Vector2(band_end.x - band_start.x, 44.0)), Color(1.0, 0.82, 0.40, 0.20))
+	draw_rect(Rect2(Vector2(overshoot_start.x, center.y - 16.0), Vector2(target.x - overshoot_start.x, 32.0)), Color(1.0, 0.35, 0.30, 0.16))
+	draw_line(Vector2(band_start.x, center.y - 28.0), Vector2(band_start.x, center.y + 28.0), color, 3.0, true)
+	draw_line(Vector2(band_end.x, center.y - 28.0), Vector2(band_end.x, center.y + 28.0), color, 3.0, true)
+	draw_line(Vector2(overshoot_start.x, center.y - 21.0), Vector2(overshoot_start.x, center.y + 21.0), Color(1.0, 0.45, 0.40, 0.80), 2.0, true)
+	draw_circle(start, 12.0, dim)
+	draw_circle(target, 15.0, color, false, 5.0, true)
+	var marker := start.lerp(target, progress)
+	draw_line(start, marker, color, 9.0, true)
+	draw_circle(marker, 13.0, Color.WHITE if active else color)
+	draw_string(ThemeDB.fallback_font, center + Vector2(-50.0, 58.0), "HALF  →", HORIZONTAL_ALIGNMENT_CENTER, 100.0, 25, color)
+
+func _draw_deep(center: Vector2, color: Color, dim: Color) -> void:
+	var start := center + Vector2(0.0, -105.0)
+	var target := center + Vector2(0.0, 105.0)
+	draw_line(start, target, dim, 5.0, true)
+	draw_circle(start, 12.0, dim)
+	draw_circle(target, 15.0, color, false, 5.0, true)
+	var marker := start.lerp(target, progress)
+	draw_line(start, marker, color, 9.0, true)
+	draw_circle(marker, 13.0, Color.WHITE if active else color)
+	draw_string(ThemeDB.fallback_font, center + Vector2(-50.0, 145.0), "DEEP  ↓", HORIZONTAL_ALIGNMENT_CENTER, 100.0, 25, color)
+
+func _draw_whiplash(center: Vector2, color: Color, dim: Color) -> void:
+	var left := center + Vector2(-105.0, 0.0)
+	var right := center + Vector2(105.0, 0.0)
+	draw_line(left, right, dim, 5.0, true)
+	draw_circle(center, 10.0, dim)
+	draw_line(left, left + Vector2(20.0, -14.0), dim, 6.0, true)
+	draw_line(left, left + Vector2(20.0, 14.0), dim, 6.0, true)
+	draw_line(right, right + Vector2(-20.0, -14.0), color, 6.0, true)
+	draw_line(right, right + Vector2(-20.0, 14.0), color, 6.0, true)
+	var marker := center.lerp(right, progress * 2.0) if progress <= 0.5 else right.lerp(left, (progress - 0.5) * 2.0)
+	draw_circle(marker, 13.0, Color.WHITE if active else color)
+	draw_string(ThemeDB.fallback_font, center + Vector2(-70.0, 58.0), "WHIPLASH  ⇆", HORIZONTAL_ALIGNMENT_CENTER, 140.0, 24, color)
+
+func _draw_windmill(center: Vector2, color: Color, dim: Color) -> void:
+	var radius := 82.0
+	draw_arc(center, radius, 0.0, TAU, 48, dim, 5.0, true)
+	var angle := -PI * 0.5 + progress * TAU
+	var marker := center + Vector2(cos(angle), sin(angle)) * radius
+	draw_circle(marker, 13.0, Color.WHITE if active else color)
+	draw_string(ThemeDB.fallback_font, center + Vector2(-75.0, 125.0), "WINDMILL  ⟳", HORIZONTAL_ALIGNMENT_CENTER, 150.0, 24, color)
