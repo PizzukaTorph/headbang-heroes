@@ -362,10 +362,10 @@ Current intent:
 
 MASTERED must not become an RPG stat that makes the physical execution automatically better.
 
-## Current POC contract: HALF and DEEP
+## Current implementation contract: HALF and DEEP
 
-The playable POC supersedes the earlier Half depth-band wording above. The
-accepted gesture vocabulary for the current implementation is:
+The current implementation restores the Half depth-band semantics described
+above. The accepted gesture vocabulary is:
 
 ```text
 CLASSIC     TAP
@@ -375,12 +375,13 @@ WHIPLASH    ⇆ reserved / not implemented
 WINDMILL    ⟳ reserved / not implemented
 ```
 
-Half is recognized primarily by rightward horizontal travel, directional
-coherence, and limited vertical drift. Deep is recognized primarily by long
-downward travel, downward coherence, and limited horizontal drift. Thresholds
-are tuning data in `game/config/tuning/base.json`; the default Half direction
-is configurable so a future handedness/accessibility mirror does not change
-the semantic skill ID.
+Half is a continuous controlled partial-range gesture. The recognizer exposes
+current travel, peak travel, target-band entry time, overshoot, release and
+directional coherence. Its target band and fail-overshoot threshold are
+tuning data in `game/config/tuning/base.json`; the default Half direction is
+configurable so a future handedness/accessibility mirror does not change the
+semantic skill ID. Deep remains the current long downward-travel POC and uses
+the shared continuous evidence path without receiving a full V2 redesign yet.
 
 Gesture direction identifies the skill, not the authored neck direction. An
 authored `DEEP` event can therefore resolve a left or right neck stroke. The
@@ -393,15 +394,17 @@ runtime representation keeps both fields on the same compiled event:
 Technique events originate from the dedicated `HH_TECHNIQUES` lane in the
 canonical MIDI model (or the equivalent compiled JSON fixture for this POC).
 They are authored occurrences, not BPM/difficulty-generated events. Their
-`time` starts the actionable window and their `duration` ends it. The
-authoritative technique timing sample is gesture completion, measured in
-SongClock time. CURRENT + NEXT remains the complete cue budget; the POC uses
+`time` starts the actionable window and their `duration` ends it. For Half, the
+authoritative technique timing sample is the first entry into the target band,
+measured in SongClock time; release is a separate completion signal with a
+tuned grace period. CURRENT + NEXT remains the complete cue budget; the POC uses
 `→ HALF` and `↓ DEEP` glyphs without adding a third cue.
 
-The recognizer emits a semantic intent and does not score it. A valid intent
-then applies the associated authored direction through the existing continuous
-neck model. A malformed or out-of-window gesture fails without snapping or
-resetting the neck.
+The recognizer emits continuous evidence and a semantic intent; it does not
+score it. The application continuously sends normalized technique progress to
+the authoritative neck model, including failed or incomplete attempts. A
+malformed or out-of-window gesture fails without snapping or resetting the
+neck. Erik's sprite sequence follows live progress as presentation only.
 
 ## Presentation
 

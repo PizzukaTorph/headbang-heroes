@@ -18,9 +18,12 @@
     "gestureReferencePx": 320,
     "halfDirection": "right",
     "half": {
-      "minHorizontalTravel": 0.25,
+      "targetMin": 0.38,
+      "targetMax": 0.62,
+      "failOvershoot": 0.78,
       "maxVerticalDrift": 0.20,
-      "minCoherence": 0.75
+      "minCoherence": 0.72,
+      "releaseGraceMs": 250
     },
     "deep": {
       "minVerticalTravel": 0.70,

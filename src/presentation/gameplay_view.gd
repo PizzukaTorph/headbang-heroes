@@ -45,6 +45,8 @@ func apply_tuning(values: Dictionary) -> void:
 		erik.apply_tuning(values)
 	if cue_ring != null:
 		cue_ring.apply_tuning(values.get("cue", {}))
+	if technique_guide != null:
+		technique_guide.apply_tuning(values.get("techniques", {}))
 	_feedback_tuning = (values.get("feedback", {}) as Dictionary).duplicate(true)
 
 func update_cue(payload: Dictionary) -> void:
@@ -119,8 +121,13 @@ func update_hud(state: Dictionary) -> void:
 	var neck_state: Dictionary = state.get("neck", {})
 	erik.apply_neck_state(neck_state, get_process_delta_time())
 	var gesture: Dictionary = state.get("gesture", {})
+	var technique_state: Dictionary = state.get("technique", {})
 	if technique_guide != null and technique_guide.visible:
 		technique_guide.set_progress(float(gesture.get("progress", 0.0)), bool(gesture.get("active", false)))
+	if bool(gesture.get("active", false)) and StringName(gesture.get("technique", "")) in [&"half", &"deep"]:
+		erik.scrub_technique(StringName(gesture.get("technique", "")), float(gesture.get("progress", 0.0)))
+	elif not bool(technique_state.get("active", false)):
+		erik.end_technique()
 	_update_debug(state)
 
 func show_judgment(outcome: Dictionary) -> void:
@@ -138,7 +145,9 @@ func show_technique_result(result: Dictionary) -> void:
 	var intent: Dictionary = result.get("intent", {})
 	var technique := str(event.get("technique", intent.get("technique", "technique"))).to_upper()
 	if bool(result.get("valid", false)):
-		erik.play_technique(StringName(event.get("technique", "")))
+		# HALF/DEEP are scrubbed by live gesture evidence; future techniques may autoplay here.
+		if technique not in ["HALF", "DEEP"]:
+			erik.play_technique(StringName(event.get("technique", "")))
 		_show_feedback("%s  OK" % technique, "GREAT")
 	else:
 		_show_feedback("%s  FAIL\n%s" % [technique, str(result.get("reason", "gesture"))], "MISS")

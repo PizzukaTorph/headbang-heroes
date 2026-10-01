@@ -57,7 +57,11 @@ func _test_chart_compile() -> void:
 	_expect(not technique_chart.is_empty(), "technique lab fixture must compile")
 	var technique_events: Array = technique_chart.get("events", [])
 	_expect(StringName((technique_events[1] as Dictionary).get("technique", "")) == &"half", "technique fixture must retain Half identity")
-	_expect(absf(float((technique_events[3] as Dictionary).get("duration", 0.0)) - 1.0) < 0.001, "technique fixture must retain authored gesture duration")
+	var deep_fixture_event: Dictionary = {}
+	for fixture_event in technique_events:
+		if StringName((fixture_event as Dictionary).get("technique", "")) == &"deep":
+			deep_fixture_event = fixture_event
+	_expect(absf(float(deep_fixture_event.get("duration", 0.0)) - 3.0) < 0.001, "technique fixture must retain authored gesture duration")
 
 func _test_candidate_resolution() -> void:
 	var cfg = TimingConfigScript.new()
@@ -87,8 +91,16 @@ func _test_technique_gestures() -> void:
 	var half = TechniqueGestureScript.new()
 	half.configure(tuning)
 	half.begin(&"half", 1.0, Vector2.ZERO)
-	var half_intent: Dictionary = half.complete(1.4, Vector2(100.0, 8.0))
+	half.update(Vector2(128.0, 4.0), 1.2)
+	var half_intent: Dictionary = half.complete(1.4, Vector2(160.0, 8.0))
 	_expect(bool(half_intent.get("valid", false)), "rightward Half swipe must be recognized")
+	_expect(bool(half_intent.get("target_entered", false)), "Half must capture target-band entry")
+	_expect(absf(float(half_intent.get("target_entered_at", 0.0)) - 1.2) < 0.0001, "Half timing anchor must be first target entry, not release")
+	_expect(absf(float(half_intent.get("completed_at", 0.0)) - 1.4) < 0.0001, "Half must retain release time separately")
+	var half_resolver = TechniqueResolverScript.new([{"id":"half-1", "time":1.0, "duration":0.2, "technique":&"half", "direction":&"left"}])
+	var resolved_half: Dictionary = half_resolver.resolve(half_intent)
+	_expect(bool(resolved_half.get("valid", false)), "Half must resolve when target entry is in its authored window")
+	_expect(absf(float(resolved_half.get("timing_error", 0.0)) - 0.2) < 0.0001, "Half timing error must use target entry, not release")
 
 	var short_half = TechniqueGestureScript.new()
 	short_half.configure(tuning)
@@ -98,7 +110,16 @@ func _test_technique_gestures() -> void:
 	var vertical_half = TechniqueGestureScript.new()
 	vertical_half.configure(tuning)
 	vertical_half.begin(&"half", 1.0, Vector2.ZERO)
-	_expect(not bool(vertical_half.complete(1.2, Vector2(100.0, 100.0)).get("valid", false)), "vertical drift must fail Half")
+	_expect(not bool(vertical_half.complete(1.2, Vector2(160.0, 100.0)).get("valid", false)), "vertical drift must fail Half")
+
+	var overshoot_half = TechniqueGestureScript.new()
+	overshoot_half.configure(tuning)
+	overshoot_half.begin(&"half", 1.0, Vector2.ZERO)
+	overshoot_half.update(Vector2(160.0, 0.0), 1.2)
+	var overshoot_intent: Dictionary = overshoot_half.complete(1.3, Vector2(260.0, 0.0))
+	_expect(bool(overshoot_intent.get("target_entered", false)), "overshooting Half must have entered its target")
+	_expect(float(overshoot_intent.get("overshoot", 0.0)) > 0.0, "Half overshoot evidence must be exposed")
+	_expect(not bool(overshoot_intent.get("valid", false)), "Half failOvershoot must reject excessive travel")
 
 	var deep = TechniqueGestureScript.new()
 	deep.configure(tuning)
@@ -144,6 +165,16 @@ func _test_technique_gestures() -> void:
 	var repeat_a_result: Dictionary = repeat_a.complete(1.4)
 	var repeat_b_result: Dictionary = repeat_b.complete(1.4)
 	_expect(repeat_a_result == repeat_b_result, "gesture recognition must be deterministic for the same samples")
+
+	var continuous_neck = NeckMotionScript.new()
+	continuous_neck.begin_technique(&"left")
+	continuous_neck.set_technique_progress(&"left", 0.5)
+	continuous_neck.advance(0.10)
+	var technique_angle: float = continuous_neck.horizontal.displacement
+	_expect(technique_angle > 0.0, "continuous technique progress must move the authoritative neck")
+	continuous_neck.end_technique(&"left")
+	continuous_neck.advance(0.10)
+	_expect(continuous_neck.horizontal.displacement < technique_angle, "technique release must recover continuously")
 
 func _test_neck_and_motion_quality() -> void:
 	var neck = NeckMotionScript.new()

@@ -8,10 +8,13 @@
   "approachTime": 1.0,
   "technique": "classic",
   "events": [
-    {"id": "classic-000", "time": 2.0, "directionName": "left", "technique": "classic"},
-    {"id": "tech-001", "time": 3.0, "duration": 2.5, "directionName": "right", "technique": "half"},
-    {"id": "classic-001", "time": 4.2, "directionName": "right", "technique": "classic"},
-    {"id": "tech-002", "time": 6.5, "duration": 3.5, "directionName": "left", "technique": "deep"},
-    {"id": "classic-002", "time": 11.0, "directionName": "left", "technique": "classic"}
+    {"id": "classic-000", "time": 1.5, "directionName": "left", "technique": "classic"},
+    {"id": "half-tutorial-001", "time": 2.8, "duration": 2.5, "directionName": "right", "technique": "half"},
+    {"id": "half-tutorial-002", "time": 6.0, "duration": 2.5, "directionName": "right", "technique": "half"},
+    {"id": "half-timed-003", "time": 9.2, "duration": 1.5, "directionName": "right", "technique": "half"},
+    {"id": "classic-001", "time": 11.5, "directionName": "right", "technique": "classic"},
+    {"id": "classic-002", "time": 12.5, "directionName": "left", "technique": "classic"},
+    {"id": "tech-004", "time": 14.0, "duration": 3.0, "directionName": "left", "technique": "deep"},
+    {"id": "classic-003", "time": 18.0, "directionName": "left", "technique": "classic"}
   ]
 }

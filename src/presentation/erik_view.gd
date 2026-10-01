@@ -66,6 +66,24 @@ func play_technique(technique: StringName) -> bool:
 	_set_technique_frame(0)
 	return true
 
+func scrub_technique(technique: StringName, progress: float) -> bool:
+	var selected: Array = technique_frames.get(technique, [])
+	if selected.is_empty():
+		return false
+	technique_playing = technique
+	_technique_elapsed = 0.0
+	_last_frame = -1
+	_set_technique_frame(roundi(clampf(progress, 0.0, 1.0) * float(selected.size() - 1)))
+	return true
+
+func end_technique() -> void:
+	if technique_playing == &"":
+		return
+	technique_playing = &""
+	_technique_elapsed = 0.0
+	_last_frame = -1
+	_set_frame(frame_driver.current_frame)
+
 func is_playing_technique() -> bool:
 	return technique_playing != &""
 

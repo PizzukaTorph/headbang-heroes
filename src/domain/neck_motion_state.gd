@@ -16,6 +16,9 @@ class AxisState:
 	var stroke_target: float = 0.0
 	var stroke_progress: float = 1.0
 	var stroke_active: bool = false
+	var technique_active: bool = false
+	var technique_progress: float = 0.0
+	var technique_direction: float = 1.0
 	var _stroke_start: float = 0.0
 
 	func reset() -> void:
@@ -26,6 +29,9 @@ class AxisState:
 		stroke_target = 0.0
 		stroke_progress = 1.0
 		stroke_active = false
+		technique_active = false
+		technique_progress = 0.0
+		technique_direction = 1.0
 		_stroke_start = 0.0
 
 	func begin_boundary() -> void:
@@ -33,6 +39,7 @@ class AxisState:
 		peak_speed_since_inversion = 0.0
 
 	func begin_stroke(sign_value: float, intensity: float, target_angle: float, stroke_duration: float, max_velocity: float) -> void:
+		technique_active = false
 		var sign_normalized := 1.0 if sign_value >= 0.0 else -1.0
 		var effective_intensity := clampf(intensity, 0.0, 1.0)
 		_stroke_start = displacement
@@ -42,7 +49,37 @@ class AxisState:
 		velocity = sign_normalized * minf(max_velocity, target_angle * effective_intensity / (stroke_duration * 0.5))
 		peak_speed_since_inversion = maxf(peak_speed_since_inversion, absf(velocity))
 
+	func begin_technique(sign_value: float) -> void:
+		technique_active = true
+		technique_progress = 0.0
+		technique_direction = 1.0 if sign_value >= 0.0 else -1.0
+		stroke_active = false
+
+	func set_technique_progress(progress: float) -> void:
+		technique_active = true
+		technique_progress = clampf(progress, 0.0, 1.0)
+		stroke_active = false
+
+	func end_technique(stroke_duration: float) -> void:
+		if not technique_active:
+			return
+		technique_active = false
+		_stroke_start = displacement
+		stroke_target = 0.0
+		stroke_progress = 0.0
+		stroke_active = true
+		# Recovery begins from the current pose; there is no snap on release.
+		velocity = 0.0
+
 	func step(step_seconds: float, stroke_duration: float, max_angle: float, max_velocity: float) -> void:
+		if technique_active:
+			var previous_technique := displacement
+			var desired_technique := technique_direction * max_angle * technique_progress
+			displacement = move_toward(previous_technique, desired_technique, max_velocity * step_seconds)
+			velocity = (displacement - previous_technique) / step_seconds
+			travel_since_inversion += absf(displacement - previous_technique)
+			peak_speed_since_inversion = maxf(peak_speed_since_inversion, absf(velocity))
+			return
 		if not stroke_active:
 			velocity = 0.0
 			return
@@ -122,6 +159,8 @@ func capture(direction: StringName) -> Dictionary:
 		"stroke_target": axis.stroke_target,
 		"stroke_progress": axis.stroke_progress,
 		"stroke_active": axis.stroke_active,
+		"technique_active": axis.technique_active,
+		"technique_progress": axis.technique_progress,
 		"prepared": prepared,
 		"tick": tick
 	}
@@ -146,9 +185,39 @@ func apply_bang(direction: StringName, intensity: float = 1.0) -> Dictionary:
 		_:
 			return snapshot
 	axis.begin_boundary()
+	axis.technique_active = false
 	axis.begin_stroke(launch_sign, intensity, target_angle, stroke_duration, max_velocity)
 	prepared = true
 	return snapshot
+
+func begin_technique(direction: StringName) -> void:
+	var axis: AxisState = horizontal if direction in [&"left", &"right"] else vertical
+	var sign_value := _direction_sign(direction)
+	if sign_value == 0.0:
+		return
+	axis.begin_boundary()
+	axis.begin_technique(sign_value)
+	prepared = true
+
+func set_technique_progress(direction: StringName, progress: float) -> void:
+	var axis: AxisState = horizontal if direction in [&"left", &"right"] else vertical
+	var sign_value := _direction_sign(direction)
+	if sign_value == 0.0:
+		return
+	if not axis.technique_active:
+		axis.begin_technique(sign_value)
+	axis.set_technique_progress(progress)
+	prepared = true
+
+func end_technique(direction: StringName) -> void:
+	var axis: AxisState = horizontal if direction in [&"left", &"right"] else vertical
+	axis.end_technique(stroke_duration)
+
+func _direction_sign(direction: StringName) -> float:
+	match direction:
+		&"left", &"up": return 1.0
+		&"right", &"down": return -1.0
+		_: return 0.0
 
 func presentation_state() -> Dictionary:
 	return {
@@ -158,6 +227,8 @@ func presentation_state() -> Dictionary:
 		"vertical_velocity": vertical.velocity,
 		"horizontal_stroke_active": horizontal.stroke_active,
 		"vertical_stroke_active": vertical.stroke_active,
+		"horizontal_technique_active": horizontal.technique_active,
+		"vertical_technique_active": vertical.technique_active,
 		"prepared": prepared,
 		"tick": tick
 	}

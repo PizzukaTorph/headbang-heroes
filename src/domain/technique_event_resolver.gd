@@ -57,18 +57,22 @@ func resolve(intent: Dictionary) -> Dictionary:
 		return {"consumed": false, "valid": false, "kind": &"no_gesture", "reason": "no_gesture"}
 	var technique := StringName(intent.get("technique", ""))
 	var completed_at := float(intent.get("completed_at", 0.0))
+	var timing_anchor := completed_at
 	for i in events.size():
 		if resolved[i]:
 			continue
 		var event := events[i]
 		var start := float(event["time"])
 		var end := start + float(event.get("duration", 0.0))
-		if technique == StringName(event.get("technique", "")) and completed_at >= start and completed_at <= end:
+		if technique == &"half" and bool(intent.get("target_entered", false)):
+			timing_anchor = float(intent.get("target_entered_at", completed_at))
+		var release_end := end + float(intent.get("release_grace_seconds", 0.0)) if technique == &"half" else end
+		if technique == StringName(event.get("technique", "")) and timing_anchor >= start and timing_anchor <= end and completed_at <= release_end:
 			if not bool(intent.get("valid", false)):
-				return _result(false, &"invalid_gesture", intent, event)
+				return _result(false, StringName(intent.get("reason", "invalid_gesture")), intent, event, timing_anchor - start)
 			resolved[i] = true
-			return _result(true, &"recognized", intent, event)
-	return _result(false, &"outside_window", intent, {})
+			return _result(true, &"recognized", intent, event, timing_anchor - start)
+	return _result(false, &"outside_window", intent, {}, timing_anchor - float(intent.get("started_at", completed_at)))
 
 func expire(now: float) -> Array[Dictionary]:
 	var expired: Array[Dictionary] = []
@@ -91,12 +95,14 @@ func debug_state(now: float) -> Dictionary:
 		"total": events.size()
 	}
 
-func _result(valid: bool, kind: StringName, intent: Dictionary, event: Dictionary) -> Dictionary:
+func _result(valid: bool, kind: StringName, intent: Dictionary, event: Dictionary, timing_error: float) -> Dictionary:
 	return {
 		"consumed": not event.is_empty(),
 		"valid": valid,
 		"kind": kind,
 		"reason": str(intent.get("reason", kind)),
+		"timing_error": timing_error,
+		"timing_anchor": float(intent.get("target_entered_at", intent.get("completed_at", 0.0))) if StringName(intent.get("technique", "")) == &"half" else float(intent.get("completed_at", 0.0)),
 		"intent": intent,
 		"event": event
 	}

@@ -29,6 +29,7 @@ var _active: bool = false
 var _finished: bool = false
 var _last_song_time: float = 0.0
 var _audio_finished: bool = false
+var _active_technique_event: Dictionary = {}
 var _next_cue_horizon_multiplier: float = DEFAULT_NEXT_CUE_HORIZON_MULTIPLIER
 
 func _ready() -> void:
@@ -102,6 +103,7 @@ func start_run() -> void:
 	resolver.reset()
 	technique_resolver.reset()
 	technique_gesture.reset()
+	_active_technique_event = {}
 	neck.reset()
 	scorer.reset()
 	diagnostics.reset()
@@ -185,20 +187,27 @@ func technique_gesture_sample(phase: StringName, position: Vector2) -> void:
 				if not preview.is_empty():
 					event = (preview[0] as Dictionary)["event"]
 			if not event.is_empty():
-				technique_gesture.begin(StringName(event.get("technique", "")), now, position)
+				if technique_gesture.begin(StringName(event.get("technique", "")), now, position):
+					_active_technique_event = event
+					neck.begin_technique(StringName(event.get("direction", "")))
 			_emit_hud()
 		&"update":
-			technique_gesture.update(position)
+			technique_gesture.update(position, now)
+			if not _active_technique_event.is_empty():
+				neck.set_technique_progress(StringName(_active_technique_event.get("direction", "")), float(technique_gesture.current_evidence().get("travel", 0.0)))
 			_emit_hud()
 		&"complete":
 			var intent := technique_gesture.complete(now, position)
 			if intent.is_empty():
 				return
+			if not _active_technique_event.is_empty():
+				neck.set_technique_progress(StringName(_active_technique_event.get("direction", "")), float(intent.get("travel", 0.0)))
+				neck.end_technique(StringName(_active_technique_event.get("direction", "")))
 			var result := technique_resolver.resolve(intent)
 			result["song_time"] = now
+			_active_technique_event = {}
 			if bool(result.get("valid", false)):
-				var event: Dictionary = result["event"]
-				result["neck_snapshot"] = neck.apply_bang(StringName(event["direction"]), float(event.get("intensity", 1.0)))
+				result["neck_state"] = neck.presentation_state()
 				technique_resolved.emit(result)
 			else:
 				technique_failed.emit(result)
@@ -218,6 +227,9 @@ func _process(_delta: float) -> void:
 		var outcome := scorer.resolve_expired(expired_event)
 		judgment_resolved.emit(outcome)
 	for expired_technique in technique_resolver.expire(now):
+		if not _active_technique_event.is_empty() and StringName(_active_technique_event.get("id", "")) == StringName(expired_technique.get("id", "")):
+			neck.end_technique(StringName(_active_technique_event.get("direction", "")))
+			_active_technique_event = {}
 		technique_failed.emit({
 			"consumed": true,
 			"valid": false,
@@ -321,9 +333,15 @@ func _emit_hud() -> void:
 		"neck": neck.presentation_state(),
 		"neck_tuning": neck.tuning_snapshot(),
 		"timing_diagnostics": diagnostics.snapshot(),
-		"technique": technique_resolver.debug_state(clock.song_time() if clock != null else 0.0),
+		"technique": _technique_debug_state(clock.song_time() if clock != null else 0.0),
 		"gesture": technique_gesture.debug_state()
 	})
+
+func _technique_debug_state(now: float) -> Dictionary:
+	var state := technique_resolver.debug_state(now)
+	state["active"] = not _active_technique_event.is_empty()
+	state["direction"] = str(_active_technique_event.get("direction", ""))
+	return state
 
 func _last_authored_event_time() -> float:
 	var events: Array = chart.get("events", [])
