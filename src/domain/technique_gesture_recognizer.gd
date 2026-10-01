@@ -70,8 +70,6 @@ func begin(technique: StringName, started_at: float, position: Vector2) -> bool:
 	_last_sample_at = started_at
 	_start_position = position
 	_last_position = position
-	if sampled_at >= 0.0:
-		_last_sample_at = sampled_at
 	return true
 
 func update(position: Vector2, sampled_at: float = -1.0) -> void:
@@ -84,6 +82,8 @@ func update(position: Vector2, sampled_at: float = -1.0) -> void:
 	_max_abs_vertical_drift = maxf(_max_abs_vertical_drift, absf(position.y - _start_position.y))
 	_max_abs_horizontal_drift = maxf(_max_abs_horizontal_drift, absf(position.x - _start_position.x))
 	_last_position = position
+	if sampled_at >= 0.0:
+		_last_sample_at = sampled_at
 	var travel := _travel()
 	_peak_travel = maxf(_peak_travel, travel)
 	if _technique == &"half" and not _target_entered and travel >= half_target_min and travel <= half_target_max:
