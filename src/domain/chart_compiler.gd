@@ -71,7 +71,7 @@ static func compile(data: Dictionary) -> Dictionary:
 				push_error("HH chart event %d has an unknown technique" % i)
 				return {}
 		var authored_duration := maxf(0.0, float(raw.get("duration", 0.0)))
-		if technique in [&"half", &"deep"] and authored_duration <= 0.0:
+		if technique != &"classic" and authored_duration <= 0.0:
 			push_error("HH chart event %d technique window must have a positive duration" % i)
 			return {}
 		var default_trajectory := &"horizontal" if direction in [&"left", &"right"] else &"vertical"

@@ -57,7 +57,7 @@ class AxisState:
 
 	func set_technique_progress(progress: float) -> void:
 		technique_active = true
-		technique_progress = clampf(progress, 0.0, 1.0)
+		technique_progress = clampf(progress, -1.0, 1.0)
 		stroke_active = false
 
 	func end_technique(stroke_duration: float) -> void:
@@ -209,9 +209,29 @@ func set_technique_progress(direction: StringName, progress: float) -> void:
 	axis.set_technique_progress(progress)
 	prepared = true
 
+func begin_technique_pose() -> void:
+	horizontal.begin_boundary()
+	vertical.begin_boundary()
+	horizontal.begin_technique(1.0)
+	vertical.begin_technique(1.0)
+	prepared = true
+
+func set_technique_pose(pose: Vector2) -> void:
+	if not horizontal.technique_active:
+		horizontal.begin_technique(1.0)
+	if not vertical.technique_active:
+		vertical.begin_technique(1.0)
+	horizontal.set_technique_progress(clampf(pose.x, -1.0, 1.0))
+	vertical.set_technique_progress(clampf(pose.y, -1.0, 1.0))
+	prepared = true
+
 func end_technique(direction: StringName) -> void:
 	var axis: AxisState = horizontal if direction in [&"left", &"right"] else vertical
 	axis.end_technique(stroke_duration)
+
+func end_technique_pose() -> void:
+	horizontal.end_technique(stroke_duration)
+	vertical.end_technique(stroke_duration)
 
 func _direction_sign(direction: StringName) -> float:
 	match direction:

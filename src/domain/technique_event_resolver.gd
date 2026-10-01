@@ -11,7 +11,7 @@ var half_release_grace_seconds: float = 0.25
 func _init(source_events: Array = []) -> void:
 	for source in source_events:
 		var event: Dictionary = (source as Dictionary).duplicate(true)
-		if StringName(event.get("technique", "")) in [&"half", &"deep"]:
+		if StringName(event.get("technique", "")) in [&"half", &"deep", &"whiplash", &"windmill"]:
 			events.append(event)
 	resolved.resize(events.size())
 	for i in resolved.size():
@@ -72,8 +72,16 @@ func resolve(intent: Dictionary) -> Dictionary:
 		var event := events[i]
 		var start := float(event["time"])
 		var end := start + float(event.get("duration", 0.0))
-		if technique == &"half" and bool(intent.get("target_entered", false)):
-			timing_anchor = float(intent.get("target_entered_at", completed_at))
+		match technique:
+			&"half":
+				if bool(intent.get("target_entered", false)):
+					timing_anchor = float(intent.get("target_entered_at", completed_at))
+			&"whiplash":
+				if bool(intent.get("whiplash_reversal", false)):
+					timing_anchor = float(intent.get("whiplash_reversal_at", completed_at))
+			&"windmill":
+				if float(intent.get("windmill_completed_at", -1.0)) >= 0.0:
+					timing_anchor = float(intent.get("windmill_completed_at", completed_at))
 		var release_end := end + half_release_grace_seconds if technique == &"half" else end
 		if technique == StringName(event.get("technique", "")) and timing_anchor >= start and timing_anchor <= end and completed_at <= release_end:
 			if not bool(intent.get("valid", false)):
@@ -112,7 +120,21 @@ func _result(valid: bool, kind: StringName, intent: Dictionary, event: Dictionar
 		"kind": kind,
 		"reason": str(intent.get("reason", kind)),
 		"timing_error": timing_error,
-		"timing_anchor": float(intent.get("target_entered_at", intent.get("completed_at", 0.0))) if StringName(intent.get("technique", "")) == &"half" else float(intent.get("completed_at", 0.0)),
+		"timing_anchor": _intent_timing_anchor(intent),
 		"intent": intent,
 		"event": event
 	}
+
+
+func _intent_timing_anchor(intent: Dictionary) -> float:
+	var technique := StringName(intent.get("technique", ""))
+	match technique:
+		&"half":
+			return float(intent.get("target_entered_at", intent.get("completed_at", 0.0)))
+		&"whiplash":
+			return float(intent.get("whiplash_reversal_at", intent.get("completed_at", 0.0)))
+		&"windmill":
+			var completed := float(intent.get("windmill_completed_at", -1.0))
+			return completed if completed >= 0.0 else float(intent.get("completed_at", 0.0))
+		_:
+			return float(intent.get("completed_at", 0.0))

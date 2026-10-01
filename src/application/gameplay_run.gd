@@ -87,7 +87,8 @@ func presentation_tuning() -> Dictionary:
 		"cue": tuning.section("cue"),
 		"feedback": tuning.section("feedback"),
 		"techniques": tuning.section("techniques"),
-		"techniqueAnimation": tuning.section("techniqueAnimation")
+		"techniqueAnimation": tuning.section("techniqueAnimation"),
+		"techniqueCamera": tuning.section("techniqueCamera")
 	}
 
 func reload_tuning() -> bool:
@@ -190,20 +191,23 @@ func technique_gesture_sample(phase: StringName, position: Vector2) -> void:
 			if not event.is_empty():
 				if technique_gesture.begin(StringName(event.get("technique", "")), now, position):
 					_active_technique_event = event
-					neck.begin_technique(StringName(event.get("direction", "")))
+					if StringName(event.get("technique", "")) == &"windmill":
+						neck.begin_technique_pose()
+					else:
+						neck.begin_technique(StringName(event.get("direction", "")))
 			_emit_hud()
 		&"update":
 			technique_gesture.update(position, now)
 			if not _active_technique_event.is_empty():
-				neck.set_technique_progress(StringName(_active_technique_event.get("direction", "")), float(technique_gesture.current_evidence().get("travel", 0.0)))
+				_apply_technique_motion(technique_gesture.current_evidence())
 			_emit_hud()
 		&"complete":
 			var intent := technique_gesture.complete(now, position)
 			if intent.is_empty():
 				return
 			if not _active_technique_event.is_empty():
-				neck.set_technique_progress(StringName(_active_technique_event.get("direction", "")), float(intent.get("travel", 0.0)))
-				neck.end_technique(StringName(_active_technique_event.get("direction", "")))
+				_apply_technique_motion(intent)
+				_end_active_technique_motion()
 			var result := technique_resolver.resolve(intent)
 			result["song_time"] = now
 			_active_technique_event = {}
@@ -213,6 +217,27 @@ func technique_gesture_sample(phase: StringName, position: Vector2) -> void:
 			else:
 				technique_failed.emit(result)
 			_emit_hud()
+
+func _apply_technique_motion(evidence: Dictionary) -> void:
+	if _active_technique_event.is_empty():
+		return
+	var technique := StringName(_active_technique_event.get("technique", ""))
+	var direction := StringName(_active_technique_event.get("direction", ""))
+	match technique:
+		&"whiplash":
+			neck.set_technique_progress(direction, float(evidence.get("motion_progress", 0.0)))
+		&"windmill":
+			neck.set_technique_pose(Vector2(float(evidence.get("motion_x", 0.0)), float(evidence.get("motion_y", 0.0))))
+		_:
+			neck.set_technique_progress(direction, float(evidence.get("travel", 0.0)))
+
+func _end_active_technique_motion() -> void:
+	if _active_technique_event.is_empty():
+		return
+	if StringName(_active_technique_event.get("technique", "")) == &"windmill":
+		neck.end_technique_pose()
+	else:
+		neck.end_technique(StringName(_active_technique_event.get("direction", "")))
 
 func _process(_delta: float) -> void:
 	if not _active or _finished:
@@ -229,7 +254,7 @@ func _process(_delta: float) -> void:
 		judgment_resolved.emit(outcome)
 	for expired_technique in technique_resolver.expire(now):
 		if not _active_technique_event.is_empty() and StringName(_active_technique_event.get("id", "")) == StringName(expired_technique.get("id", "")):
-			neck.end_technique(StringName(_active_technique_event.get("direction", "")))
+			_end_active_technique_motion()
 			_active_technique_event = {}
 		technique_failed.emit({
 			"consumed": true,

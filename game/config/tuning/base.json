@@ -29,6 +29,18 @@
       "minVerticalTravel": 0.70,
       "maxHorizontalDrift": 0.20,
       "minCoherence": 0.75
+    },
+    "whiplash": {
+      "minOutboundTravel": 0.34,
+      "minReturnTravel": 0.32,
+      "reversalDeadzone": 0.06,
+      "maxVerticalDrift": 0.22
+    },
+    "windmill": {
+      "minTurns": 0.85,
+      "minSpan": 0.34,
+      "minPathTravel": 1.30,
+      "minAngularCoherence": 0.62
     }
   },
   "techniqueAnimation": {
