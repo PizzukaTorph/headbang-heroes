@@ -291,19 +291,43 @@ The style does not need to be strict 16-color retro pixel art.
 
 However, HH should eventually define a controlled palette and rendering rules so separate assets look like part of the same game.
 
-### Low frame count by design
+### Authored frame count by motion weight
 
 Do not target 24/30 FPS character animation.
 
-The style should benefit from authored keyframes.
+The style should benefit from authored keyframes, but frame count is subordinate
+to the physical read of the move. A heavy Technique Skill must not be forced
+into the same frame budget as a common action.
 
-Working target:
+Working targets:
 
 - Idle: around 4 frames
-- Common actions: around 6–8 frames
-- Specials / finishers: around 8–12 frames
+- Common / Classic actions: around 6–8 frames
+- Heavy Technique Skills such as Half and Deep: around 12–16 frames
+- Finishers / unusually complex specials: 12+ frames as required by the pose design
 
-These are starting constraints, not final production numbers.
+These are production starting points, not gameplay constants.
+
+For heavy Technique Skills, prefer a phase-authored sequence:
+
+```text
+NEUTRAL
+-> LOAD / ANTICIPATION
+-> EXCURSION
+-> COMPRESSION / TARGET
+-> RELEASE / IMPACT
+-> RECOVERY / SETTLE
+-> NEUTRAL
+```
+
+The gesture-driven portion and post-release portion must remain distinguishable
+in the frame map. During gameplay, loading/excursion/compression can be scrubbed
+from continuous gesture progress, while release/impact/recovery can play as a
+short authored continuation after the player releases.
+
+Do not build the recovery by simply reversing the forward frames. Hair inertia,
+shoulder lag, facial expression and torso settling should be allowed to follow a
+different path so the move communicates weight.
 
 ### Pose vocabulary
 

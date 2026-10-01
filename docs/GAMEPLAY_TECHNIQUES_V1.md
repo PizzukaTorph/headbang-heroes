@@ -409,6 +409,76 @@ the authoritative neck model, including failed or incomplete attempts. A
 malformed or out-of-window gesture fails without snapping or resetting the
 neck. Erik's sprite sequence follows live progress as presentation only.
 
+### Technique animation contract
+
+Technique Skill animation is not a short canned clip played after recognition.
+For visually heavy techniques, especially Half and Deep, the animation must
+communicate preparation, weight and recovery.
+
+The canonical presentation phases are:
+
+```text
+NEUTRAL
+  ↓
+LOAD / ANTICIPATION
+  ↓
+GESTURE-DRIVEN EXCURSION
+  ↓
+COMPRESSION / TARGET POSE
+  ↓
+RELEASE / IMPACT
+  ↓
+RECOVERY / SETTLE
+  ↓
+NEUTRAL
+```
+
+These phases have different ownership.
+
+While the player's gesture is active, the presentation is scrubbed by continuous
+gesture evidence. This portion includes loading, excursion and compression.
+The player should feel as if they are physically loading and moving Erik rather
+than merely filling a progress bar.
+
+After release, presentation may continue through authored release/impact and
+recovery frames. These post-release frames are animation-driven presentation
+only and must never alter the already-established gameplay outcome.
+
+Therefore the runtime must not assume a single linear mapping of:
+
+```text
+gesture progress 0..1 -> complete sprite sequence 0..N
+```
+
+Instead, sprite sequences should expose at least two logical frame regions:
+
+```text
+GESTURE REGION
+  LOAD -> EXCURSION -> COMPRESSION
+
+POST-RELEASE REGION
+  IMPACT / SETTLE -> RECOVERY
+```
+
+A technique sequence may use more frames than Classic movement when required to
+make mass and secondary motion readable. Half and Deep should be expected to use
+roughly 12–16 authored frames as an initial production target, with the exact
+count determined by readability rather than a fixed FPS requirement.
+
+The recovery path should not automatically be produced by reversing the approach
+frames. Hair, shoulders, head and torso may settle through distinct authored
+poses so the move feels heavy rather than mechanically mirrored.
+
+Hard rules:
+
+- gameplay state and timing remain authoritative outside presentation;
+- no sprite frame determines technique success;
+- the gesture-driven region follows continuous player evidence;
+- release/recovery may continue after input ends;
+- a failed gesture still displays the physical movement the player produced;
+- frame count is a visual-production concern, not a scoring parameter;
+- lower-body / torso anchor rules remain stable across every frame in a sequence.
+
 ## Presentation
 
 Technique Skills may temporarily use the gameplay surface itself as a gesture area.
