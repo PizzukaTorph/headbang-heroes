@@ -1,0 +1,334 @@
+{
+  "technique": "half",
+  "source_sheet": "/mnt/data/ghostwriter_images/generated/a_clean_sprite_sheet_style_image_on_a_transparent_1.png",
+  "canvas_size": [
+    301,
+    346
+  ],
+  "global_anchor": [
+    114.50207466471451,
+    333.0
+  ],
+  "frames": [
+    {
+      "index": 0,
+      "file": "half_00.png",
+      "grid_row": 0,
+      "grid_col": 0,
+      "source_bbox": [
+        78,
+        17,
+        261,
+        329
+      ],
+      "placed_at": [
+        25,
+        22
+      ],
+      "local_anchor": [
+        89.4710387389397,
+        311.0
+      ]
+    },
+    {
+      "index": 1,
+      "file": "half_01.png",
+      "grid_row": 0,
+      "grid_col": 1,
+      "source_bbox": [
+        385,
+        23,
+        587,
+        315
+      ],
+      "placed_at": [
+        12,
+        42
+      ],
+      "local_anchor": [
+        102.5994682301609,
+        291.0
+      ]
+    },
+    {
+      "index": 2,
+      "file": "half_02.png",
+      "grid_row": 0,
+      "grid_col": 2,
+      "source_bbox": [
+        686,
+        31,
+        902,
+        315
+      ],
+      "placed_at": [
+        0,
+        50
+      ],
+      "local_anchor": [
+        114.51642529141645,
+        283.0
+      ]
+    },
+    {
+      "index": 3,
+      "file": "half_03.png",
+      "grid_row": 0,
+      "grid_col": 3,
+      "source_bbox": [
+        954,
+        12,
+        1213,
+        315
+      ],
+      "placed_at": [
+        0,
+        31
+      ],
+      "local_anchor": [
+        158.87280056305585,
+        302.0
+      ]
+    },
+    {
+      "index": 4,
+      "file": "half_04.png",
+      "grid_row": 1,
+      "grid_col": 0,
+      "source_bbox": [
+        71,
+        329,
+        267,
+        628
+      ],
+      "placed_at": [
+        19,
+        35
+      ],
+      "local_anchor": [
+        95.7409821541577,
+        298.0
+      ]
+    },
+    {
+      "index": 5,
+      "file": "half_05.png",
+      "grid_row": 1,
+      "grid_col": 1,
+      "source_bbox": [
+        382,
+        346,
+        621,
+        628
+      ],
+      "placed_at": [
+        17,
+        52
+      ],
+      "local_anchor": [
+        97.25445309854385,
+        281.0
+      ]
+    },
+    {
+      "index": 6,
+      "file": "half_06.png",
+      "grid_row": 1,
+      "grid_col": 2,
+      "source_bbox": [
+        690,
+        362,
+        925,
+        628
+      ],
+      "placed_at": [
+        14,
+        68
+      ],
+      "local_anchor": [
+        100.2135525141327,
+        265.0
+      ]
+    },
+    {
+      "index": 7,
+      "file": "half_07.png",
+      "grid_row": 1,
+      "grid_col": 3,
+      "source_bbox": [
+        1000,
+        376,
+        1220,
+        653
+      ],
+      "placed_at": [
+        17,
+        57
+      ],
+      "local_anchor": [
+        97.32743718592965,
+        276.0
+      ]
+    },
+    {
+      "index": 8,
+      "file": "half_08.png",
+      "grid_row": 2,
+      "grid_col": 0,
+      "source_bbox": [
+        57,
+        704,
+        295,
+        941
+      ],
+      "placed_at": [
+        11,
+        97
+      ],
+      "local_anchor": [
+        103.0696116669493,
+        236.0
+      ]
+    },
+    {
+      "index": 9,
+      "file": "half_09.png",
+      "grid_row": 2,
+      "grid_col": 1,
+      "source_bbox": [
+        366,
+        713,
+        624,
+        958
+      ],
+      "placed_at": [
+        11,
+        89
+      ],
+      "local_anchor": [
+        103.97725816784113,
+        244.0
+      ]
+    },
+    {
+      "index": 10,
+      "file": "half_10.png",
+      "grid_row": 2,
+      "grid_col": 2,
+      "source_bbox": [
+        675,
+        701,
+        942,
+        958
+      ],
+      "placed_at": [
+        15,
+        77
+      ],
+      "local_anchor": [
+        99.69364691508858,
+        256.0
+      ]
+    },
+    {
+      "index": 11,
+      "file": "half_11.png",
+      "grid_row": 2,
+      "grid_col": 3,
+      "source_bbox": [
+        980,
+        653,
+        1230,
+        958
+      ],
+      "placed_at": [
+        16,
+        29
+      ],
+      "local_anchor": [
+        98.22709601701753,
+        304.0
+      ]
+    },
+    {
+      "index": 12,
+      "file": "half_12.png",
+      "grid_row": 3,
+      "grid_col": 0,
+      "source_bbox": [
+        61,
+        958,
+        302,
+        1247
+      ],
+      "placed_at": [
+        17,
+        45
+      ],
+      "local_anchor": [
+        97.75965549724128,
+        288.0
+      ]
+    },
+    {
+      "index": 13,
+      "file": "half_13.png",
+      "grid_row": 3,
+      "grid_col": 1,
+      "source_bbox": [
+        382,
+        958,
+        579,
+        1247
+      ],
+      "placed_at": [
+        18,
+        45
+      ],
+      "local_anchor": [
+        96.62410493207521,
+        288.0
+      ]
+    },
+    {
+      "index": 14,
+      "file": "half_14.png",
+      "grid_row": 3,
+      "grid_col": 2,
+      "source_bbox": [
+        692,
+        958,
+        881,
+        1247
+      ],
+      "placed_at": [
+        22,
+        45
+      ],
+      "local_anchor": [
+        92.65718522512806,
+        288.0
+      ]
+    },
+    {
+      "index": 15,
+      "file": "half_15.png",
+      "grid_row": 3,
+      "grid_col": 3,
+      "source_bbox": [
+        1009,
+        958,
+        1197,
+        1247
+      ],
+      "placed_at": [
+        22,
+        45
+      ],
+      "local_anchor": [
+        92.02847843775427,
+        288.0
+      ]
+    }
+  ]
+}

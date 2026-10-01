@@ -1,0 +1,334 @@
+{
+  "technique": "deep",
+  "source_sheet": "/mnt/data/ghostwriter_images/generated/a_transparent_background_sprite_sheet_image_clean_2.png",
+  "canvas_size": [
+    322,
+    351
+  ],
+  "global_anchor": [
+    129.67693979877967,
+    338.0
+  ],
+  "frames": [
+    {
+      "index": 0,
+      "file": "deep_00.png",
+      "grid_row": 0,
+      "grid_col": 0,
+      "source_bbox": [
+        67,
+        18,
+        274,
+        332
+      ],
+      "placed_at": [
+        28,
+        25
+      ],
+      "local_anchor": [
+        101.79627558438654,
+        313.0
+      ]
+    },
+    {
+      "index": 1,
+      "file": "deep_01.png",
+      "grid_row": 0,
+      "grid_col": 1,
+      "source_bbox": [
+        381,
+        24,
+        608,
+        332
+      ],
+      "placed_at": [
+        14,
+        31
+      ],
+      "local_anchor": [
+        116.12565356721201,
+        307.0
+      ]
+    },
+    {
+      "index": 2,
+      "file": "deep_02.png",
+      "grid_row": 0,
+      "grid_col": 2,
+      "source_bbox": [
+        685,
+        36,
+        960,
+        332
+      ],
+      "placed_at": [
+        0,
+        43
+      ],
+      "local_anchor": [
+        130.125635779012,
+        295.0
+      ]
+    },
+    {
+      "index": 3,
+      "file": "deep_03.png",
+      "grid_row": 0,
+      "grid_col": 3,
+      "source_bbox": [
+        960,
+        14,
+        1239,
+        331
+      ],
+      "placed_at": [
+        0,
+        22
+      ],
+      "local_anchor": [
+        172.72499607062397,
+        316.0
+      ]
+    },
+    {
+      "index": 4,
+      "file": "deep_04.png",
+      "grid_row": 1,
+      "grid_col": 0,
+      "source_bbox": [
+        60,
+        342,
+        279,
+        649
+      ],
+      "placed_at": [
+        23,
+        32
+      ],
+      "local_anchor": [
+        106.1849637585313,
+        306.0
+      ]
+    },
+    {
+      "index": 5,
+      "file": "deep_05.png",
+      "grid_row": 1,
+      "grid_col": 1,
+      "source_bbox": [
+        374,
+        349,
+        643,
+        649
+      ],
+      "placed_at": [
+        22,
+        39
+      ],
+      "local_anchor": [
+        107.84832737901917,
+        299.0
+      ]
+    },
+    {
+      "index": 6,
+      "file": "deep_06.png",
+      "grid_row": 1,
+      "grid_col": 2,
+      "source_bbox": [
+        676,
+        371,
+        952,
+        649
+      ],
+      "placed_at": [
+        9,
+        61
+      ],
+      "local_anchor": [
+        120.5160480349345,
+        277.0
+      ]
+    },
+    {
+      "index": 7,
+      "file": "deep_07.png",
+      "grid_row": 1,
+      "grid_col": 3,
+      "source_bbox": [
+        989,
+        382,
+        1239,
+        658
+      ],
+      "placed_at": [
+        13,
+        63
+      ],
+      "local_anchor": [
+        116.88303650372616,
+        275.0
+      ]
+    },
+    {
+      "index": 8,
+      "file": "deep_08.png",
+      "grid_row": 2,
+      "grid_col": 0,
+      "source_bbox": [
+        44,
+        700,
+        324,
+        953
+      ],
+      "placed_at": [
+        0,
+        86
+      ],
+      "local_anchor": [
+        130.16570563644225,
+        252.0
+      ]
+    },
+    {
+      "index": 9,
+      "file": "deep_09.png",
+      "grid_row": 2,
+      "grid_col": 1,
+      "source_bbox": [
+        365,
+        699,
+        631,
+        953
+      ],
+      "placed_at": [
+        7,
+        85
+      ],
+      "local_anchor": [
+        123.12792685646325,
+        253.0
+      ]
+    },
+    {
+      "index": 10,
+      "file": "deep_10.png",
+      "grid_row": 2,
+      "grid_col": 2,
+      "source_bbox": [
+        673,
+        691,
+        960,
+        953
+      ],
+      "placed_at": [
+        21,
+        77
+      ],
+      "local_anchor": [
+        108.77296567069294,
+        261.0
+      ]
+    },
+    {
+      "index": 11,
+      "file": "deep_11.png",
+      "grid_row": 2,
+      "grid_col": 3,
+      "source_bbox": [
+        960,
+        658,
+        1248,
+        953
+      ],
+      "placed_at": [
+        10,
+        44
+      ],
+      "local_anchor": [
+        119.41431203931204,
+        294.0
+      ]
+    },
+    {
+      "index": 12,
+      "file": "deep_12.png",
+      "grid_row": 3,
+      "grid_col": 0,
+      "source_bbox": [
+        53,
+        953,
+        332,
+        1246
+      ],
+      "placed_at": [
+        18,
+        46
+      ],
+      "local_anchor": [
+        111.80721783356779,
+        292.0
+      ]
+    },
+    {
+      "index": 13,
+      "file": "deep_13.png",
+      "grid_row": 3,
+      "grid_col": 1,
+      "source_bbox": [
+        385,
+        953,
+        606,
+        1246
+      ],
+      "placed_at": [
+        21,
+        46
+      ],
+      "local_anchor": [
+        109.08876293198327,
+        292.0
+      ]
+    },
+    {
+      "index": 14,
+      "file": "deep_14.png",
+      "grid_row": 3,
+      "grid_col": 2,
+      "source_bbox": [
+        696,
+        953,
+        909,
+        1246
+      ],
+      "placed_at": [
+        25,
+        46
+      ],
+      "local_anchor": [
+        104.98011269472987,
+        292.0
+      ]
+    },
+    {
+      "index": 15,
+      "file": "deep_15.png",
+      "grid_row": 3,
+      "grid_col": 3,
+      "source_bbox": [
+        1014,
+        953,
+        1224,
+        1246
+      ],
+      "placed_at": [
+        26,
+        46
+      ],
+      "local_anchor": [
+        103.26909643983777,
+        292.0
+      ]
+    }
+  ]
+}
