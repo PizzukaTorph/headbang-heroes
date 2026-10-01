@@ -267,8 +267,9 @@ A valid Half should require:
 
 - movement toward the required direction;
 - entry into the valid Half depth band;
+- no excessive orthogonal/vertical drift;
 - no excessive overshoot into the Deep/full-extension range;
-- a valid release/completion inside the authored Technique Skill window.
+- a valid release/completion inside the authored Technique Skill window or its tuned release-grace interval.
 
 Failure to execute Half must never cancel the player's physical input. The neck still responds to what the player actually did.
 
@@ -397,7 +398,9 @@ They are authored occurrences, not BPM/difficulty-generated events. Their
 `time` starts the actionable window and their `duration` ends it. For Half, the
 authoritative technique timing sample is the first entry into the target band,
 measured in SongClock time; release is a separate completion signal with a
-tuned grace period. CURRENT + NEXT remains the complete cue budget; the POC uses
+resolver-owned tuned grace period. The same grace value governs event expiry,
+so a gesture that entered the band on time cannot expire before its legal
+release window closes. CURRENT + NEXT remains the complete cue budget; the POC uses
 `→ HALF` and `↓ DEEP` glyphs without adding a third cue.
 
 The recognizer emits continuous evidence and a semantic intent; it does not

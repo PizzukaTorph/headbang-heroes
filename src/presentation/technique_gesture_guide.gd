@@ -7,6 +7,7 @@ var remaining_seconds: float = 0.0
 var progress: float = 0.0
 var half_target_min: float = 0.38
 var half_target_max: float = 0.62
+var half_fail_overshoot: float = 0.78
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -24,6 +25,11 @@ func apply_tuning(values: Dictionary) -> void:
 	var half: Dictionary = values.get("half", {})
 	half_target_min = clampf(float(half.get("targetMin", half_target_min)), 0.0, 1.0)
 	half_target_max = clampf(float(half.get("targetMax", half_target_max)), half_target_min, 1.0)
+	half_fail_overshoot = clampf(
+		float(half.get("failOvershoot", half_fail_overshoot)),
+		half_target_max,
+		1.0
+	)
 	queue_redraw()
 
 func set_progress(value: float, is_active: bool) -> void:
@@ -50,9 +56,12 @@ func _draw() -> void:
 		draw_line(start, target, dim, 5.0, true)
 		var band_start := start.lerp(target, half_target_min)
 		var band_end := start.lerp(target, half_target_max)
+		var overshoot_start := start.lerp(target, half_fail_overshoot)
 		draw_rect(Rect2(Vector2(band_start.x, center.y - 22.0), Vector2(band_end.x - band_start.x, 44.0)), Color(1.0, 0.82, 0.40, 0.20))
+		draw_rect(Rect2(Vector2(overshoot_start.x, center.y - 16.0), Vector2(target.x - overshoot_start.x, 32.0)), Color(1.0, 0.35, 0.30, 0.16))
 		draw_line(Vector2(band_start.x, center.y - 28.0), Vector2(band_start.x, center.y + 28.0), color, 3.0, true)
 		draw_line(Vector2(band_end.x, center.y - 28.0), Vector2(band_end.x, center.y + 28.0), color, 3.0, true)
+		draw_line(Vector2(overshoot_start.x, center.y - 21.0), Vector2(overshoot_start.x, center.y + 21.0), Color(1.0, 0.45, 0.40, 0.80), 2.0, true)
 		draw_circle(start, 12.0, dim)
 		draw_circle(target, 15.0, color, false, 5.0, true)
 		draw_line(target, target + Vector2(-22.0, -15.0), color, 7.0, true)

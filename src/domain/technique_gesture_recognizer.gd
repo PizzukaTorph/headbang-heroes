@@ -8,6 +8,7 @@ var half_direction: float = 1.0
 var half_target_min: float = 0.38
 var half_target_max: float = 0.62
 var half_fail_overshoot: float = 0.78
+var half_max_vertical_drift: float = 0.20
 var half_min_coherence: float = 0.72
 var half_release_grace_seconds: float = 0.25
 var deep_min_vertical_travel: float = 0.70
@@ -37,6 +38,7 @@ func configure(values: Dictionary) -> void:
 	half_target_min = clampf(float(half.get("targetMin", half_target_min)), 0.0, 1.0)
 	half_target_max = clampf(float(half.get("targetMax", half_target_max)), half_target_min, 1.0)
 	half_fail_overshoot = maxf(half_target_max, float(half.get("failOvershoot", half_fail_overshoot)))
+	half_max_vertical_drift = maxf(0.0, float(half.get("maxVerticalDrift", half_max_vertical_drift)))
 	half_min_coherence = clampf(float(half.get("minCoherence", half_min_coherence)), 0.0, 1.0)
 	half_release_grace_seconds = maxf(0.0, float(half.get("releaseGraceMs", half_release_grace_seconds * 1000.0)) / 1000.0)
 	deep_min_vertical_travel = maxf(0.0, float(deep.get("minVerticalTravel", deep_min_vertical_travel)))
@@ -102,11 +104,19 @@ func complete(completed_at: float, position: Vector2 = Vector2.INF) -> Dictionar
 	var valid := false
 	var reason := ""
 	if _technique == &"half":
-		valid = _target_entered and _peak_travel < half_fail_overshoot and coherence >= half_min_coherence
+		var vertical_drift := _max_abs_vertical_drift / reference_pixels
+		valid = (
+			_target_entered
+			and _peak_travel < half_fail_overshoot
+			and vertical_drift <= half_max_vertical_drift
+			and coherence >= half_min_coherence
+		)
 		if not _target_entered:
 			reason = "target_not_reached"
 		elif _peak_travel >= half_fail_overshoot:
 			reason = "overshoot"
+		elif vertical_drift > half_max_vertical_drift:
+			reason = "vertical_drift"
 		elif coherence < half_min_coherence:
 			reason = "low_coherence"
 		else:

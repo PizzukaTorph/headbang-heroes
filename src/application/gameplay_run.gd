@@ -74,6 +74,7 @@ func configure(
 			technique_events.append(event)
 	resolver = CandidateResolver.new(classic_events)
 	technique_resolver = TechniqueEventResolver.new(technique_events)
+	technique_resolver.configure(tuning.section("techniques"))
 	technique_gesture.configure(tuning.section("techniques"))
 	return true
 

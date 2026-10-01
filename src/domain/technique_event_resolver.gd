@@ -6,6 +6,7 @@ extends RefCounted
 
 var events: Array[Dictionary] = []
 var resolved: Array[bool] = []
+var half_release_grace_seconds: float = 0.25
 
 func _init(source_events: Array = []) -> void:
 	for source in source_events:
@@ -15,6 +16,13 @@ func _init(source_events: Array = []) -> void:
 	resolved.resize(events.size())
 	for i in resolved.size():
 		resolved[i] = false
+
+func configure(values: Dictionary) -> void:
+	var half: Dictionary = values.get("half", {})
+	half_release_grace_seconds = maxf(
+		0.0,
+		float(half.get("releaseGraceMs", half_release_grace_seconds * 1000.0)) / 1000.0
+	)
 
 func reset() -> void:
 	for i in resolved.size():
@@ -66,7 +74,7 @@ func resolve(intent: Dictionary) -> Dictionary:
 		var end := start + float(event.get("duration", 0.0))
 		if technique == &"half" and bool(intent.get("target_entered", false)):
 			timing_anchor = float(intent.get("target_entered_at", completed_at))
-		var release_end := end + float(intent.get("release_grace_seconds", 0.0)) if technique == &"half" else end
+		var release_end := end + half_release_grace_seconds if technique == &"half" else end
 		if technique == StringName(event.get("technique", "")) and timing_anchor >= start and timing_anchor <= end and completed_at <= release_end:
 			if not bool(intent.get("valid", false)):
 				return _result(false, StringName(intent.get("reason", "invalid_gesture")), intent, event, timing_anchor - start)
@@ -79,10 +87,12 @@ func expire(now: float) -> Array[Dictionary]:
 	for i in events.size():
 		if resolved[i]:
 			continue
-		var end := float(events[i]["time"]) + float(events[i].get("duration", 0.0))
-		if now > end:
+		var event := events[i]
+		var end := float(event["time"]) + float(event.get("duration", 0.0))
+		var expiry := end + half_release_grace_seconds if StringName(event.get("technique", "")) == &"half" else end
+		if now > expiry:
 			resolved[i] = true
-			expired.append(events[i])
+			expired.append(event)
 	return expired
 
 func debug_state(now: float) -> Dictionary:

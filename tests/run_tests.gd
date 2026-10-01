@@ -85,7 +85,14 @@ func _test_candidate_resolution() -> void:
 func _test_technique_gestures() -> void:
 	var tuning := {
 		"gestureReferencePx": 320.0,
-		"half": {"minHorizontalTravel": 0.25, "maxVerticalDrift": 0.20, "minCoherence": 0.75},
+		"half": {
+			"targetMin": 0.38,
+			"targetMax": 0.62,
+			"failOvershoot": 0.78,
+			"maxVerticalDrift": 0.20,
+			"minCoherence": 0.72,
+			"releaseGraceMs": 250
+		},
 		"deep": {"minVerticalTravel": 0.70, "maxHorizontalDrift": 0.20, "minCoherence": 0.75}
 	}
 	var half = TechniqueGestureScript.new()
@@ -98,9 +105,22 @@ func _test_technique_gestures() -> void:
 	_expect(absf(float(half_intent.get("target_entered_at", 0.0)) - 1.2) < 0.0001, "Half timing anchor must be first target entry, not release")
 	_expect(absf(float(half_intent.get("completed_at", 0.0)) - 1.4) < 0.0001, "Half must retain release time separately")
 	var half_resolver = TechniqueResolverScript.new([{"id":"half-1", "time":1.0, "duration":0.2, "technique":&"half", "direction":&"left"}])
+	half_resolver.configure(tuning)
 	var resolved_half: Dictionary = half_resolver.resolve(half_intent)
 	_expect(bool(resolved_half.get("valid", false)), "Half must resolve when target entry is in its authored window")
 	_expect(absf(float(resolved_half.get("timing_error", 0.0)) - 0.2) < 0.0001, "Half timing error must use target entry, not release")
+
+	var grace_resolver = TechniqueResolverScript.new([{"id":"half-grace", "time":1.0, "duration":0.2, "technique":&"half", "direction":&"left"}])
+	grace_resolver.configure(tuning)
+	_expect(grace_resolver.expire(1.30).is_empty(), "Half must remain unresolved during release grace")
+	var grace_intent: Dictionary = half_intent.duplicate(true)
+	grace_intent["completed_at"] = 1.40
+	var grace_result: Dictionary = grace_resolver.resolve(grace_intent)
+	_expect(bool(grace_result.get("valid", false)), "Half release inside grace must resolve after the authored window")
+
+	var expired_grace = TechniqueResolverScript.new([{"id":"half-expired", "time":1.0, "duration":0.2, "technique":&"half", "direction":&"left"}])
+	expired_grace.configure(tuning)
+	_expect(expired_grace.expire(1.46).size() == 1, "Half must expire after authored window plus release grace")
 
 	var short_half = TechniqueGestureScript.new()
 	short_half.configure(tuning)
@@ -110,7 +130,9 @@ func _test_technique_gestures() -> void:
 	var vertical_half = TechniqueGestureScript.new()
 	vertical_half.configure(tuning)
 	vertical_half.begin(&"half", 1.0, Vector2.ZERO)
-	_expect(not bool(vertical_half.complete(1.2, Vector2(160.0, 100.0)).get("valid", false)), "vertical drift must fail Half")
+	var vertical_half_intent: Dictionary = vertical_half.complete(1.2, Vector2(160.0, 100.0))
+	_expect(not bool(vertical_half_intent.get("valid", false)), "vertical drift must fail Half")
+	_expect(str(vertical_half_intent.get("reason", "")) == "vertical_drift", "Half must expose vertical drift as an explicit failure reason")
 
 	var overshoot_half = TechniqueGestureScript.new()
 	overshoot_half.configure(tuning)
